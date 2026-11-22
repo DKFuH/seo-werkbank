@@ -375,3 +375,20 @@ class RankObservation(Base):
     serp_features: Mapped[list] = mapped_column(JSON, default=list)
     notes: Mapped[str] = mapped_column(String(1000), default="")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+
+
+class SeoResearchRecord(Base):
+    """Site-scoped, manually reviewed SEO research evidence or planning entry."""
+
+    __tablename__ = "seo_research_records"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    site_id: Mapped[int] = mapped_column(ForeignKey("sites.id", ondelete="CASCADE"), index=True)
+    kind: Mapped[str] = mapped_column(String(32))
+    title: Mapped[str] = mapped_column(String(300))
+    source: Mapped[str] = mapped_column(String(32), default="manual")
+    payload: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    notes: Mapped[str] = mapped_column(Text, default="")
+    observed_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, onupdate=utcnow)
+    __table_args__ = (Index("ix_seo_research_site_kind", "site_id", "kind"),)
