@@ -21,7 +21,8 @@ Exporten und Fehlerbehebung.
 
 - **Browser- und Bilddiagnostik:** Consent-Request-Zeitfolgen, Roh-/JS-Rendering und Markup-Hinweise für mögliche LCP-Bilder ([Anleitung](docs/TECHNICAL_DIAGNOSTICS.md)).
 
-- **Erweiterte Audits:** Keyword-SERP-Overlap, Relaunch-Snapshots, Paginierung und strukturierte Daten ([Anleitung](docs/ADVANCED_SEO.md)).
+- **Erweiterte Audits** in den passenden Bereichen: SERP-Überschneidung (SERP-Analyse), Relaunch-Vergleich (Crawler),
+  Paginierung (Interne Verlinkung) und Rich-Result-Potenzial (Strukturierte Daten) ([Anleitung](docs/ADVANCED_SEO.md)).
 
 ## Was gegenüber OpenSEOSuite dazugekommen ist
 

@@ -5,7 +5,9 @@ import { Link } from "react-router-dom";
 import {
   Badge, Button, Card, type Column, DataBadge, DataTable, EmptyState, ErrorBox, Field, Input, Notice, PageHeader, ScoreRing, Spinner, Stat, Textarea, Url,
 } from "../components/ui";
+import { SerpOverlapCard } from "../components/AdvancedSeoPanels";
 import { api, ApiError } from "../lib/api";
+import { useSite } from "../lib/context";
 import { fmtInt, fmtPct, titleCase } from "../lib/format";
 
 const INTENT_TONE: Record<string, string> = { transactional: "green", commercial: "purple", navigational: "blue", local: "orange", informational: "gray" };
@@ -98,6 +100,7 @@ function Difficulty({ d }: { d: any }) {
 }
 
 export default function Serp() {
+  const { site } = useSite();
   const providers = useQuery({ queryKey: ["serp-providers"], queryFn: () => api.get("/serp/providers") });
   const [keyword, setKeyword] = useState("");
   const [country, setCountry] = useState("us");
@@ -301,6 +304,8 @@ export default function Serp() {
             <AiBrief key={r.keyword} keyword={r.keyword} serp={r} />
           </>
         )}
+
+        {site && <SerpOverlapCard siteId={site.id} />}
       </div>
     </div>
   );

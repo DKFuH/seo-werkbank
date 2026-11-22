@@ -7,11 +7,12 @@ import {
   Badge, Button, Card, chartColors, type Column, DataTable, EmptyState, ErrorBox, NeedsCrawl, Notice, PageHeader, Pagination,
   Spinner, Stat, StatusCode, Tabs, Url,
 } from "../components/ui";
+import { PaginationPanel } from "../components/AdvancedSeoPanels";
 import { api } from "../lib/api";
 import { useSite } from "../lib/context";
 import { fmtInt, fmtNum, shortUrl } from "../lib/format";
 
-type TabId = "overview" | "top" | "weak" | "orphans" | "anchors" | "opportunities" | "graph";
+type TabId = "overview" | "top" | "weak" | "orphans" | "anchors" | "opportunities" | "pagination" | "graph";
 
 const INLINK_ORDER = ["0", "1", "2-5", "6-20", "21+"];
 const tooltipStyle = { background: "#0f172a", border: "none", borderRadius: 8, color: "#f8fafc", fontSize: 12 } as const;
@@ -414,6 +415,7 @@ export default function InternalLinks() {
         { id: "orphans", label: "Verwaist", count: (d.orphans ?? []).length },
         { id: "anchors", label: "Ankertexte", count: anchors.length },
         { id: "opportunities", label: "Linkchancen" },
+        { id: "pagination", label: "Paginierung" },
         { id: "graph", label: "Linkgraph" },
       ]} />
 
@@ -457,6 +459,7 @@ export default function InternalLinks() {
           <ContextualLinkOpportunities crawlId={crawlId} base={base} />
         </Card>
       )}
+      {tab === "pagination" && site && <PaginationPanel siteId={site.id} />}
       {tab === "graph" && (
         <Card title="Linkgraph" description="Radiale Ansicht nach Crawltiefe: Startseite in der Mitte, jeder Ring einen Klick weiter entfernt">
           <LinkGraph crawlId={crawlId} />

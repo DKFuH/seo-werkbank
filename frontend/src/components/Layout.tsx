@@ -38,7 +38,6 @@ export const NAV: NavGroup[] = [
     { to: "/audit", label: "Website-Audit", icon: i(Bug) },
     { to: "/crawler", label: "Crawler", icon: i(FileSearch) },
     { to: "/diagnostics", label: "Tracking & Rendering", icon: i(Activity) },
-    { to: "/advanced-seo", label: "Erweiterte SEO-Prüfungen", icon: i(Microscope) },
     { to: "/internal-links", label: "Interne Verlinkung", icon: i(Network) },
     { to: "/sitemaps", label: "Sitemaps & Indexierung", icon: i(ListTree) },
     { to: "/schema", label: "Strukturierte Daten", icon: i(Braces) },
