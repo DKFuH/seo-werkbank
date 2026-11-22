@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Badge, Card, EmptyState, ErrorBox, PageHeader, Spinner, Stat, Url } from "../components/ui";
 import { api } from "../lib/api";
 import { useSite } from "../lib/context";
+import { DirectoryQualityPanel } from "../components/AuthorityPanels";
 import { fmtInt } from "../lib/format";
 
 type Action = { priority: string; title: string; basis: string; type: string };
@@ -99,5 +100,6 @@ export default function SeoEvidence() {
         </li>)}
       </ul>
     </Card>}
+    {site && <DirectoryQualityPanel siteId={site.id} />}
   </div>;
 }
