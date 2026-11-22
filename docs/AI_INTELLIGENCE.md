@@ -9,7 +9,7 @@ Generic, site-owned, explicitly sampled prompts:
 - The displayed matches are lexical phrase matches, not provider rankings,
   genuine brand recommendations, independent citations or search share.
 
-Matomo attribution is **only** a filtered, read-only referrer report:
+Instance-wide configured AI-model execution and Matomo referral retrieval are **administrator-only**.\nOther site users may create prompts and save their own manual observations without accessing shared provider credentials.\n\nMatomo attribution is **only** a filtered, read-only referrer report:
 - Explicit user action; Matomo token is never returned by the API.
 - The Matomo site must have the same domain as the registered site.
 - A fixed whitelist of recognizable AI referral hostnames prevents counting

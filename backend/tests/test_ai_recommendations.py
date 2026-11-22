@@ -45,4 +45,12 @@ def test_prompt_observations_and_permissions(client, auth, fixture_site):
                        json={"provider": "manual", "answer": "steal"}).status_code == 404
     assert client.get(f"/api/sites/{site['id']}/ai-referrals", headers=h).status_code == 404
     assert client.delete(f"{root}/{prompt_id}", headers=h).status_code == 404
+    # Instance-wide provider credentials must never be usable by regular tenants.
+    own_site = client.post("/api/sites", headers=h, json={
+        "name": "Non-admin project", "url": fixture_site.url + "/"}).json()
+    other_root = f"/api/sites/{own_site['id']}/ai-prompt-tests"
+    own_test = client.post(other_root, headers=h, json={
+        "prompt": "Who provides this service?", "brand_terms": ["Example"]}).json()
+    assert client.post(f"{other_root}/{own_test['id']}/run", headers=h).status_code == 403
+    assert client.get(f"/api/sites/{own_site['id']}/ai-referrals", headers=h).status_code == 403
     assert client.delete(f"{root}/{prompt_id}", headers=auth).status_code == 204

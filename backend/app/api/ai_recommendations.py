@@ -121,6 +121,10 @@ async def run_sample(site_id: int, test_id: int, user: User = Depends(current_us
                      db: Session = Depends(get_db)) -> dict:
     site = get_site_for(db, user, site_id)
     test = _test(db, site.id, test_id)
+    # Provider credentials are instance-wide. A tenant owner must never
+    # spend an administrator's paid AI quota by invoking this route.
+    if not user.is_admin:
+        raise HTTPException(403, "Only administrators can run a configured instance-wide chat model")
     settings = get_setting(db, "ai")
     if settings.get("provider") not in ("ollama", "openai_compatible"):
         raise HTTPException(422, "A chat model is not configured")
@@ -188,6 +192,10 @@ async def ai_referrals(site_id: int, days: int = Query(30, ge=1, le=180),
                        id_site: int | None = Query(None, ge=1),
                        user: User = Depends(current_user), db: Session = Depends(get_db)) -> dict:
     site = get_site_for(db, user, site_id)
+    # Matomo token_auth is shared at instance level. Matching a URL alone
+    # is not proof that a tenant may read the administrator's analytics.
+    if not user.is_admin:
+        raise HTTPException(403, "Only administrators can use instance-wide Matomo credentials")
     settings = get_setting(db, "matomo")
     try:
         # Never silently use an unrelated Matomo site ID: match to registered site domain.
