@@ -273,3 +273,38 @@ class Setting(Base):
     key: Mapped[str] = mapped_column(String(80), primary_key=True)
     value: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, onupdate=utcnow)
+
+
+class SeoWorkItem(Base):
+    """A manually maintained, site-scoped editorial/SEO workflow record."""
+
+    __tablename__ = "seo_work_items"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    site_id: Mapped[int] = mapped_column(ForeignKey("sites.id", ondelete="CASCADE"), index=True)
+    kind: Mapped[str] = mapped_column(String(24))
+    status: Mapped[str] = mapped_column(String(24))
+    title: Mapped[str] = mapped_column(String(300))
+    target_url: Mapped[str | None] = mapped_column(String(2048), nullable=True)
+    source_url: Mapped[str | None] = mapped_column(String(2048), nullable=True)
+    evidence_url: Mapped[str | None] = mapped_column(String(2048), nullable=True)
+    notes: Mapped[str] = mapped_column(Text, default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, onupdate=utcnow)
+    __table_args__ = (Index("ix_seo_work_items_site_kind", "site_id", "kind"),)
+
+
+class SeoPerformanceSnapshot(Base):
+    """Actual dated GSC metrics saved for *manual* before/after review, not causal attribution."""
+
+    __tablename__ = "seo_performance_snapshots"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    work_item_id: Mapped[int] = mapped_column(ForeignKey("seo_work_items.id", ondelete="CASCADE"), index=True)
+    label: Mapped[str] = mapped_column(String(20))  # baseline|followup
+    source: Mapped[str] = mapped_column(String(10))
+    start_date: Mapped[date] = mapped_column(Date)
+    end_date: Mapped[date] = mapped_column(Date)
+    clicks: Mapped[float] = mapped_column(Float)
+    impressions: Mapped[float] = mapped_column(Float)
+    position: Mapped[float | None] = mapped_column(Float, nullable=True)
+    captured_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+
