@@ -31,6 +31,8 @@ SEO-Werkbank ist eine Weiterentwicklung von [OpenSEOSuite](https://github.com/Su
   und belegten URLs; keine Live-Überwachung oder erfundene AI-Rankings.
 - **Wettbewerber-Themenradar** (`/competitor-radar`): thematische Wortpaare aus tatsächlichen
   Wettbewerber-Crawls mit belegbaren Quellseiten; keine erfundenen Rankings oder Volumina.
+- **Lokales SEO & Nachweise** (`/seo-evidence`): Aktionsplan aus importierten NAP-Daten,
+  manuell erfassten Bewertungsanfragen und Abgleich von Publikationen mit Backlink-Datensätzen.
 - Deutsche Stoppwörter auch in SERP-Analyse und Content-Optimierung; deutsche Signalwörter für kommerzielle
   Suchintention.
 
