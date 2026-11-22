@@ -41,6 +41,8 @@ SEO-Werkbank ist eine Weiterentwicklung von [OpenSEOSuite](https://github.com/Su
   Suchreise-Planung, belegbare Beobachtungen und Rechercheprotokolle.
 - **Qualität & CRO** (`/research-quality`): transparente Content-Nachweise, Landingpage-Textsignale,
   Quellenprüfung für Vergleiche und QA-Checklisten für Linkable-Assets.
+- **SEO-Verlauf & GEO** (`/research-monitoring`): erfasste Ereignisse mit Positionshistorie,
+  beobachtete SERP-Features, Indexierungs-Crawl-Abgleich und KI-Zitationsstichproben.
 - Deutsche Stoppwörter auch in SERP-Analyse und Content-Optimierung; deutsche Signalwörter für kommerzielle
   Suchintention.
 
