@@ -13,7 +13,7 @@ type Pagination = { crawl_id: number | null; items: { url: string; depth: number
   inlinks: number; indexable: boolean; hints: string[] }[]; method: string };
 type Schema = { crawl_id: number | null; items: { url: string; types: string[];
   potential_google_feature_types: string[]; other_schema_types: string[];
-  google_eligibility_confirmed: boolean }[]; method: string };
+  google_eligibility_confirmed: boolean; validator_result: { errors: number; warnings: number; findings: { level: string; path: string; message: string }[] } }[]; method: string };
 
 export default function AdvancedSeo() {
   const { site } = useSite();
@@ -98,7 +98,10 @@ export default function AdvancedSeo() {
       {schema.data?.items.slice(0, 80).map(x => <div key={x.url} className="mb-2 text-sm">
         <p className="break-all font-medium">{x.url}</p>
         <p className="text-xs text-slate-500">Typen: {x.types.join(", ")}
-          {" · "}Mögliche Google-Funktionstypen: {x.potential_google_feature_types.join(", ") || "keine"}</p>
+          {" · "}Mögliche Google-Funktionstypen: {x.potential_google_feature_types.join(", ") || "keine"}
+          {" · "}Validator: {x.validator_result.errors} Fehler, {x.validator_result.warnings} Hinweise</p>
+        {x.validator_result.findings.slice(0, 5).map((f, i) => <p key={i} className="text-xs text-slate-500">
+          {f.level}: {f.path} – {f.message}</p>)}
       </div>)}
       <p className="text-xs text-slate-500">{schema.data?.method}</p>
     </Card>
