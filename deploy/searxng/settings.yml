@@ -1,0 +1,19 @@
+# Private SearXNG companion for the SEO-Werkbank full Docker deployment.
+# Never make this JSON-enabled, limiter-disabled instance publicly reachable.
+use_default_settings: true
+
+general:
+  debug: false
+  instance_name: "SEO-Werkbank Suche"
+
+search:
+  safe_search: 0
+  formats:
+    - html
+    - json
+
+server:
+  public_instance: false
+  limiter: false
+  image_proxy: false
+  # SEARXNG_SECRET is supplied securely via Docker Compose.
