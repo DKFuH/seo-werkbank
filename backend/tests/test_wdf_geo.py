@@ -189,3 +189,34 @@ def test_geo_ignores_referenced_articles_on_hub_pages():
     p = parse_html(html, "https://x.example/hub/", "text/html")
     ids = {f[0] for f in page_findings("https://x.example/hub/", html, p)}
     assert "geo_no_date" not in ids and "geo_no_author" not in ids
+
+
+# ------------------------------------------------------------------ template pages and GSC target check
+def test_template_pairs_flags_swapped_name_pages_only():
+    from app.audit.analysis import template_pairs
+    body = "Wir planen deine Küche in ORT mit Beratung vor Ort, Aufmaß und Montage aus einer Hand. " * 8
+    other = "Ein ganz anderer Text über Bäder, Fliesen und Armaturen im Badezimmer. " * 10
+    pairs = template_pairs([(1, body.replace("ORT", "Alpha")), (2, body.replace("ORT", "Beta")), (3, other)])
+    assert 2 in pairs[1] and pairs[1][2] >= 0.5 and 3 not in pairs
+
+
+def test_template_pairs_ignores_site_wide_blocks():
+    from app.audit.analysis import template_pairs
+    cta = "Jetzt Termin vereinbaren und unverbindlich beraten lassen, wir freuen uns auf dich. "
+    items = [(i, cta * 3 + f"Eigener Inhalt Nummer {i} " + " ".join(f"wort{i}x{j}" for j in range(60))) for i in range(60)]
+    assert template_pairs(items) == {}
+
+
+def test_keyword_mapping_compares_with_search_console(client, auth, crawled):
+    site_id = crawled["site"]["id"]
+    base = crawled["base"]
+    client.post(f"/api/sites/{site_id}/keywords", headers=auth, json={"keywords": ["about page"]})
+    csv_text = f"Suchanfrage,Seite,Klicks,Impressionen,Position\nabout page,{base}/dup-a,2,40,\"6,5\"\n"
+    r = client.post(f"/api/sites/{site_id}/gsc/import", headers=auth,
+                    files={"file": ("Daten.csv", csv_text.encode("utf-8"), "text/csv")})
+    assert r.status_code in (200, 201), r.text
+    m = client.get(f"/api/sites/{site_id}/keywords/mapping", headers=auth).json()
+    item = next(i for i in m["items"] if i["keyword"] == "about page")
+    assert m["gsc_available"] is True and "target mismatch" in m["summary"]
+    assert item["gsc"]["top"]["url"] == f"{base}/dup-a" and item["gsc"]["top"]["impressions"] == 40
+    assert isinstance(item["target_mismatch"], bool)

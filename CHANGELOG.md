@@ -15,6 +15,11 @@ uses [Semantic Versioning](https://semver.org/).
   follow below, the site list only appears with more than one site.
 
 ### Added
+- **Audit rule `template_content`** (medium): pages that share at least half of their 5-word sequences with another indexable
+  page, typical for template pages with swapped city or product names. Site-wide blocks that appear on many pages are ignored.
+- **Keyword mapping vs. Search Console**: each mapped keyword shows the page Google actually shows for it (most impressions in the
+  last 90 days of query+page data) and flags a mismatch with the intended page.
+
 Evidence-first planning and review modules. All of them store manually entered or imported records, scope every route to the
 signed-in user's site, and label their results as observations rather than measured rankings or causal effects.
 - **Content refresh** (`/content-refresh`): GSC query+URL pairs grouped per page, striking-distance and low-CTR prompts, lexical
