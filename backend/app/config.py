@@ -22,6 +22,7 @@ class Settings(BaseSettings):
 
     # Security
     secret_key: str = ""  # default: generated once and stored in data_dir/.secret_key
+    master_key: str = ""  # Fernet key; recommended for managed/replicated production deployments
     access_token_minutes: int = 720
     allow_registration: bool = False  # the very first account can always be created; set true to let others sign up
     cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"

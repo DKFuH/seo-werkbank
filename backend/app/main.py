@@ -89,6 +89,10 @@ def run_migrations() -> None:
 async def lifespan(app: FastAPI):
     configure_logging()
     run_migrations()
+    from .services.settings_store import migrate_integration_secrets
+    migrated = migrate_integration_secrets()
+    if migrated:
+        log.info("Encrypted %d legacy integration setting rows", migrated)
     mark_interrupted_jobs()
     scheduler = None
     if get_settings().scheduler_enabled:
