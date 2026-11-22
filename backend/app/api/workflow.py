@@ -103,7 +103,10 @@ def update_item(site_id: int, item_id: int, body: ItemPatch,
     item = _item_for(db, site.id, item_id)
     updated = {**_item_out(item), **body.model_dump(exclude_unset=True)}
     # Reuse validation to enforce the per-kind allowed states and required content URL.
-    ItemIn.model_validate(updated)
+    if updated["status"] not in STATES[item.kind]:
+        raise HTTPException(422, "Status für diesen Vorgangstyp ungültig")
+    if item.kind == "content" and not updated["target_url"]:
+        raise HTTPException(422, "Content-Aufgaben benötigen eine Ziel-URL")
     for key, val in body.model_dump(exclude_unset=True).items():
         setattr(item, key, val)
     from ..models import utcnow
