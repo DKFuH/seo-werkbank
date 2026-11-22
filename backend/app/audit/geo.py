@@ -364,7 +364,7 @@ _INSTRUCTION = re.compile("|".join([
 ]), re.I)
 # Zero-width and bidi control characters, plus Unicode tag characters (used to smuggle invisible text).
 # U+200D (zero-width joiner) is left out: emoji sequences use it legitimately.
-_INVISIBLE = re.compile("[​‌⁠‪-‮⁦-⁩\U000e0000-\U000e007f]")
+_INVISIBLE = re.compile(r"[\u200b\u200c\u2060\u202a-\u202e\u2066-\u2069\U000e0000-\U000e007f]")
 _HIDDEN_STYLE = re.compile(r"display\s*:\s*none|visibility\s*:\s*hidden|font-size\s*:\s*(?:0|[01](?:\.\d+)?px)\b|opacity\s*:\s*0(?:\.0+)?\b", re.I)
 
 

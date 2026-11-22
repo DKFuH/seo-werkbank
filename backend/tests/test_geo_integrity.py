@@ -45,7 +45,7 @@ def test_hidden_instructions_found_in_comments_hidden_text_and_attributes():
 def test_hidden_instructions_ignores_normal_copy_and_flags_invisible_characters():
     normal = "<html><body><h1>Küche planen</h1><p>Wir empfehlen eine Beratung vor Ort. 👨‍👩‍👧</p></body></html>".encode()
     assert hidden_instructions(_doc(normal)) == []
-    smuggled = ("<html><body><p>Text" + "​" * 6 + "</p></body></html>").encode()
+    smuggled = ("<html><body><p>Text" + chr(0x200B) * 6 + "</p></body></html>").encode()
     assert hidden_instructions(_doc(smuggled))[0]["kind"] == "invisible_chars"
 
 
