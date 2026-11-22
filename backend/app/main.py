@@ -15,6 +15,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from .api import (
+    advanced_seo,
     ai_recommendations,
     ai_visibility,
     auth,
@@ -146,7 +147,7 @@ def create_app() -> FastAPI:
     async def job_limit(_request: Request, exc: JobLimitError):
         return JSONResponse({"detail": str(exc)}, status_code=429, headers={"Retry-After": "30"})
 
-    for r in (auth.router, sites.router, crawls.router, diagnostics.router, tools.router, integrations.router, content_refresh.router, workflow.router, ai_visibility.router, competitor_radar.router, evidence.router, content_proposals.router, rank_tracking.router, research.router, research_quality.router, research_monitoring.router, research_index_geo.router, conversion_trust.router, ai_recommendations.router, content_studio.router, seo_data.router):
+    for r in (auth.router, sites.router, crawls.router, diagnostics.router, advanced_seo.router, tools.router, integrations.router, content_refresh.router, workflow.router, ai_visibility.router, competitor_radar.router, evidence.router, content_proposals.router, rank_tracking.router, research.router, research_quality.router, research_monitoring.router, research_index_geo.router, conversion_trust.router, ai_recommendations.router, content_studio.router, seo_data.router):
         app.include_router(r, prefix="/api")
 
     @app.get("/api/health", tags=["system"])
