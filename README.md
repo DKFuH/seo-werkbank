@@ -37,6 +37,8 @@ SEO-Werkbank ist eine Weiterentwicklung von [OpenSEOSuite](https://github.com/Su
   Diff, gesonderte Freigabe sowie rein manuelle Dokumentation einer Veröffentlichung.
 - **Ranktracker** (`/rank-tracking`): ausgewählte Zielkeywords, dokumentierte Positionshistorie und
   manuelle oder anbieterbezogene SERP-Beobachtungen. Keine unabhängige Google-Messung.
+- **SEO-Research** (`/research`): mandantengetrennte Themen- und Fragenhierarchien,
+  Suchreise-Planung, belegbare Beobachtungen und Rechercheprotokolle.
 - Deutsche Stoppwörter auch in SERP-Analyse und Content-Optimierung; deutsche Signalwörter für kommerzielle
   Suchintention.
 
