@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import Literal
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field, model_validator
 from sqlalchemy import case, func, select
 from sqlalchemy.orm import Session

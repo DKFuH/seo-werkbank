@@ -23,7 +23,8 @@ function Snapshots({ siteId, item }: { siteId: number; item: WorkItem }) {
     onSuccess: () => void qc.invalidateQueries({ queryKey: ["work-snapshots", siteId, item.id] }) });
   if (item.kind !== "content" || !item.target_url) return null;
   const before = data.data?.find((s) => s.label === "baseline");
-  const after = data.data?.filter((s) => s.label === "followup").at(-1);
+  const followups = data.data?.filter((s) => s.label === "followup") ?? [];
+  const after = followups[followups.length - 1];
   return <div className="mt-3 border-t border-slate-200 pt-3 dark:border-slate-700">
     <div className="flex flex-wrap items-center gap-2">
       <Button size="sm" disabled={!!before || mutation.isPending} onClick={() => mutation.mutate("baseline")}>28-Tage-Baseline messen</Button>
