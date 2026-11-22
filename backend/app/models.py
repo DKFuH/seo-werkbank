@@ -308,3 +308,21 @@ class SeoPerformanceSnapshot(Base):
     position: Mapped[float | None] = mapped_column(Float, nullable=True)
     captured_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
 
+
+class AiVisibilityObservation(Base):
+    """Manually supplied AI response observation; not a provider integration or live ranking."""
+
+    __tablename__ = "ai_visibility_observations"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    site_id: Mapped[int] = mapped_column(ForeignKey("sites.id", ondelete="CASCADE"), index=True)
+    platform: Mapped[str] = mapped_column(String(30))
+    model_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    prompt: Mapped[str] = mapped_column(Text)
+    brand_mentioned: Mapped[bool] = mapped_column(Boolean, default=False)
+    cited_url: Mapped[str | None] = mapped_column(String(2048), nullable=True)
+    evidence_url: Mapped[str | None] = mapped_column(String(2048), nullable=True)
+    response_excerpt: Mapped[str] = mapped_column(Text, default="")
+    notes: Mapped[str] = mapped_column(Text, default="")
+    observed_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+    __table_args__ = (Index("ix_ai_visibility_site_platform_date", "site_id", "platform", "observed_at"),)

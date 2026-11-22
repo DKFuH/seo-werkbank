@@ -14,7 +14,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
-from .api import auth, content_refresh, crawls, integrations, sites, tools, workflow
+from .api import ai_visibility, auth, content_refresh, crawls, integrations, sites, tools, workflow
 from .config import APP_NAME, APP_VERSION, get_settings
 from .jobs import JobLimitError, jobs, mark_interrupted_jobs
 from .security.limits import BodyLimitMiddleware
@@ -124,7 +124,7 @@ def create_app() -> FastAPI:
     async def job_limit(_request: Request, exc: JobLimitError):
         return JSONResponse({"detail": str(exc)}, status_code=429, headers={"Retry-After": "30"})
 
-    for r in (auth.router, sites.router, crawls.router, tools.router, integrations.router, content_refresh.router, workflow.router):
+    for r in (auth.router, sites.router, crawls.router, tools.router, integrations.router, content_refresh.router, workflow.router, ai_visibility.router):
         app.include_router(r, prefix="/api")
 
     @app.get("/api/health", tags=["system"])
