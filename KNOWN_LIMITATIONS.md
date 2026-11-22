@@ -81,6 +81,20 @@ the current implementation.
 - The scheduler runs inside the API process; monitors do not run while the app is stopped. Alerts appear in the app only (no e-mail,
   Slack or webhook delivery yet).
 
+## Evidence and planning modules (SEO-Werkbank)
+
+- SEO work items, AI observations, research records, funnel steps, trust proofs and comparisons are **manually entered or imported**.
+  The app does not verify them; sources are shown as "supplied", never as "verified".
+- Matching is lexical (stemmed words), not semantic: content refresh, topic coverage, competitor topic radar and internal link context
+  can miss synonyms and paraphrases. The stemmer is tuned mainly for English.
+- Competitor topic radar compares only titles and H1s of the latest completed crawls. It says nothing about search volume or rankings.
+- Internal link context only covers link opportunities whose target has at least two significant title/H1 words.
+- Rank observations from a SERP provider follow that provider's ordering, not Google's. Capture needs a configured provider and works
+  only for desktop targets without a city.
+- GSC snapshots and the change timeline show temporal changes only; no causal attribution.
+- CTA and CRO hints are word matches in page text (for example "jetzt" or "book"); layout, forms and real conversions are not examined.
+- The new screens were tested through the API; they have not been clicked through one by one in a browser.
+
 ## Security and multi-user use
 
 - Integration secrets are stored unencrypted in the application database.

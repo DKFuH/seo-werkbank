@@ -1,6 +1,6 @@
 # Project Status
 
-Last updated: 2026-11-13 · Version 0.1.0 (pre-release, not yet published)
+Last updated: 2026-11-22 · Version 0.1.0 (pre-release, not yet published) plus SEO-Werkbank modules (see `CHANGELOG.md`)
 
 This file separates what has been **verified** from what is **implemented but unverified** and what is **not done**. Keep it honest.
 
@@ -24,6 +24,10 @@ This file separates what has been **verified** from what is **implemented but un
 ## Verification record
 
 ### Verified by automated tests (221 backend tests, 18 frontend tests, all passing on Windows 11 / Python 3.11 / Node 20)
+
+Update 2026-11-22: after the SEO-Werkbank modules were merged, 265 backend tests (2 skipped) and 22 frontend tests pass on
+Windows 11 / Python 3.14; `ruff check app tests`, the TypeScript type-check and the production build are clean. The new modules are
+covered through the API (site isolation, validation, state transitions, GSC pairing rules); their screens were not clicked through.
 
 - Crawl of a local website with ~50 planted problems: each expected rule fires on the expected URL, and healthy pages are not flagged.
 - Redirect chains/loops, broken internal/external links, broken and oversized images, duplicates and near-duplicates, canonicals,
@@ -70,6 +74,8 @@ This file separates what has been **verified** from what is **implemented but un
 | Docker on Windows/macOS and long-running use | CI runs on Linux only. A crawl, the data volume across restarts and the UI inside the container were not exercised | Volume permissions or crawl behaviour inside the container could still surprise |
 | Frontend interactions | Screens were loaded and checked for errors; forms/buttons on most screens were not clicked through one by one. The Search Console return flow was checked in the browser only with an invalid state | UI bugs in less common flows are likely |
 | Dropped capabilities and `no-new-privileges` | Applied in `docker-compose.yml` and covered by the Compose smoke test (the app starts and answers health and registration) | Anything that needs a capability at runtime would only show up in less common flows |
+| SEO-Werkbank screens (`/seo-work`, `/research`, `/rank-tracking` …) | Covered by API tests only; no browser walkthrough yet | Form or display bugs in the new screens |
+| Rank capture through a SERP provider | No provider configured; only the "no provider" refusal is tested | Host matching and result mapping untested against live data |
 | External penetration test | Not done; the review was code reading, scanners and regression tests | Unknown issues may remain |
 
 ### Not implemented
