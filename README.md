@@ -97,6 +97,13 @@ Administratorkonto angelegt. Docker und PostgreSQL funktionieren wie in der
 Matomo: in Matomo unter *Persönlich → Sicherheit* einen Auth-Token mit Leserechten anlegen und unter
 *Einstellungen → Matomo* zusammen mit der Matomo-URL eintragen.
 
+## Datenanbieter-Schnittstelle (optional erweiterbar)
+
+Ein quellennachvollziehbares, lesendes Provider-Register macht vorhandene GSC-,
+Keyword-Import- und Backlink-Daten einheitlich abrufbar. Suchvolumen, Rankings
+oder Backlink-Indizes werden **nicht** ohne Datenquelle erfunden. Erweiterung und
+Schnittstellen: [Datenanbieter](docs/SEO_DATA_PROVIDERS.md).
+
 ## Tests
 
 ```bash
