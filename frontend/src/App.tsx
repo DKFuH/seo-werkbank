@@ -27,6 +27,7 @@ const AiVisibility = lazy(() => import("./pages/AiVisibility"));
 const CompetitorRadar = lazy(() => import("./pages/CompetitorRadar"));
 const SeoEvidence = lazy(() => import("./pages/SeoEvidence"));
 const ContentProposals = lazy(() => import("./pages/ContentProposals"));
+const RankTracking = lazy(() => import("./pages/RankTracking"));
 const WdfIdf = lazy(() => import("./pages/WdfIdf"));
 const Geo = lazy(() => import("./pages/Geo"));
 const Matomo = lazy(() => import("./pages/Matomo"));
@@ -68,6 +69,7 @@ export default function App() {
             <Route path="/competitor-radar" element={<CompetitorRadar />} />
             <Route path="/seo-evidence" element={<SeoEvidence />} />
             <Route path="/content-proposals" element={<ContentProposals />} />
+            <Route path="/rank-tracking" element={<RankTracking />} />
             <Route path="/wdf-idf" element={<WdfIdf />} />
             <Route path="/geo" element={<Geo />} />
             <Route path="/matomo" element={<Matomo />} />

@@ -35,6 +35,8 @@ SEO-Werkbank ist eine Weiterentwicklung von [OpenSEOSuite](https://github.com/Su
   manuell erfassten Bewertungsanfragen und Abgleich von Publikationen mit Backlink-Datensätzen.
 - **Content-Entwürfe** (`/content-proposals`): gespeicherter Ausgangstext und Entwurf,
   Diff, gesonderte Freigabe sowie rein manuelle Dokumentation einer Veröffentlichung.
+- **Ranktracker** (`/rank-tracking`): ausgewählte Zielkeywords, dokumentierte Positionshistorie und
+  manuelle oder anbieterbezogene SERP-Beobachtungen. Keine unabhängige Google-Messung.
 - Deutsche Stoppwörter auch in SERP-Analyse und Content-Optimierung; deutsche Signalwörter für kommerzielle
   Suchintention.
 
