@@ -63,7 +63,7 @@ export default function AdvancedSeo() {
       </div>}
     </Card>
     <Card title="Relaunch: zwei gespeicherte Crawls vergleichen">
-      <p className="mb-2 text-xs text-slate-500">Zwei abgeschlossene Crawl-IDs der gleichen Website angeben. Optional Zuordnungen im Format „alte URL => neue URL“.</p>
+      <p className="mb-2 text-xs text-slate-500">Zwei abgeschlossene Crawl-IDs der gleichen Website angeben. Optional Zuordnungen im Format „alte URL → neue URL“.</p>
       <form className="space-y-3" onSubmit={e => { e.preventDefault(); relaunch.mutate(); }}>
         <div className="grid gap-3 md:grid-cols-2">
           <Field label="Crawl-ID vorher"><Input type="number" min={1} required value={oldCrawl} onChange={e => setOldCrawl(e.target.value)} /></Field>
