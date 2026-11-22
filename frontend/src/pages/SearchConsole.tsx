@@ -413,6 +413,30 @@ function Insights({ site }: { site: Site }) {
   );
 }
 
+
+function UrlInspectionCard({ site }: { site: Site }) {
+  const [url, setUrl] = useState(site.url);
+  const scan = useMutation<{ index: Record<string, string | string[] | null>; method: string; inspection_result_link: string | null }>({
+    mutationFn: () => api.post(`/sites/${site.id}/gsc/inspect`, { url }),
+  });
+  return <Card title="Google URL Inspection" description="Einzel-URL-Indexierungsstand aus Googles API – kein Live URL Test. Google-Property und OAuth-Verbindung erforderlich.">
+    <form className="flex flex-wrap items-end gap-2" onSubmit={e => { e.preventDefault(); scan.mutate(); }}>
+      <Field label="URL dieser Website">
+        <Input type="url" value={url} onChange={e => setUrl(e.target.value)} required className="w-full min-w-[16rem]" />
+      </Field>
+      <Button type="submit" loading={scan.isPending}>URL bei Google prüfen</Button>
+    </form>
+    {scan.error && <ErrorBox error={scan.error} />}
+    {scan.data && <div className="mt-3 space-y-1 text-sm">
+      {Object.entries(scan.data.index).filter(([, v]) => v !== null).map(([key, value]) =>
+        <p className="break-words" key={key}><strong>{key}:</strong> {Array.isArray(value) ? value.join(", ") : value}</p>)}
+      <p className="text-xs text-slate-500">{scan.data.method}</p>
+      {scan.data.inspection_result_link && <a className="text-brand-700 underline" href={scan.data.inspection_result_link}
+        target="_blank" rel="noopener noreferrer">Bei Google öffnen</a>}
+    </div>}
+  </Card>;
+}
+
 type OAuthState = { kind: "working" | "ok" | "error"; message?: string } | null;
 
 /** Google sends the browser back with a one-time code in the URL fragment. It is exchanged here, with the
@@ -461,6 +485,7 @@ export default function SearchConsole() {
           <ConnectionPanel key={`c-${site.id}`} site={site} onData={onData} />
           <ImportPanel key={`i-${site.id}`} site={site} onData={onData} />
         </div>
+        <UrlInspectionCard key={`inspect-${site.id}`} site={site} />
         <Performance key={`p-${site.id}`} site={site} />
         <Insights key={`n-${site.id}`} site={site} />
       </div>

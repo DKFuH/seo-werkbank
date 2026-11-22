@@ -133,6 +133,38 @@ def gsc_insights(site_id: int, days: int = Query(28, ge=7, le=180), user: User =
     return gsc.insights(db, get_site_for(db, user, site_id).id, days)
 
 
+
+class GscInspectIn(BaseModel):
+    url: str = Field(min_length=10, max_length=2048)
+
+
+@router.post("/sites/{site_id}/gsc/inspect")
+async def gsc_inspect(site_id: int, body: GscInspectIn, user: User = Depends(current_user),
+                      db: Session = Depends(get_db)) -> dict:
+    site = get_site_for(db, user, site_id)
+    url = body.url.strip()
+    from .deps import checked_url
+    url = checked_url(url)
+    base_host = (urlsplit(site.url).hostname or "").lower().removeprefix("www.")
+    url_host = (urlsplit(url).hostname or "").lower().removeprefix("www.")
+    if base_host != url_host:
+        raise HTTPException(422, "Nur URLs der ausgewählten Website erlaubt")
+    if not site.gsc_property or not gsc.is_connected(db, user.id):
+        raise HTTPException(400, "Search Console verbinden und Property auswählen")
+    prop = site.gsc_property
+    property_host = prop.removeprefix("sc-domain:")
+    if prop.startswith("sc-domain:"):
+        valid = url_host == property_host.lower() or url_host.endswith("." + property_host.lower())
+    else:
+        valid = url.startswith(prop)
+    if not valid:
+        raise HTTPException(422, "Die URL ist nicht von der gespeicherten Google-Property abgedeckt")
+    try:
+        return await gsc.inspect_url(db, user.id, prop, url)
+    except gsc.GscError as exc:
+        raise HTTPException(502, str(exc)) from exc
+
+
 @router.delete("/sites/{site_id}/gsc/data", status_code=204)
 def gsc_clear(site_id: int, user: User = Depends(current_user), db: Session = Depends(get_db)) -> None:
     site = get_site_for(db, user, site_id)

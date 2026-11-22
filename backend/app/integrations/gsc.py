@@ -443,3 +443,21 @@ def ranking_pages(db: Session, site_id: int, queries: list[str], days: int = 90)
 
 def same_page(a: str | None, b: str | None) -> bool:
     return bool(a and b) and _norm_page(a) == _norm_page(b)
+
+async def inspect_url(db: Session, user_id: int, prop: str, url: str) -> dict:
+    """Index status from Google URL Inspection API; not Google's Live URL Test."""
+    token = await _access_token(db, user_id)
+    endpoint = "https://searchconsole.googleapis.com/v1/urlInspection/index:inspect"
+    async with httpx.AsyncClient(timeout=35) as client:
+        r = await client.post(endpoint, json={"inspectionUrl": url, "siteUrl": prop, "languageCode": "de-DE"},
+                              headers={"Authorization": f"Bearer {token}"})
+    if r.status_code != 200:
+        raise GscError(f"Google URL Inspection nicht verfügbar (HTTP {r.status_code}). Property, Berechtigungen und Kontingent prüfen.")
+    data = r.json().get("inspectionResult", {})
+    idx = data.get("indexStatusResult") or {}
+    return {"inspected_url": url, "property": prop, "inspection_result_link": data.get("inspectionResultLink"),
+            "index": {k: idx.get(k) for k in ("verdict", "coverageState", "robotsTxtState", "indexingState",
+                     "pageFetchState", "lastCrawlTime", "googleCanonical", "userCanonical", "crawledAs", "sitemap")},
+            "source": "google_url_inspection_api",
+            "method": "Google Index-Snapshot, kein Live-URL-Test. Daten können verzögert sein; API-Kontingent beachten."}
+
