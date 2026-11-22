@@ -327,6 +327,35 @@ function Opportunities({ crawlId, base }: { crawlId: number; base?: string }) {
   );
 }
 
+
+function ContextualLinkOpportunities({ crawlId, base }: { crawlId: number; base?: string }) {
+  const q = useQuery({ queryKey: ["contextual-link-opportunities", crawlId],
+    queryFn: () => api.get("/crawls/" + crawlId + "/link-opportunities/context", { limit: 50 }) });
+  if (q.isLoading) return <Spinner label="Linktexte werden geprüft…" />;
+  if (q.error) return <ErrorBox error={q.error} onRetry={() => q.refetch()} />;
+  const items: any[] = q.data?.items ?? [];
+  return <div className="p-4">
+    <Notice>Hier werden nur Vorschläge angezeigt, bei denen alle relevanten Wörter im selben gecrawlten Textausschnitt vorkommen.
+      Das ist ein lexikalischer Treffer und kein Beweis, dass ein Link inhaltlich passt.</Notice>
+    {q.data?.truncated && <p className="mt-2 text-xs text-amber-700">Mehr Vorschläge vorhanden als geprüft; Auswahl auf die ersten 500 begrenzt.</p>}
+    {!items.length && <EmptyState title="Keine zusammenhängenden Textstellen gefunden" description="Die bestehenden Linkchancen enthalten keine ausreichend kurze gemeinsame Textpassage." />}
+    <ul className="mt-3 space-y-3">
+      {items.map((item) => <li key={item.source_url + "|" + item.target_url} className="rounded-lg border border-slate-200 p-3 text-sm dark:border-slate-800">
+        <div className="flex flex-wrap items-center gap-2">
+          <Url href={item.source_url} label={shortUrl(item.source_url, base)} />
+          <ArrowRight className="h-3 w-3 text-slate-400" />
+          <Url href={item.target_url} label={shortUrl(item.target_url, base)} />
+        </div>
+        <blockquote className="mt-2 whitespace-pre-wrap border-l-2 border-slate-300 pl-3 text-slate-700 dark:border-slate-600 dark:text-slate-300">{item.context_snippet}</blockquote>
+        <p className="mt-1 text-xs text-slate-500">
+          {item.anchor_candidate ? "Möglicher Anker im Originaltext: " + item.anchor_candidate : "Kein kurzer Ankerkandidat – manuell auswählen"}
+        </p>
+        <p className="mt-1 text-xs text-slate-500">{item.context_basis}</p>
+      </li>)}
+    </ul>
+  </div>;
+}
+
 /* ------------------------------------------------------------------ page */
 export default function InternalLinks() {
   const { site, crawlId } = useSite();
@@ -425,6 +454,7 @@ export default function InternalLinks() {
       {tab === "opportunities" && (
         <Card padded={false} title="Linkchancen" description="Seiten, die das Thema einer anderen Seite erwähnen, ohne sie zu verlinken">
           <Opportunities crawlId={crawlId} base={base} />
+          <ContextualLinkOpportunities crawlId={crawlId} base={base} />
         </Card>
       )}
       {tab === "graph" && (

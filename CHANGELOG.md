@@ -3,6 +3,39 @@
 All notable changes are recorded here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project
 uses [Semantic Versioning](https://semver.org/).
 
+## [Unreleased] - SEO-Werkbank
+
+### Added
+Evidence-first planning and review modules. All of them store manually entered or imported records, scope every route to the
+signed-in user's site, and label their results as observations rather than measured rankings or causal effects.
+- **Content refresh** (`/content-refresh`): GSC query+URL pairs grouped per page, striking-distance and low-CTR prompts, lexical
+  check against the crawled headings ([docs](docs/CONTENT_REFRESH.md)).
+- **Opportunity value** (`/opportunity-value`): user-defined lead, close-rate and margin assumptions as scenarios
+  ([docs](docs/OPPORTUNITY_VALUE.md)).
+- **SEO work items** (`/seo-work`): manual workflow for content, reviews, publications, local tasks and competitor observations, with
+  dated GSC baseline/follow-up snapshots for content items ([docs](docs/SEO_WORKFLOW.md)).
+- **Internal link context**: `GET /crawls/{id}/link-opportunities/context` shows a real source-text passage and an anchor candidate for
+  existing link opportunities.
+- **AI visibility observations** (`/ai-visibility`): manual samples of brand mentions and cited URLs ([docs](docs/AI_VISIBILITY.md)).
+- **Competitor topic radar** (`/competitor-radar`): word pairs from competitor titles/H1s missing from the own crawl.
+- **Local SEO action plan and publication evidence** (`/seo-evidence`) ([docs](docs/LOCAL_EVIDENCE.md)).
+- **Content proposals** (`/content-proposals`): draft, diff, separate approval and manual "published" marker
+  ([docs](docs/CONTENT_PROPOSALS.md)).
+- **Rank tracker** (`/rank-tracking`): explicit targets with provenance-labelled observations ([docs](docs/RANK_TRACKING.md)).
+- **SEO research** (`/research`), **quality & CRO** (`/research-quality`), **change timeline, SERP features, indexing and GEO
+  citations** (`/research-monitoring`), **conversion & trust** (`/conversion-trust`) ([docs](docs/SEO_RESEARCH.md),
+  [quality](docs/RESEARCH_QUALITY.md), [monitoring](docs/RESEARCH_MONITORING.md), [conversion](docs/CONVERSION_TRUST.md)).
+- Alembic migrations `0002`–`0006`; they run automatically on start-up.
+
+### Fixed
+- Timestamps entered with a UTC offset (AI observations, rank observations, research records) were stored with the offset cut off
+  instead of being converted to UTC.
+- Rank capture did not recognise the own site when the provider returned `example.de` for a site saved as `www.example.de` (or the
+  other way round).
+- A GSC follow-up snapshot for a page without recent impressions reused the baseline's old window; the window now ends at the newest
+  day of the whole site dataset.
+- The change timeline issued one database query per event and rank target (up to 60,000 per request); it now uses one query.
+
 ## [0.1.0] - Unreleased
 
 First development release.

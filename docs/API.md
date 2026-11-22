@@ -39,6 +39,15 @@ All endpoints live under `/api`, accept and return JSON (exports return files) a
 | Backlinks | `GET /sites/{id}/backlinks`, `/backlinks/summary`, `POST /backlinks/import`, `/backlinks/verify`, `GET /backlinks/export`, `DELETE /backlinks` |
 | Search Console | `GET /gsc/status`, `/gsc/auth-url`, `/gsc/properties`, `POST /gsc/disconnect`; `POST /sites/{id}/gsc/sync`, `/gsc/import`, `GET /gsc/performance`, `/gsc/insights`, `DELETE /gsc/data` |
 | Monitoring | `GET /monitoring/kinds`, `GET/POST /sites/{id}/monitors`, `PATCH/DELETE /monitors/{id}`, `POST /monitors/{id}/run`, `GET /alerts`, `POST /alerts/read`, `GET /alerts/export` |
+| Link context | `GET /crawls/{id}/link-opportunities/context` |
+| Content refresh / value | `GET /sites/{id}/content-refresh` (value scenarios are computed in the browser) |
+| SEO work items | `GET/POST /sites/{id}/seo-work`, `PATCH/DELETE .../{item}`, `GET/POST .../{item}/snapshots` |
+| Content proposals | `GET/PUT /sites/{id}/seo-work/{item}/content-proposal`, `POST .../approve`, `/reopen`, `/mark-published` |
+| AI visibility | `GET/POST /sites/{id}/ai-visibility/observations`, `DELETE .../{observation}` |
+| Competitor radar / local evidence | `GET /sites/{id}/competitor-topic-radar`, `/local-action-plan`, `/publication-evidence` |
+| Rank tracker | `GET/POST /sites/{id}/rank-targets`, `DELETE .../{target}`, `POST .../{target}/observations`, `POST .../{target}/capture` |
+| SEO research | `GET/POST /sites/{id}/research`, `PATCH/DELETE .../{record}`; `GET /sites/{id}/research/topic-coverage`, `/question-tree`, `/journeys`, `/content-evidence`, `/cro-audit`, `/comparison-review`, `/asset-briefs`, `/change-timeline`, `/serp-features`, `/indexing-review`, `/geo-citations` |
+| Conversion & trust | `GET /sites/{id}/conversion-trust` |
 | Jobs | `GET /jobs`, `GET /jobs/{id}`, `POST /jobs/{id}/cancel` |
 | Settings (admin) | `GET/PUT /settings` |
 | AI (optional) | `GET /ai/status`, `POST /ai/run` |

@@ -20,6 +20,20 @@ const Local = lazy(() => import("./pages/Local"));
 const Keywords = lazy(() => import("./pages/Keywords"));
 const Serp = lazy(() => import("./pages/Serp"));
 const Content = lazy(() => import("./pages/Content"));
+const ContentRefresh = lazy(() => import("./pages/ContentRefresh"));
+const OpportunityValue = lazy(() => import("./pages/OpportunityValue"));
+const SeoWork = lazy(() => import("./pages/SeoWork"));
+const AiVisibility = lazy(() => import("./pages/AiVisibility"));
+const CompetitorRadar = lazy(() => import("./pages/CompetitorRadar"));
+const SeoEvidence = lazy(() => import("./pages/SeoEvidence"));
+const ContentProposals = lazy(() => import("./pages/ContentProposals"));
+const RankTracking = lazy(() => import("./pages/RankTracking"));
+const ResearchWorkspace = lazy(() => import("./pages/ResearchWorkspace"));
+const ResearchQuality = lazy(() => import("./pages/ResearchQuality"));
+const ResearchMonitoring = lazy(() => import("./pages/ResearchMonitoring"));
+const ConversionTrust = lazy(() => import("./pages/ConversionTrust"));
+const AiIntelligence = lazy(() => import("./pages/AiIntelligence"));
+const ContentStudio = lazy(() => import("./pages/ContentStudio"));
 const WdfIdf = lazy(() => import("./pages/WdfIdf"));
 const Geo = lazy(() => import("./pages/Geo"));
 const Matomo = lazy(() => import("./pages/Matomo"));
@@ -54,6 +68,20 @@ export default function App() {
             <Route path="/keywords" element={<Keywords />} />
             <Route path="/serp" element={<Serp />} />
             <Route path="/content" element={<Content />} />
+            <Route path="/content-refresh" element={<ContentRefresh />} />
+            <Route path="/opportunity-value" element={<OpportunityValue />} />
+            <Route path="/seo-work" element={<SeoWork />} />
+            <Route path="/ai-visibility" element={<AiVisibility />} />
+            <Route path="/competitor-radar" element={<CompetitorRadar />} />
+            <Route path="/seo-evidence" element={<SeoEvidence />} />
+            <Route path="/content-proposals" element={<ContentProposals />} />
+            <Route path="/rank-tracking" element={<RankTracking />} />
+            <Route path="/research" element={<ResearchWorkspace />} />
+            <Route path="/research-quality" element={<ResearchQuality />} />
+            <Route path="/research-monitoring" element={<ResearchMonitoring />} />
+            <Route path="/conversion-trust" element={<ConversionTrust />} />
+            <Route path="/ai-intelligence" element={<AiIntelligence />} />
+            <Route path="/content-studio" element={<ContentStudio />} />
             <Route path="/wdf-idf" element={<WdfIdf />} />
             <Route path="/geo" element={<Geo />} />
             <Route path="/matomo" element={<Matomo />} />

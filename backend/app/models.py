@@ -14,6 +14,11 @@ def utcnow() -> datetime:
     return datetime.now(UTC).replace(tzinfo=None)
 
 
+def naive_utc(value: datetime) -> datetime:
+    """Store user-supplied timestamps as naive UTC, converting any explicit offset first."""
+    return value.astimezone(UTC).replace(tzinfo=None) if value.tzinfo else value
+
+
 class User(Base):
     __tablename__ = "users"
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -273,3 +278,147 @@ class Setting(Base):
     key: Mapped[str] = mapped_column(String(80), primary_key=True)
     value: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, onupdate=utcnow)
+
+
+class SeoWorkItem(Base):
+    """A manually maintained, site-scoped editorial/SEO workflow record."""
+
+    __tablename__ = "seo_work_items"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    site_id: Mapped[int] = mapped_column(ForeignKey("sites.id", ondelete="CASCADE"), index=True)
+    kind: Mapped[str] = mapped_column(String(24))
+    status: Mapped[str] = mapped_column(String(24))
+    title: Mapped[str] = mapped_column(String(300))
+    target_url: Mapped[str | None] = mapped_column(String(2048), nullable=True)
+    source_url: Mapped[str | None] = mapped_column(String(2048), nullable=True)
+    evidence_url: Mapped[str | None] = mapped_column(String(2048), nullable=True)
+    notes: Mapped[str] = mapped_column(Text, default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, onupdate=utcnow)
+    __table_args__ = (Index("ix_seo_work_items_site_kind", "site_id", "kind"),)
+
+
+class SeoPerformanceSnapshot(Base):
+    """Actual dated GSC metrics saved for *manual* before/after review, not causal attribution."""
+
+    __tablename__ = "seo_performance_snapshots"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    work_item_id: Mapped[int] = mapped_column(ForeignKey("seo_work_items.id", ondelete="CASCADE"), index=True)
+    label: Mapped[str] = mapped_column(String(20))  # baseline|followup
+    source: Mapped[str] = mapped_column(String(10))
+    start_date: Mapped[date] = mapped_column(Date)
+    end_date: Mapped[date] = mapped_column(Date)
+    clicks: Mapped[float] = mapped_column(Float)
+    impressions: Mapped[float] = mapped_column(Float)
+    position: Mapped[float | None] = mapped_column(Float, nullable=True)
+    captured_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+
+
+class AiVisibilityObservation(Base):
+    """Manually supplied AI response observation; not a provider integration or live ranking."""
+
+    __tablename__ = "ai_visibility_observations"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    site_id: Mapped[int] = mapped_column(ForeignKey("sites.id", ondelete="CASCADE"), index=True)
+    platform: Mapped[str] = mapped_column(String(30))
+    model_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    prompt: Mapped[str] = mapped_column(Text)
+    brand_mentioned: Mapped[bool] = mapped_column(Boolean, default=False)
+    cited_url: Mapped[str | None] = mapped_column(String(2048), nullable=True)
+    evidence_url: Mapped[str | None] = mapped_column(String(2048), nullable=True)
+    response_excerpt: Mapped[str] = mapped_column(Text, default="")
+    notes: Mapped[str] = mapped_column(Text, default="")
+    observed_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+    __table_args__ = (Index("ix_ai_visibility_site_platform_date", "site_id", "platform", "observed_at"),)
+
+
+class SeoContentProposal(Base):
+    """Reviewable user-authored content revision, never automatically published."""
+
+    __tablename__ = "seo_content_proposals"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    work_item_id: Mapped[int] = mapped_column(ForeignKey("seo_work_items.id", ondelete="CASCADE"), unique=True, index=True)
+    original_text: Mapped[str] = mapped_column(Text, default="")
+    proposed_text: Mapped[str] = mapped_column(Text)
+    rationale: Mapped[str] = mapped_column(Text, default="")
+    status: Mapped[str] = mapped_column(String(20), default="draft")
+    approved_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    marked_published_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, onupdate=utcnow)
+
+
+class RankTarget(Base):
+    """An explicit keyword, search engine, locale and intended landing page."""
+
+    __tablename__ = "rank_targets"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    site_id: Mapped[int] = mapped_column(ForeignKey("sites.id", ondelete="CASCADE"), index=True)
+    keyword: Mapped[str] = mapped_column(String(500))
+    engine: Mapped[str] = mapped_column(String(24), default="google")
+    country: Mapped[str] = mapped_column(String(2), default="de")
+    language: Mapped[str] = mapped_column(String(2), default="de")
+    device: Mapped[str] = mapped_column(String(12), default="desktop")
+    location: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    landing_url: Mapped[str | None] = mapped_column(String(2048), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+    __table_args__ = (Index("ix_rank_targets_site_keyword", "site_id", "keyword"),)
+
+
+class RankObservation(Base):
+    """A provider-sourced or manually supplied observation, NOT a GSC average."""
+
+    __tablename__ = "rank_observations"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    target_id: Mapped[int] = mapped_column(ForeignKey("rank_targets.id", ondelete="CASCADE"), index=True)
+    observed_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+    provider: Mapped[str] = mapped_column(String(32))
+    position: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    result_url: Mapped[str | None] = mapped_column(String(2048), nullable=True)
+    search_depth: Mapped[int] = mapped_column(Integer, default=10)
+    serp_features: Mapped[list] = mapped_column(JSON, default=list)
+    notes: Mapped[str] = mapped_column(String(1000), default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+
+
+class SeoResearchRecord(Base):
+    """Site-scoped, manually reviewed SEO research evidence or planning entry."""
+
+    __tablename__ = "seo_research_records"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    site_id: Mapped[int] = mapped_column(ForeignKey("sites.id", ondelete="CASCADE"), index=True)
+    kind: Mapped[str] = mapped_column(String(32))
+    title: Mapped[str] = mapped_column(String(300))
+    source: Mapped[str] = mapped_column(String(32), default="manual")
+    payload: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    notes: Mapped[str] = mapped_column(Text, default="")
+    observed_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, onupdate=utcnow)
+    __table_args__ = (Index("ix_seo_research_site_kind", "site_id", "kind"),)
+
+
+class AiPromptTest(Base):
+    """An explicit prompt test. Responses are sampled, not verified web-search results."""
+
+    __tablename__ = "ai_prompt_tests"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    site_id: Mapped[int] = mapped_column(ForeignKey("sites.id", ondelete="CASCADE"), index=True)
+    prompt: Mapped[str] = mapped_column(Text)
+    brand_terms: Mapped[list] = mapped_column(JSON, default=list)
+    competitor_terms: Mapped[list] = mapped_column(JSON, default=list)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+
+
+class AiPromptSample(Base):
+    """Human-recorded or explicitly requested provider-model answer."""
+
+    __tablename__ = "ai_prompt_samples"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    test_id: Mapped[int] = mapped_column(ForeignKey("ai_prompt_tests.id", ondelete="CASCADE"), index=True)
+    source: Mapped[str] = mapped_column(String(32))
+    provider: Mapped[str] = mapped_column(String(32))
+    model_name: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    answer: Mapped[str] = mapped_column(Text)
+    observed_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
