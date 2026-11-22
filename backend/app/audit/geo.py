@@ -285,7 +285,11 @@ def page_findings(url: str, html: bytes, parsed, *, is_start: bool = False, now:
     long_paras = [len(p.split()) for p in paragraphs if len(p.split()) > 120]
     if long_paras:
         out.append(("geo_long_paragraphs", {"paragraphs_over_120_words": len(long_paras), "longest": max(long_paras)}))
-    articles = [n for n in nodes if _types(n) & _ARTICLE_TYPES]
+    # Only the page's own article: hub pages list other articles via hasPart/itemListElement, and those
+    # references carry their dates and authors on their own pages.
+    own_url = url.rstrip("/")
+    articles = [n for n in nodes if _types(n) & _ARTICLE_TYPES
+                and (not n.get("url") or str(n.get("url")).rstrip("/") == own_url or n.get("mainEntityOfPage"))]
     if articles:
         dates = [d for d in (_parse_date(str(n.get(k))) for n in articles for k in ("dateModified", "datePublished") if n.get(k)) if d]
         if not dates:

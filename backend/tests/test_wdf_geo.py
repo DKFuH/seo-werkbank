@@ -178,3 +178,14 @@ def test_crawl_reports_geo_rules(client, auth, crawled):
     summary = client.get(f"/api/crawls/{crawled['crawl_id']}/issues", headers=auth).json()
     rules = {g.get("rule_id") or g.get("id") for g in summary.get("groups", summary.get("items", []))}
     assert "geo_llms_missing" in rules  # the fixture site has no /llms.txt
+
+
+def test_geo_ignores_referenced_articles_on_hub_pages():
+    from app.audit.geo import page_findings
+    text = " ".join(["Wort"] * 60)
+    html = ("<html><head><script type='application/ld+json'>{\"@type\":\"CollectionPage\",\"hasPart\":["
+            "{\"@type\":\"Article\",\"headline\":\"A\",\"url\":\"https://x.example/ratgeber/a/\"}]}</script></head>"
+            f"<body><main><h1>Hub</h1><p>{text}</p><p>{text}</p></main></body></html>").encode()
+    p = parse_html(html, "https://x.example/hub/", "text/html")
+    ids = {f[0] for f in page_findings("https://x.example/hub/", html, p)}
+    assert "geo_no_date" not in ids and "geo_no_author" not in ids
