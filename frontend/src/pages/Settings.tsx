@@ -7,7 +7,7 @@ import { api, tokenStore } from "../lib/api";
 import { useAuth } from "../lib/context";
 
 const MASK = "********";
-type Section = "serp" | "pagespeed" | "ai" | "gsc";
+type Section = "serp" | "pagespeed" | "ai" | "gsc" | "matomo";
 type Values = Record<string, string>;
 
 /** Local form state for one settings section; resets whenever the server copy changes. */
@@ -42,17 +42,17 @@ function SecretInput({ value, onChange, placeholder }: { value: string; onChange
       onFocus={(e) => value === MASK && e.target.select()} />
   );
 }
-const secretHint = (value: string | undefined) => (value === MASK ? "A value is stored. Leave it as is to keep it, or type a new one to replace it." : "Stored in the application database; never shown again after saving.");
+const secretHint = (value: string | undefined) => (value === MASK ? "Ein Wert ist gespeichert. So lassen, um ihn zu behalten, oder neuen eingeben, um ihn zu ersetzen." : "Wird in der Anwendungsdatenbank gespeichert und danach nie wieder angezeigt.");
 
 function SaveBar({ s, children }: { s: ReturnType<typeof useSection>; children?: ReactNode }) {
   return (
     <div className="space-y-3">
       {s.save.error ? <ErrorBox error={s.save.error} /> : null}
       <div className="flex flex-wrap items-center gap-2">
-        <Button type="submit" variant="primary" loading={s.save.isPending} disabled={!s.dirty}>Save</Button>
+        <Button type="submit" variant="primary" loading={s.save.isPending} disabled={!s.dirty}>Speichern</Button>
         {children}
-        {s.saved && <span className="inline-flex items-center gap-1 text-xs text-emerald-700 dark:text-emerald-400"><CheckCircle2 className="h-3.5 w-3.5" /> Saved</span>}
-        {s.dirty && <span className="text-xs text-slate-500 dark:text-slate-400">Unsaved changes</span>}
+        {s.saved && <span className="inline-flex items-center gap-1 text-xs text-emerald-700 dark:text-emerald-400"><CheckCircle2 className="h-3.5 w-3.5" /> Gespeichert</span>}
+        {s.dirty && <span className="text-xs text-slate-500 dark:text-slate-400">Ungespeicherte Änderungen</span>}
       </div>
     </div>
   );
@@ -82,29 +82,29 @@ function Account() {
     change.mutate();
   };
   return (
-    <Card title="Account">
+    <Card title="Konto">
       <div className="grid gap-6 lg:grid-cols-2">
         <KeyValue items={[
-          ["Email", user?.email],
-          ["Role", user?.is_admin ? <Badge tone="blue">administrator</Badge> : <Badge>member</Badge>],
+          ["E-Mail", user?.email],
+          ["Rolle", user?.is_admin ? <Badge tone="blue">Administrator</Badge> : <Badge>Mitglied</Badge>],
         ]} />
         <form onSubmit={submit} className="space-y-3">
-          <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Change password</h3>
+          <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Passwort ändern</h3>
           {change.error ? <ErrorBox error={change.error} /> : null}
-          {mismatch && <ErrorBox error="The new password and its confirmation do not match." />}
-          {change.isSuccess && <Notice tone="success">Password changed.</Notice>}
-          <Field label="Current password">
+          {mismatch && <ErrorBox error="Neues Passwort und Bestätigung stimmen nicht überein." />}
+          {change.isSuccess && <Notice tone="success">Passwort geändert.</Notice>}
+          <Field label="Aktuelles Passwort">
             <Input type="password" autoComplete="current-password" required value={current} onChange={(e) => setCurrent(e.target.value)} />
           </Field>
           <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="New password" hint="At least 8 characters.">
+            <Field label="Neues Passwort" hint="Mindestens 8 Zeichen.">
               <Input type="password" autoComplete="new-password" required minLength={8} maxLength={200} value={next} onChange={(e) => setNext(e.target.value)} />
             </Field>
-            <Field label="Confirm new password">
+            <Field label="Neues Passwort bestätigen">
               <Input type="password" autoComplete="new-password" required minLength={8} maxLength={200} value={confirm} onChange={(e) => setConfirm(e.target.value)} />
             </Field>
           </div>
-          <Button type="submit" variant="primary" loading={change.isPending}>Change password</Button>
+          <Button type="submit" variant="primary" loading={change.isPending}>Passwort ändern</Button>
         </form>
       </div>
     </Card>
@@ -113,44 +113,44 @@ function Account() {
 
 /* ------------------------------------------------------------------ integrations */
 const SERP_NOTES: Record<string, ReactNode> = {
-  none: "SERP analysis is switched off. Every other feature works without a provider.",
-  searxng: <>Self-hosted metasearch, free and without a quota of its own. Enable the JSON output format in your instance's settings.yml (<code>search.formats: [html, json]</code>). Upstream engines may rate-limit a busy instance.</>,
-  google_cse: <>Google Programmable Search JSON API: 100 queries per day free, then paid, up to 10 results per request. Needs an API key and a search engine ID (cx) set to search the entire web. Results can differ from google.com.</>,
-  brave: <>Brave Search API: its own independent index, not Google's. The free plan is limited to about one request per second and a monthly query quota; check your plan in the Brave dashboard.</>,
+  none: "SERP-Analyse ist aus. Alle anderen Funktionen arbeiten ohne Anbieter.",
+  searxng: <>Selbst betriebene Metasuche, kostenlos und ohne eigenes Kontingent. JSON-Ausgabe in der settings.yml der Instanz aktivieren (<code>search.formats: [html, json]</code>). Die angefragten Suchmaschinen können eine viel genutzte Instanz bremsen.</>,
+  google_cse: <>Google Programmable Search JSON API: 100 Abfragen pro Tag kostenlos, danach kostenpflichtig, bis zu 10 Ergebnisse je Abfrage. Braucht API-Schlüssel und Suchmaschinen-ID (cx) mit Suche im ganzen Web. Ergebnisse können von google.de abweichen.</>,
+  brave: <>Brave Search API: eigener, unabhängiger Index, nicht der von Google. Der kostenlose Tarif erlaubt etwa eine Anfrage pro Sekunde und ein Monatskontingent; Details im Brave-Dashboard.</>,
 };
 
 function SerpSettings({ server }: { server: Values }) {
   const s = useSection("serp", server);
   const p = s.values.provider ?? "none";
   return (
-    <Card title="SERP provider" description="Used by SERP analysis and content briefs to fetch live search results">
+    <Card title="SERP-Anbieter" description="Liefert SERP-Analyse und Content-Briefings live Suchergebnisse">
       <form onSubmit={(e) => { e.preventDefault(); s.save.mutate(s.values); }} className="space-y-4">
         <div className="grid gap-3 sm:grid-cols-2">
-          <Field label="Provider">
+          <Field label="Anbieter">
             <Select value={p} onChange={(e) => s.set("provider", e.target.value)}>
-              <option value="none">None</option>
-              <option value="searxng">SearXNG (self-hosted)</option>
+              <option value="none">Keiner</option>
+              <option value="searxng">SearXNG (selbst betrieben)</option>
               <option value="google_cse">Google Programmable Search</option>
               <option value="brave">Brave Search API</option>
             </Select>
           </Field>
           {p === "searxng" && (
-            <Field label="SearXNG URL" hint="Base URL of your instance, including http:// or https://">
+            <Field label="SearXNG URL" hint="Basis-URL deiner Instanz inklusive http:// oder https://">
               <Input type="url" required value={s.values.searxng_url ?? ""} onChange={(e) => s.set("searxng_url", e.target.value)} placeholder="http://localhost:8080" />
             </Field>
           )}
           {p === "google_cse" && (
             <>
-              <Field label="API key" hint={secretHint(s.values.google_cse_key)}>
+              <Field label="API-Schlüssel" hint={secretHint(s.values.google_cse_key)}>
                 <SecretInput value={s.values.google_cse_key ?? ""} onChange={(v) => s.set("google_cse_key", v)} />
               </Field>
-              <Field label="Search engine ID (cx)">
+              <Field label="Suchmaschinen-ID (cx)">
                 <Input required value={s.values.google_cse_cx ?? ""} onChange={(e) => s.set("google_cse_cx", e.target.value)} />
               </Field>
             </>
           )}
           {p === "brave" && (
-            <Field label="Subscription token" hint={secretHint(s.values.brave_key)}>
+            <Field label="Abo-Token" hint={secretHint(s.values.brave_key)}>
               <SecretInput value={s.values.brave_key ?? ""} onChange={(v) => s.set("brave_key", v)} />
             </Field>
           )}
@@ -165,14 +165,36 @@ function SerpSettings({ server }: { server: Values }) {
 function PageSpeedSettings({ server }: { server: Values }) {
   const s = useSection("pagespeed", server);
   return (
-    <Card title="PageSpeed Insights" description="Lighthouse and Core Web Vitals data from Google's public API">
+    <Card title="PageSpeed Insights" description="Lighthouse- und Core-Web-Vitals-Daten aus Googles öffentlicher API">
       <form onSubmit={(e) => { e.preventDefault(); s.save.mutate(s.values); }} className="space-y-4">
-        <Field label="API key" className="max-w-md" hint={secretHint(s.values.api_key)}>
+        <Field label="API-Schlüssel" className="max-w-md" hint={secretHint(s.values.api_key)}>
           <SecretInput value={s.values.api_key ?? ""} onChange={(v) => s.set("api_key", v)} placeholder="Optional" />
         </Field>
         <p className="text-xs text-slate-500 dark:text-slate-400">
-          The API is free. Without a key, requests share a small anonymous quota and may be rejected with HTTP 429. Create a key in the{" "}
-          {ext("https://developers.google.com/speed/docs/insights/v5/get-started", "Google Cloud console")} (enable “PageSpeed Insights API”). Clear the field and save to remove a stored key.
+          Die API ist kostenlos. Ohne Schlüssel teilen sich Anfragen ein kleines anonymes Kontingent und können mit HTTP 429 abgelehnt werden. Schlüssel in der{" "}
+          {ext("https://developers.google.com/speed/docs/insights/v5/get-started", "Google Cloud Console")} anlegen („PageSpeed Insights API“ aktivieren). Feld leeren und speichern, um einen gespeicherten Schlüssel zu entfernen.
+        </p>
+        <SaveBar s={s} />
+      </form>
+    </Card>
+  );
+}
+
+function MatomoSettings({ server }: { server: Values }) {
+  const s = useSection("matomo", server);
+  return (
+    <Card title="Matomo" description="Besuche, Kanäle, Einstiegsseiten und Ziele aus deiner Matomo-Instanz">
+      <form onSubmit={(e) => { e.preventDefault(); s.save.mutate(s.values); }} className="space-y-4">
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Field label="Matomo-URL" hint="z. B. https://statistik.example.de/">
+            <Input type="url" value={s.values.url ?? ""} onChange={(e) => s.set("url", e.target.value)} placeholder="https://…" />
+          </Field>
+          <Field label="token_auth" hint={secretHint(s.values.token_auth)}>
+            <SecretInput value={s.values.token_auth ?? ""} onChange={(v) => s.set("token_auth", v)} placeholder="Persönlicher API-Token" />
+          </Field>
+        </div>
+        <p className="text-xs text-slate-500 dark:text-slate-400">
+          Token in Matomo unter Persönlich → Sicherheit → Auth-Token anlegen; Leserechte genügen. Der Token wird nur im Formular-Body an Matomo gesendet und hier ausgeblendet gespeichert.
         </p>
         <SaveBar s={s} />
       </form>
@@ -191,26 +213,26 @@ function AiSettings({ server }: { server: Values }) {
   });
   const st = test.data;
   return (
-    <Card title="AI provider" description="Optional. Powers AI summaries, briefs and rewrite suggestions; nothing else depends on it.">
+    <Card title="KI-Anbieter" description="Optional. Für KI-Zusammenfassungen, Briefings und Umformulierungen; sonst hängt nichts davon ab.">
       <form onSubmit={(e) => { e.preventDefault(); test.reset(); s.save.mutate(s.values); }} className="space-y-4">
         <div className="grid gap-3 sm:grid-cols-2">
-          <Field label="Provider">
+          <Field label="Anbieter">
             <Select value={p} onChange={(e) => s.set("provider", e.target.value)}>
-              <option value="none">None</option>
-              <option value="ollama">Ollama (local models)</option>
-              <option value="openai_compatible">OpenAI-compatible API</option>
+              <option value="none">Keiner</option>
+              <option value="ollama">Ollama (lokale Modelle)</option>
+              <option value="openai_compatible">OpenAI-kompatible API</option>
             </Select>
           </Field>
           {p !== "none" && (
             <>
-              <Field label="Base URL" hint={p === "ollama" ? "Default: http://localhost:11434" : "The API root that serves /models and /chat/completions, e.g. https://api.openai.com/v1"}>
+              <Field label="Basis-URL" hint={p === "ollama" ? "Standard: http://localhost:11434" : "API-Wurzel mit /models und /chat/completions, z. B. https://api.openai.com/v1"}>
                 <Input type="url" required value={s.values.base_url ?? ""} onChange={(e) => s.set("base_url", e.target.value)} />
               </Field>
-              <Field label="Model" hint={p === "ollama" ? "A model you have pulled, e.g. llama3.1" : "Model identifier as the API expects it"}>
+              <Field label="Modell" hint={p === "ollama" ? "Ein geladenes Modell, z. B. llama3.1" : "Modellkennung, wie die API sie erwartet"}>
                 <Input required value={s.values.model ?? ""} onChange={(e) => s.set("model", e.target.value)} />
               </Field>
               {p === "openai_compatible" && (
-                <Field label="API key" hint={secretHint(s.values.api_key)}>
+                <Field label="API-Schlüssel" hint={secretHint(s.values.api_key)}>
                   <SecretInput value={s.values.api_key ?? ""} onChange={(v) => s.set("api_key", v)} />
                 </Field>
               )}
@@ -218,12 +240,12 @@ function AiSettings({ server }: { server: Values }) {
           )}
         </div>
         <Notice>
-          {p === "none" ? "No AI provider is configured. All crawling, auditing and reporting features work without one."
-            : p === "ollama" ? "Ollama runs models on your own hardware: free, private, and limited by your machine's memory and speed. Page content stays on this machine."
-            : "Prompts, including excerpts of page content, are sent to the configured API. Usage is billed by that provider under your key."}
+          {p === "none" ? "Kein KI-Anbieter eingerichtet. Crawlen, Audit und Berichte funktionieren auch ohne."
+            : p === "ollama" ? "Ollama betreibt Modelle auf deiner eigenen Hardware: kostenlos, privat und begrenzt durch Speicher und Tempo des Rechners. Seiteninhalte bleiben auf diesem Rechner."
+            : "Prompts samt Auszügen aus Seiteninhalten gehen an die eingerichtete API. Die Nutzung rechnet der Anbieter über deinen Schlüssel ab."}
         </Notice>
         <SaveBar s={s}>
-          <Button type="button" icon={<PlugZap className="h-4 w-4" />} loading={test.isPending} onClick={() => test.mutate()}>{s.dirty ? "Save & test connection" : "Test connection"}</Button>
+          <Button type="button" icon={<PlugZap className="h-4 w-4" />} loading={test.isPending} onClick={() => test.mutate()}>{s.dirty ? "Speichern & Verbindung testen" : "Verbindung testen"}</Button>
         </SaveBar>
         {test.error ? <ErrorBox error={test.error} /> : null}
         {st && !test.isPending && (
@@ -233,7 +255,7 @@ function AiSettings({ server }: { server: Values }) {
             </div>
             {Array.isArray(st.models) && (
               <div className="mt-2">
-                <div className="mb-1 text-xs text-slate-500 dark:text-slate-400">{st.models.length ? "Models available in Ollama (click one to use it):" : "Ollama has no models yet. Pull one with: ollama pull llama3.1"}</div>
+                <div className="mb-1 text-xs text-slate-500 dark:text-slate-400">{st.models.length ? "In Ollama verfügbare Modelle (anklicken zum Übernehmen):" : "Ollama hat noch keine Modelle. Eines laden mit: ollama pull llama3.1"}</div>
                 <div className="flex flex-wrap gap-1">
                   {st.models.map((m: string) => (
                     <button key={m} type="button" onClick={() => s.set("model", m)} aria-pressed={s.values.model === m}
@@ -256,32 +278,32 @@ function GscSettings({ server }: { server: Values }) {
   const s = useSection("gsc", server);
   const status = useQuery({ queryKey: ["gsc", "status"], queryFn: () => api.get("/gsc/status") });
   return (
-    <Card title="Google Search Console" description="OAuth client used to read your own Search Console data"
+    <Card title="Google Search Console" description="OAuth-Client zum Lesen deiner eigenen Search-Console-Daten"
       actions={status.data ? (
         <>
-          {status.data.client_configured ? <Badge tone="green">client configured</Badge> : <Badge tone="amber">client not configured</Badge>}
-          {status.data.connected ? <Badge tone="green">account connected</Badge> : <Badge>not connected</Badge>}
+          {status.data.client_configured ? <Badge tone="green">Client eingerichtet</Badge> : <Badge tone="amber">Client nicht eingerichtet</Badge>}
+          {status.data.connected ? <Badge tone="green">Konto verbunden</Badge> : <Badge>nicht verbunden</Badge>}
         </>
       ) : undefined}>
       <form onSubmit={(e) => { e.preventDefault(); s.save.mutate(s.values); }} className="space-y-4">
         <div className="grid gap-3 sm:grid-cols-2">
-          <Field label="OAuth client ID">
+          <Field label="OAuth-Client-ID">
             <Input value={s.values.client_id ?? ""} onChange={(e) => s.set("client_id", e.target.value)} placeholder="….apps.googleusercontent.com" autoComplete="off" />
           </Field>
-          <Field label="OAuth client secret" hint={secretHint(s.values.client_secret)}>
+          <Field label="OAuth-Client-Secret" hint={secretHint(s.values.client_secret)}>
             <SecretInput value={s.values.client_secret ?? ""} onChange={(v) => s.set("client_secret", v)} />
           </Field>
         </div>
         <div className="rounded-lg border border-slate-200 p-3 text-sm dark:border-slate-800">
-          <div className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Authorised redirect URI</div>
-          {status.isLoading ? <span className="text-slate-500 dark:text-slate-400">Loading…</span> : status.error ? <ErrorBox error={status.error} onRetry={() => status.refetch()} />
+          <div className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Autorisierte Weiterleitungs-URI</div>
+          {status.isLoading ? <span className="text-slate-500 dark:text-slate-400">Wird geladen…</span> : status.error ? <ErrorBox error={status.error} onRetry={() => status.refetch()} />
             : <code className="break-all text-slate-800 dark:text-slate-200">{status.data.redirect_uri}</code>}
           <ol className="mt-3 list-decimal space-y-1 pl-5 text-xs text-slate-600 dark:text-slate-400">
-            <li>In the {ext("https://console.cloud.google.com/apis/library/searchconsole.googleapis.com", "Google Cloud console")}, create a project and enable the “Google Search Console API”.</li>
-            <li>Configure the OAuth consent screen and add your Google account as a test user.</li>
-            <li>Create an OAuth client ID of type “Web application” and add the redirect URI above exactly as shown.</li>
-            <li>Paste the client ID and secret here and save.</li>
-            <li>Open <Link to="/search-console" className="font-medium text-brand-700 hover:underline dark:text-brand-300">Search Console</Link> and choose Connect.</li>
+            <li>In der {ext("https://console.cloud.google.com/apis/library/searchconsole.googleapis.com", "Google Cloud Console")} ein Projekt anlegen und die „Google Search Console API“ aktivieren.</li>
+            <li>OAuth-Zustimmungsbildschirm einrichten und dein Google-Konto als Testnutzer eintragen.</li>
+            <li>OAuth-Client-ID vom Typ „Webanwendung“ anlegen und die Weiterleitungs-URI oben exakt eintragen.</li>
+            <li>Client-ID und Secret hier einfügen und speichern.</li>
+            <li><Link to="/search-console" className="font-medium text-brand-700 hover:underline dark:text-brand-300">Search Console</Link> öffnen und Verbinden wählen.</li>
           </ol>
         </div>
         <SaveBar s={s} />
@@ -296,18 +318,19 @@ function Integrations() {
   const q = useQuery({ queryKey: ["settings"], queryFn: () => api.get("/settings"), enabled: isAdmin });
   if (!isAdmin) {
     return (
-      <Card title="Integrations">
-        <Notice tone="warn">Integration settings (SERP provider, PageSpeed key, AI provider, Search Console client) apply to the whole installation and can only be changed by an administrator.</Notice>
+      <Card title="Integrationen">
+        <Notice tone="warn">Integrationen (SERP-Anbieter, PageSpeed-Schlüssel, KI-Anbieter, Search-Console-Client, Matomo) gelten für die ganze Installation und können nur von Administratoren geändert werden.</Notice>
       </Card>
     );
   }
-  if (q.isLoading) return <Card title="Integrations"><Spinner /></Card>;
-  if (q.error) return <Card title="Integrations"><ErrorBox error={q.error} onRetry={() => q.refetch()} /></Card>;
+  if (q.isLoading) return <Card title="Integrationen"><Spinner /></Card>;
+  if (q.error) return <Card title="Integrationen"><ErrorBox error={q.error} onRetry={() => q.refetch()} /></Card>;
   const d = q.data ?? {};
   return (
     <>
       <SerpSettings server={d.serp ?? {}} />
       <PageSpeedSettings server={d.pagespeed ?? {}} />
+      <MatomoSettings server={d.matomo ?? {}} />
       <AiSettings server={d.ai ?? {}} />
       <GscSettings server={d.gsc ?? {}} />
     </>
@@ -319,30 +342,30 @@ function About() {
   const status = useQuery({ queryKey: ["auth-status"], queryFn: () => api.get("/auth/status") });
   const health = useQuery({ queryKey: ["health"], queryFn: () => api.get("/health"), retry: false });
   return (
-    <Card title="About">
+    <Card title="Über">
       <div className="grid gap-6 lg:grid-cols-2">
         <div>
           {status.isLoading ? <Spinner /> : status.error ? <ErrorBox error={status.error} onRetry={() => status.refetch()} /> : (
             <KeyValue items={[
-              ["Application", status.data.app],
+              ["Anwendung", status.data.app],
               ["Version", status.data.version],
-              ["Backend health", health.isLoading ? "Checking…" : health.error ? <Badge tone="red" title={health.error instanceof Error ? health.error.message : undefined}>unreachable</Badge>
+              ["Backend-Status", health.isLoading ? "Wird geprüft…" : health.error ? <Badge tone="red" title={health.error instanceof Error ? health.error.message : undefined}>nicht erreichbar</Badge>
                 : <Badge tone={health.data?.status === "ok" ? "green" : "amber"}>{health.data?.status ?? "unknown"}</Badge>],
-              ["Private networks", status.data.private_networks_allowed
-                ? <><Badge tone="amber">allowed</Badge><span className="ml-2 text-xs text-slate-500 dark:text-slate-400">Crawls and fetches may reach localhost and private IP ranges.</span></>
-                : <><Badge tone="green">blocked</Badge><span className="ml-2 text-xs text-slate-500 dark:text-slate-400">Requests to localhost and private IP ranges are refused (SSRF protection).</span></>],
-              ["Registration", status.data.registration_open ? <Badge tone="amber">open</Badge> : <Badge tone="green">closed</Badge>],
+              ["Private Netze", status.data.private_networks_allowed
+                ? <><Badge tone="amber">erlaubt</Badge><span className="ml-2 text-xs text-slate-500 dark:text-slate-400">Crawls und Abrufe dürfen localhost und private IP-Bereiche erreichen.</span></>
+                : <><Badge tone="green">gesperrt</Badge><span className="ml-2 text-xs text-slate-500 dark:text-slate-400">Anfragen an localhost und private IP-Bereiche werden abgelehnt (SSRF-Schutz).</span></>],
+              ["Registrierung", status.data.registration_open ? <Badge tone="amber">offen</Badge> : <Badge tone="green">geschlossen</Badge>],
             ]} />
           )}
         </div>
         <div className="space-y-2 text-sm text-slate-600 dark:text-slate-300">
-          <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Data sources and limitations</h3>
-          <p>Everything shown comes from one of three places: this toolkit's own crawler and analysis, Google's free APIs (PageSpeed Insights, your own Search Console property), or files you import.</p>
+          <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Datenquellen und Grenzen</h3>
+          <p>Alles Angezeigte stammt aus dem eigenen Crawler und der Analyse dieses Tools, aus kostenlosen Google-APIs (PageSpeed Insights, deine Search-Console-Property), aus Matomo oder aus Dateien, die du importierst.</p>
           <ul className="list-disc space-y-1 pl-5">
-            <li><strong>No search volume.</strong> Keyword volumes and difficulty scores need third-party data; they are only shown when you import them.</li>
-            <li><strong>No web-scale backlink index.</strong> Backlinks are limited to what you import (for example a Search Console links export) and can be re-verified by fetching the linking pages.</li>
-            <li><strong>Rankings</strong> come from Search Console (your site only) or from the SERP provider you configure, with that provider's limits.</li>
-            <li><strong>Indexing status</strong> can only be confirmed in Search Console; the crawler reports whether a page is <em>indexable</em>.</li>
+            <li><strong>Kein Suchvolumen.</strong> Keyword-Volumen und Schwierigkeitswerte brauchen Fremddaten; sie erscheinen nur nach Import.</li>
+            <li><strong>Kein eigener Backlink-Index.</strong> Backlinks beschränken sich auf Importe (z. B. den Links-Export der Search Console) und lassen sich durch Abrufen der verweisenden Seiten prüfen.</li>
+            <li><strong>Rankings</strong> kommen aus der Search Console (nur eigene Website) oder vom eingerichteten SERP-Anbieter mit dessen Grenzen.</li>
+            <li><strong>Indexierungsstatus</strong> lässt sich nur in der Search Console bestätigen; der Crawler meldet, ob eine Seite <em>indexierbar</em> ist.</li>
           </ul>
         </div>
       </div>
@@ -353,7 +376,7 @@ function About() {
 export default function Settings() {
   return (
     <>
-      <PageHeader title="Settings" description="Your account, the integrations this installation uses, and information about the instance." />
+      <PageHeader title="Einstellungen" description="Dein Konto, die Integrationen dieser Installation und Informationen zur Instanz." />
       <div className="space-y-4">
         <Account />
         <Integrations />

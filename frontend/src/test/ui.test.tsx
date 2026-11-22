@@ -30,7 +30,7 @@ describe("DataTable", () => {
 
   it("shows an empty state when there are no rows", () => {
     render(<DataTable columns={columns} rows={[]} rowKey={(r) => r.id} />);
-    expect(screen.getByText("Nothing to show")).toBeInTheDocument();
+    expect(screen.getByText("Nichts anzuzeigen")).toBeInTheDocument();
   });
 });
 
@@ -38,26 +38,26 @@ describe("Pagination", () => {
   it("disables previous on the first page and moves forward", () => {
     const onPage = vi.fn();
     render(<Pagination page={1} perPage={10} total={35} onPage={onPage} />);
-    expect(screen.getByLabelText("Previous page")).toBeDisabled();
-    fireEvent.click(screen.getByLabelText("Next page"));
+    expect(screen.getByLabelText("Vorherige Seite")).toBeDisabled();
+    fireEvent.click(screen.getByLabelText("Nächste Seite"));
     expect(onPage).toHaveBeenCalledWith(2);
-    expect(screen.getByText(/1–10 of 35/)).toBeInTheDocument();
+    expect(screen.getByText(/1–10 von 35/)).toBeInTheDocument();
   });
 
   it("shows only a row count when everything fits on one page", () => {
     render(<Pagination page={1} perPage={50} total={3} onPage={() => {}} />);
-    expect(screen.getByText("3 rows")).toBeInTheDocument();
-    expect(screen.queryByLabelText("Next page")).toBeNull();
+    expect(screen.getByText("3 Zeilen")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Nächste Seite")).toBeNull();
   });
 });
 
 describe("badges", () => {
   it("renders severity, status codes and data provenance", () => {
     render(<><SeverityBadge severity="critical" /><StatusCode code={404} /><StatusCode code={null} error="timeout" /><DataBadge kind="estimated" /></>);
-    expect(screen.getByText("critical")).toBeInTheDocument();
+    expect(screen.getByText("kritisch")).toBeInTheDocument();
     expect(screen.getByText("404")).toBeInTheDocument();
-    expect(screen.getByText("error")).toHaveAttribute("title", "timeout");
-    expect(screen.getByText("estimated").getAttribute("title")).toMatch(/estimate/i);
+    expect(screen.getByText("Fehler")).toHaveAttribute("title", "timeout");
+    expect(screen.getByText("geschätzt").getAttribute("title")).toMatch(/Schätzung/i);
   });
 });
 
@@ -88,7 +88,7 @@ describe("format helpers", () => {
     expect(fmtBytes(null)).toBe("–");
     expect(fmtMs(850)).toBe("850 ms");
     expect(fmtMs(1500)).toBe("1.50 s");
-    expect(fmtPct(0.1234)).toBe("12.3%");
+    expect(fmtPct(0.1234)).toBe("12,3 %");
     expect(shortUrl("https://example.com/a?b=1", "https://example.com/")).toBe("/a?b=1");
     expect(shortUrl("https://other.com/x", "https://example.com/")).toBe("other.com/x");
     expect(scoreColor(90)).not.toBe(scoreColor(40));

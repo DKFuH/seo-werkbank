@@ -1,10 +1,10 @@
-export const fmtInt = (n: number | null | undefined) => (n === null || n === undefined ? "–" : Math.round(n).toLocaleString("en-US"));
+export const fmtInt = (n: number | null | undefined) => (n === null || n === undefined ? "–" : Math.round(n).toLocaleString("de-DE"));
 
 export const fmtNum = (n: number | null | undefined, digits = 1) =>
-  n === null || n === undefined ? "–" : n.toLocaleString("en-US", { maximumFractionDigits: digits });
+  n === null || n === undefined ? "–" : n.toLocaleString("de-DE", { maximumFractionDigits: digits });
 
 export const fmtPct = (ratio: number | null | undefined, digits = 1) =>
-  ratio === null || ratio === undefined ? "–" : `${(ratio * 100).toFixed(digits)}%`;
+  ratio === null || ratio === undefined ? "–" : `${(ratio * 100).toFixed(digits).replace(".", ",")} %`;
 
 export function fmtBytes(bytes: number | null | undefined): string {
   if (bytes === null || bytes === undefined) return "–";
@@ -25,21 +25,21 @@ function parseDate(iso: string): Date {
 
 export function fmtDate(iso: string | null | undefined): string {
   if (!iso) return "–";
-  return parseDate(iso).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+  return parseDate(iso).toLocaleDateString("de-DE", { year: "numeric", month: "short", day: "numeric" });
 }
 
 export function fmtDateTime(iso: string | null | undefined): string {
   if (!iso) return "–";
-  return parseDate(iso).toLocaleString(undefined, { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+  return parseDate(iso).toLocaleString("de-DE", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
 }
 
 export function timeAgo(iso: string | null | undefined): string {
-  if (!iso) return "never";
+  if (!iso) return "nie";
   const s = Math.max(0, (Date.now() - parseDate(iso).getTime()) / 1000);
-  if (s < 60) return "just now";
-  if (s < 3600) return `${Math.floor(s / 60)} min ago`;
-  if (s < 86400) return `${Math.floor(s / 3600)} h ago`;
-  return `${Math.floor(s / 86400)} d ago`;
+  if (s < 60) return "gerade eben";
+  if (s < 3600) return `vor ${Math.floor(s / 60)} Min.`;
+  if (s < 86400) return `vor ${Math.floor(s / 3600)} Std.`;
+  return `vor ${Math.floor(s / 86400)} Tg.`;
 }
 
 export function shortUrl(url: string, base?: string): string {
@@ -62,4 +62,22 @@ export function scoreColor(score: number | null | undefined): string {
   return score >= 85 ? "#16a34a" : score >= 65 ? "#ca8a04" : "#dc2626";
 }
 
-export const titleCase = (s: string) => s.replace(/[_-]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+/** Deutsche Bezeichnungen für Werte, die das Backend als englische Schlüssel liefert. */
+export const LABELS: Record<string, string> = {
+  critical: "kritisch", high: "hoch", medium: "mittel", low: "niedrig",
+  availability: "Erreichbarkeit", performance: "Performance", redirects: "Weiterleitungen", links: "Links", images: "Bilder",
+  architecture: "Seitenarchitektur", indexability: "Indexierbarkeit", content: "Inhalt", international: "International",
+  url: "URL-Struktur", security: "Sicherheit", mobile: "Mobil", html: "HTML", social: "Social Media",
+  structured_data: "Strukturierte Daten", sitemap: "Sitemap",
+  informational: "informational", commercial: "kommerziell", transactional: "transaktional", navigational: "navigational", local: "lokal",
+  queued: "in Warteschlange", running: "läuft", completed: "abgeschlossen", failed: "fehlgeschlagen", cancelled: "abgebrochen",
+  pending: "ausstehend", ok: "ok", error: "Fehler", warning: "Warnung", info: "Info",
+  page: "Seite", site: "Website", start: "Start", link: "Link", redirect: "Weiterleitung",
+  measured: "gemessen", estimated: "geschätzt", imported: "importiert", unavailable: "nicht verfügbar",
+  desktop: "Desktop", mobile_strategy: "Mobil", live: "live", lost: "verloren", unknown: "unbekannt",
+  uptime: "Erreichbarkeit", metadata: "Metadaten", audit: "Audit",
+  question: "Frage", suggestion: "Vorschlag", related: "verwandt",
+  canonicalised: "per Canonical verwiesen", noindex: "noindex", blocked: "gesperrt", not_html: "kein HTML",
+  pass: "ok", warn: "prüfen", fail: "Problem",
+};
+export const titleCase = (s: string) => LABELS[s] ?? s.replace(/[_-]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());

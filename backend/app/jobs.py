@@ -63,10 +63,10 @@ class JobManager:
             limit = get_settings().max_jobs_per_user
             active = sum(1 for jid, owner in self._owners.items() if owner == owner_id and jid in self._tasks)
             if active >= limit:
-                raise JobLimitError(f"You already have {active} background jobs queued or running (limit {limit}). "
-                                    "Wait for some to finish or cancel them first.")
+                raise JobLimitError(f"Es laufen oder warten bereits {active} Hintergrundaufgaben (Limit {limit}). "
+                                    "Warten, bis einige fertig sind, oder zuerst abbrechen.")
         with session_scope() as db:
-            job = Job(kind=kind, owner_id=owner_id, site_id=site_id, status="queued", message="Waiting for a free worker")
+            job = Job(kind=kind, owner_id=owner_id, site_id=site_id, status="queued", message="Wartet auf einen freien Arbeitsplatz")
             db.add(job)
             db.flush()
             job_id = job.id
@@ -128,6 +128,6 @@ def mark_interrupted_jobs() -> None:
 
     with session_scope() as db:
         for job in db.query(Job).filter(Job.status.in_(("queued", "running"))):
-            job.status, job.error, job.finished_at = "failed", "Interrupted by a server restart", utcnow()
+            job.status, job.error, job.finished_at = "failed", "Durch Serverneustart unterbrochen", utcnow()
         for crawl in db.query(Crawl).filter(Crawl.status.in_(("queued", "running"))):
-            crawl.status, crawl.error, crawl.finished_at = "failed", "Interrupted by a server restart", utcnow()
+            crawl.status, crawl.error, crawl.finished_at = "failed", "Durch Serverneustart unterbrochen", utcnow()

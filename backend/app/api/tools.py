@@ -4,18 +4,22 @@ from __future__ import annotations
 import asyncio
 import json
 from typing import Any, Literal
+from urllib.parse import urlsplit
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile
 from pydantic import BaseModel, Field
 from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 
+from ..audit.geo import analyse_geo
 from ..audit.schema_validator import SPECS, TEMPLATES, all_types, generate_template, validate_jsonld
-from ..content.optimizer import analyse_content
+from ..content.optimizer import analyse_content, parse_draft
+from ..content.wdf_idf import analyse_wdf_idf
 from ..crawler.fetcher import Fetcher
 from ..crawler.parser import parse_html
 from ..db import get_db
 from ..integrations import pagespeed as psi
+from ..integrations.gsc import parse_number
 from ..keywords import research
 from ..models import GscRow, Keyword, Page, PageSpeedResult, User
 from ..reports.exports import to_csv, to_xlsx
@@ -52,17 +56,17 @@ async def keyword_suggest(body: SuggestIn, user: User = Depends(current_user)) -
     result = await research.suggest(body.seed, body.lang, body.country.lower(), list(body.sources), body.depth)
     result["clusters"] = research.cluster_keywords([k["keyword"] for k in result["keywords"]], seed=body.seed)[:60]
     result["data_notes"] = [
-        "Suggestions are real completions returned by the listed public endpoints at request time.",
-        "Search volume, CPC and competition are NOT available from these sources and are never estimated here. "
-        "Import a Google Ads Keyword Planner CSV or use Search Console impressions for measured demand.",
-        "Intent labels are rule-based estimates.",
+        "Die Vorschläge sind echte Vervollständigungen der genannten öffentlichen Dienste zum Abfragezeitpunkt.",
+        "Suchvolumen, CPC und Wettbewerb liefern diese Quellen NICHT, und hier wird nichts davon geschätzt. "
+        "Für gemessene Nachfrage eine Keyword-Planer-CSV importieren oder Search-Console-Impressionen nutzen.",
+        "Suchintentionen sind regelbasierte Schätzungen.",
     ]
     return result
 
 
 @router.post("/keywords/cluster")
 def keyword_cluster(body: ClusterIn, user: User = Depends(current_user)) -> dict:
-    return {"clusters": research.cluster_keywords(body.keywords, body.threshold, body.seed), "method": "Lexical (shared stemmed terms, Jaccard similarity)"}
+    return {"clusters": research.cluster_keywords(body.keywords, body.threshold, body.seed), "method": "Lexikalisch (gemeinsame Wortstämme, Jaccard-Ähnlichkeit)"}
 
 
 @router.post("/keywords/intent")
@@ -91,8 +95,8 @@ def list_keywords(site_id: int, user: User = Depends(current_user), db: Session 
                       "volume_status": "imported" if imported.get("search_volume") is not None else "unavailable",
                       "created_at": k.created_at.isoformat()})
     return {"items": items, "has_gsc_data": bool(gsc),
-            "legend": {"gsc": "Measured by Google Search Console for your site", "imported": "Values from a file you imported",
-                       "unavailable": "No legitimate free source; left empty rather than guessed"}}
+            "legend": {"gsc": "Von der Google Search Console für deine Website gemessen", "imported": "Werte aus einer importierten Datei",
+                       "unavailable": "Keine legitime kostenlose Quelle; lieber leer als geraten"}}
 
 
 @router.post("/sites/{site_id}/keywords", status_code=201)
@@ -130,8 +134,15 @@ async def import_keywords(site_id: int, file: UploadFile, user: User = Depends(c
     except csv.Error:
         dialect = csv.excel
     reader = csv.DictReader(io.StringIO("\n".join(lines[start:])), dialect=dialect)
-    alias = {"keyword": ("keyword", "keywords", "search term", "query"), "search_volume": ("avg. monthly searches", "search volume", "volume", "avg monthly searches"),
-             "competition": ("competition", "competition (indexed value)"), "cpc_low": ("top of page bid (low range)",), "cpc_high": ("top of page bid (high range)", "cpc")}
+    alias = {"keyword": ("keyword", "keywords", "search term", "query", "suchbegriff", "suchanfrage"),
+             "search_volume": ("avg. monthly searches", "search volume", "volume", "avg monthly searches",
+                               "durchschnittl. monatliche suchanfragen", "durchschn. monatliche suchanfragen", "suchvolumen", "monatliche suchanfragen"),
+             "competition": ("competition", "competition (indexed value)", "wettbewerb", "wettbewerb (indexierter wert)"),
+             "cpc_low": ("top of page bid (low range)", "gebot für obere positionen auf der seite (niedriger bereich)"),
+             "cpc_high": ("top of page bid (high range)", "cpc", "gebot für obere positionen auf der seite (hoher bereich)")}
+    german = any(
+        (h or "").strip().lower() in ("suchbegriff", "wettbewerb", "durchschnittl. monatliche suchanfragen", "durchschn. monatliche suchanfragen", "suchvolumen")
+        for h in (reader.fieldnames or []))
     existing = {k.keyword: k for k in db.scalars(select(Keyword).where(Keyword.site_id == site.id))}
     added = updated = 0
     for row in reader:
@@ -148,7 +159,7 @@ async def import_keywords(site_id: int, file: UploadFile, user: User = Depends(c
         for f in ("search_volume", "cpc_low", "cpc_high"):
             if f in rec:
                 try:
-                    rec[f] = float(rec[f].replace(",", "").replace("$", "").replace("€", ""))
+                    rec[f] = parse_number(rec[f].replace("$", "").replace("€", ""), german, strict=True)
                 except ValueError:
                     rec.pop(f)
         rec["file"] = (file.filename or "")[:120]
@@ -178,7 +189,7 @@ def keyword_mapping(site_id: int, user: User = Depends(current_user), db: Sessio
     crawl = latest_crawl(db, site.id)
     keywords = list(db.scalars(select(Keyword.keyword).where(Keyword.site_id == site.id).order_by(Keyword.keyword).limit(500)))
     if not crawl:
-        return {"items": [], "crawl_id": None, "message": "Run a crawl first so keywords can be mapped to pages."}
+        return {"items": [], "crawl_id": None, "message": "Zuerst crawlen, damit Keywords Seiten zugeordnet werden können."}
     pages = [{"url": u, "title": t, "h1": h, "meta_description": d, "text": (x or "")[:6000]} for u, t, h, d, x in db.execute(
         select(Page.url, Page.title, Page.h1, Page.meta_description, Page.text).where(Page.crawl_id == crawl.id, Page.indexable.is_(True)).order_by(Page.pagerank.desc()).limit(1500))]
     items = research.map_keywords(keywords, pages)
@@ -263,13 +274,13 @@ async def content_analyze(body: ContentIn, user: User = Depends(current_user), d
         try:
             urls = [r["url"] for r in (await serp.search(get_setting(db, "serp"), body.keyword))["results"][:8]]
         except serp.SerpError as exc:
-            notes.append(f"SERP lookup skipped: {exc}")
+            notes.append(f"SERP-Abfrage übersprungen: {exc}")
     if urls:
         pages = await serp.fetch_pages(urls, limit=10)
         competitors = [{"url": u, **p} for u, p in pages.items() if p.get("status") == 200]
         failed = [u for u, p in pages.items() if p.get("status") != 200]
         if failed:
-            notes.append(f"{len(failed)} competitor page(s) could not be fetched.")
+            notes.append(f"{len(failed)} Wettbewerberseite(n) nicht ladbar.")
     site_pages = None
     if body.site_id:
         site = get_site_for(db, user, body.site_id)
@@ -283,13 +294,93 @@ async def content_analyze(body: ContentIn, user: User = Depends(current_user), d
             sug = await research.suggest(body.keyword, sources=["google", "bing"], depth="basic")
             questions = [k["keyword"] for k in sug["keywords"] if k["type"] == "question"][:15]
         except Exception as exc:  # noqa: BLE001
-            notes.append(f"Question suggestions unavailable: {exc}")
+            notes.append(f"Fragevorschläge nicht verfügbar: {exc}")
     result = analyse_content(body.content, body.keyword, title=body.title, meta_description=body.meta_description, url=body.url,
                              secondary_keywords=body.secondary_keywords, competitors=competitors, site_pages=site_pages,
                              question_keywords=questions)
     result["notes"] += notes
     result["competitors"] = [{"url": c["url"], "title": c.get("title"), "word_count": c.get("word_count")} for c in competitors]
+    # WDF*IDF des Entwurfs gegen dieselben Wettbewerberseiten (keine zusätzlichen Abrufe).
+    if competitors:
+        draft = parse_draft(body.content, body.url or "https://draft.invalid/")
+        own = {"url": body.url or "Entwurf", "text": draft["text"], "headings": draft["headings"], "title": body.title}
+        result["wdf_idf"] = analyse_wdf_idf(own, competitors, keyword=body.keyword, lang="de", limit=40)
     return result
+
+
+class WdfIdfIn(BaseModel):
+    keyword: str = Field("", max_length=200)
+    my_url: str | None = Field(None, max_length=2048)
+    my_content: str | None = Field(None, max_length=400_000)
+    competitor_urls: list[str] = Field(default_factory=list, max_length=10)
+    use_serp: bool = False
+    lang: str = Field("de", pattern=r"^[a-z]{2}$")
+    country: str = Field("de", pattern=r"^[a-zA-Z]{2}$")
+    ngram: int = Field(1, ge=1, le=2)
+    limit: int = Field(50, ge=10, le=150)
+
+
+@router.post("/content/wdf-idf")
+async def content_wdf_idf(body: WdfIdfIn, user: User = Depends(current_user), db: Session = Depends(get_db)) -> dict:
+    """WDF*IDF of the own page (URL or pasted text) against competitor pages."""
+    notes: list[str] = []
+    urls = [checked_url(u) for u in body.competitor_urls]
+    if body.use_serp and not urls:
+        if not body.keyword.strip():
+            raise HTTPException(400, "Für die SERP-Abfrage wird ein Keyword benötigt.")
+        try:
+            found = await serp.search(get_setting(db, "serp"), body.keyword, body.country.lower(), body.lang)
+            urls = [r["url"] for r in found["results"][:10]]
+        except serp.SerpError as exc:
+            raise HTTPException(400, str(exc)) from exc
+    my_url = checked_url(body.my_url) if body.my_url else None
+    urls = [u for u in dict.fromkeys(urls) if u != my_url]
+    if not urls:
+        raise HTTPException(400, "Mindestens eine Wettbewerber-URL angeben (oder SERP-Anbieter nutzen).")
+    pages = await serp.fetch_pages(urls + ([my_url] if my_url and not body.my_content else []), limit=11)
+    own = None
+    if body.my_content and body.my_content.strip():
+        draft = parse_draft(body.my_content, my_url or "https://draft.invalid/")
+        own = {"url": my_url or "Eigener Text", "text": draft["text"], "headings": draft["headings"], "title": draft["title"]}
+    elif my_url:
+        p = pages.get(my_url, {})
+        if p.get("status") == 200:
+            own = {"url": my_url, **p}
+        else:
+            notes.append(f"Eigene URL nicht ladbar: {p.get('error') or 'unbekannter Fehler'}")
+    competitors = [{"url": u, **pages[u]} for u in urls if pages.get(u, {}).get("status") == 200]
+    failed = [{"url": u, "error": pages.get(u, {}).get("error")} for u in urls if pages.get(u, {}).get("status") != 200]
+    result = analyse_wdf_idf(own, competitors, keyword=body.keyword, lang=body.lang, limit=body.limit, ngram=body.ngram)
+    result["notes"] = notes + result["notes"]
+    result["failed"] = failed
+    return result
+
+
+class GeoIn(BaseModel):
+    url: str = Field(max_length=2048)
+
+
+@router.post("/geo/check")
+async def geo_check(body: GeoIn, user: User = Depends(current_user)) -> dict:
+    """GEO checklist for one URL: AI crawler access, llms.txt, entity data, answer structure and evidence."""
+    url = checked_url(body.url)
+    parts = urlsplit(url)
+    root = f"{parts.scheme}://{parts.netloc}"
+    async with Fetcher(timeout_s=20, retries=1) as fetcher:
+        res = await fetcher.fetch_following(url, max_body=5_000_000)
+        if res.status != 200 or not res.is_html:
+            raise HTTPException(400, f"Seite nicht ladbar: {res.error or f'HTTP {res.status}'}")
+        robots, llms, ai_txt = await asyncio.gather(
+            fetcher.fetch_following(root + "/robots.txt", max_body=500_000),
+            fetcher.fetch_following(root + "/llms.txt", max_body=500_000),
+            fetcher.fetch_following(root + "/.well-known/ai.txt", max_body=200_000),
+        )
+    final = res.final_url or url
+    parsed = await asyncio.to_thread(parse_html, res.body, final, res.headers.get("content-type", ""))
+    robots_text = robots.body.decode("utf-8", "replace") if robots.status == 200 else ""
+    llms_text = llms.body.decode("utf-8", "replace")[:5000] if llms.status == 200 else ""
+    return analyse_geo(final, res.body, parsed, robots_text=robots_text, robots_status=robots.status,
+                       llms_status=llms.status, llms_text=llms_text, ai_txt_status=ai_txt.status, headers=res.headers)
 
 
 class FetchIn(BaseModel):
@@ -303,7 +394,7 @@ async def content_fetch(body: FetchIn, user: User = Depends(current_user)) -> di
     async with Fetcher(timeout_s=20, retries=1) as fetcher:
         res = await fetcher.fetch_following(url, max_body=3_000_000)
     if res.status != 200 or not res.is_html:
-        raise HTTPException(400, f"Could not load the page: {res.error or f'HTTP {res.status}'}")
+        raise HTTPException(400, f"Seite nicht ladbar: {res.error or f'HTTP {res.status}'}")
     p = await asyncio.to_thread(parse_html, res.body, res.final_url or url, res.headers.get("content-type", ""))
     md = "\n\n".join(f"{'#' * h['level']} {h['text']}" for h in p.headings[:3]) if not p.text else ""
     try:
@@ -344,17 +435,17 @@ async def schema_validate(body: SchemaValidateIn, user: User = Depends(current_u
                 from ..crawler.parser import _flatten_jsonld
                 items = _flatten_jsonld(json.loads(raw))
             except json.JSONDecodeError as exc:
-                parse_errors = [f"Invalid JSON: {exc.msg} (line {exc.lineno}, column {exc.colno})"]
+                parse_errors = [f"Ungültiges JSON: {exc.msg} (Zeile {exc.lineno}, Spalte {exc.colno})"]
     elif body.url:
         url = checked_url(body.url)
         async with Fetcher(timeout_s=20, retries=1) as fetcher:
             res = await fetcher.fetch_following(url, max_body=3_000_000)
         if res.status != 200 or not res.is_html:
-            raise HTTPException(400, f"Could not load the page: {res.error or f'HTTP {res.status}'}")
+            raise HTTPException(400, f"Seite nicht ladbar: {res.error or f'HTTP {res.status}'}")
         page = await asyncio.to_thread(parse_html, res.body, res.final_url or url, res.headers.get("content-type", ""))
         items, parse_errors, microdata = page.jsonld, page.jsonld_errors, page.microdata_types
     else:
-        raise HTTPException(422, "Provide a URL or JSON-LD markup")
+        raise HTTPException(422, "URL oder JSON-LD-Markup angeben")
     result = validate_jsonld(items)
     return {**result, "parse_errors": parse_errors, "items": items[:40], "all_types": all_types(items), "microdata_types": microdata,
             "valid": not parse_errors and result["errors"] == 0}
@@ -365,7 +456,7 @@ def schema_generate(body: SchemaGenerateIn, user: User = Depends(current_user)) 
     try:
         doc = generate_template(body.type, body.values)
     except KeyError:
-        raise HTTPException(404, f"No template for '{body.type}'") from None
+        raise HTTPException(404, f"Keine Vorlage für '{body.type}'") from None
     text = json.dumps(doc, indent=2, ensure_ascii=False).replace("</", "<\\/")  # safe to embed inside <script>
     return {"jsonld": doc, "html": f'<script type="application/ld+json">\n{text}\n</script>', "validation": validate_jsonld([doc])}
 
@@ -381,9 +472,9 @@ class SpeedIn(BaseModel):
 @router.get("/pagespeed/status")
 def pagespeed_status(user: User = Depends(current_user), db: Session = Depends(get_db)) -> dict:
     return {"psi_key_configured": bool(get_setting(db, "pagespeed").get("api_key")), "local_lighthouse": bool(psi.lighthouse_path()),
-            "notes": ["The PageSpeed Insights API is free; without a key the anonymous quota is small and shared.",
-                      "Field data (real-user Core Web Vitals incl. INP) comes from the Chrome UX Report and exists only for pages with enough traffic.",
-                      "Local Lighthouse gives lab data only; install with: npm install -g lighthouse"]}
+            "notes": ["Die PageSpeed-Insights-API ist kostenlos; ohne Schlüssel ist das anonyme Kontingent klein und geteilt.",
+                      "Felddaten (Core Web Vitals echter Nutzer inkl. INP) stammen aus dem Chrome UX Report und gibt es nur für Seiten mit genug Traffic.",
+                      "Lokales Lighthouse liefert nur Labordaten; Installation: npm install -g lighthouse"]}
 
 
 @router.post("/pagespeed/run")
@@ -393,7 +484,7 @@ async def pagespeed_run(body: SpeedIn, user: User = Depends(current_user), db: S
     try:
         if body.source == "local":
             if not user.is_admin:  # starts a full Chrome on the server
-                raise HTTPException(403, "Local Lighthouse runs are limited to administrators")
+                raise HTTPException(403, "Lokale Lighthouse-Läufe sind Administratoren vorbehalten")
             data = await psi.run_local_lighthouse(url, body.strategy)
         else:
             data = await psi.run_psi(url, body.strategy, get_setting(db, "pagespeed").get("api_key", ""))
@@ -423,5 +514,5 @@ def pagespeed_history(site_id: int | None = None, url: str | None = None, limit:
 def pagespeed_result(result_id: int, user: User = Depends(current_user), db: Session = Depends(get_db)) -> dict:
     r = db.get(PageSpeedResult, result_id)
     if r is None or r.owner_id != user.id:
-        raise HTTPException(404, "Result not found")
+        raise HTTPException(404, "Ergebnis nicht gefunden")
     return {"id": r.id, "url": r.url, "created_at": r.created_at.isoformat(), **(r.data or {})}

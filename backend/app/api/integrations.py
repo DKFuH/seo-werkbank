@@ -16,6 +16,7 @@ from sqlalchemy.orm import Session
 from ..audit.rules import RULES, rule_dict
 from ..db import get_db, session_scope
 from ..integrations import ai, gsc
+from ..integrations import matomo as mt
 from ..jobs import jobs
 from ..models import Alert, Backlink, Citation, Crawl, GscRow, Issue, Link, Monitor, Page, Site, User, utcnow
 from ..reports.exports import to_csv, to_xlsx
@@ -73,7 +74,7 @@ async def gsc_exchange(body: GscExchangeIn, user: User = Depends(current_user), 
         await gsc.exchange_code(db, user.id, body.code)
         db.commit()
     except gsc.GscError as exc:
-        raise HTTPException(400, "Google rejected the request. Check the OAuth client settings and try again.") from exc
+        raise HTTPException(400, "Google hat die Anfrage abgelehnt. OAuth-Client-Einstellungen prüfen und erneut versuchen.") from exc
     return {"connected": True}
 
 
@@ -100,13 +101,13 @@ class GscSyncIn(BaseModel):
 async def gsc_sync(site_id: int, body: GscSyncIn | None = None, user: User = Depends(current_user), db: Session = Depends(get_db)) -> dict:
     site = get_site_for(db, user, site_id)
     if not site.gsc_property:
-        raise HTTPException(400, "Choose a Search Console property for this site first")
+        raise HTTPException(400, "Zuerst eine Search-Console-Property für diese Website wählen")
     if not gsc.is_connected(db, user.id):
-        raise HTTPException(400, "Search Console is not connected")
+        raise HTTPException(400, "Die Search Console ist nicht verbunden")
     days, prop, uid, sid = (body or GscSyncIn()).days, site.gsc_property, user.id, site.id
 
     async def _job(ctx):
-        ctx.update(0.1, "Downloading Search Console data", force=True)
+        ctx.update(0.1, "Search-Console-Daten werden geladen", force=True)
         with session_scope() as s:
             return await gsc.sync(s, uid, sid, prop, days)
 
@@ -305,7 +306,7 @@ def create_monitor(site_id: int, body: MonitorIn, user: User = Depends(current_u
 def _get_monitor(db: Session, user: User, monitor_id: int) -> Monitor:
     m = db.get(Monitor, monitor_id)
     if m is None:
-        raise HTTPException(404, "Monitor not found")
+        raise HTTPException(404, "Monitor nicht gefunden")
     get_site_for(db, user, m.site_id)
     return m
 
@@ -393,19 +394,20 @@ class SettingsIn(BaseModel):
     pagespeed: dict[str, str] | None = None
     ai: dict[str, str] | None = None
     gsc: dict[str, str] | None = None
+    matomo: dict[str, str] | None = None
 
 
 @router.put("/settings")
 def write_settings(body: SettingsIn, user: User = Depends(admin_user), db: Session = Depends(get_db)) -> dict:
     data = body.model_dump(exclude_none=True)
     if "serp" in data and data["serp"].get("provider") not in (None, "none", "searxng", "google_cse", "brave"):
-        raise HTTPException(422, "Unknown SERP provider")
+        raise HTTPException(422, "Unbekannter SERP-Anbieter")
     if "ai" in data and data["ai"].get("provider") not in (None, "none", "ollama", "openai_compatible"):
-        raise HTTPException(422, "Unknown AI provider")
+        raise HTTPException(422, "Unbekannter KI-Anbieter")
     for key, value in data.items():
         for k, v in value.items():
             if len(v) > 2048:
-                raise HTTPException(422, f"Value for {key}.{k} is too long")
+                raise HTTPException(422, f"Wert für {key}.{k} ist zu lang")
             if k.endswith("url") and v:
                 parts = urlsplit(v)
                 if parts.scheme not in ("http", "https") or not parts.hostname:
@@ -415,6 +417,39 @@ def write_settings(body: SettingsIn, user: User = Depends(admin_user), db: Sessi
         set_setting(db, key, value)
     db.commit()
     return read_settings(user, db)
+
+
+# ----------------------------------------------------------------------------- Matomo
+@router.get("/matomo/sites")
+async def matomo_sites(user: User = Depends(current_user), db: Session = Depends(get_db)) -> dict:
+    try:
+        return {"sites": await mt.sites(get_setting(db, "matomo"))}
+    except mt.MatomoError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+
+@router.get("/sites/{site_id}/matomo/overview")
+async def matomo_overview(site_id: int, days: int = Query(30, ge=1, le=365), id_site: int | None = Query(None, ge=1),
+                          user: User = Depends(current_user), db: Session = Depends(get_db)) -> dict:
+    site = get_site_for(db, user, site_id)
+    settings = get_setting(db, "matomo")
+    try:
+        if id_site is None:
+            id_site = mt.match_site(await mt.sites(settings), site.url)
+            if id_site is None:
+                raise HTTPException(400, "Keine Matomo-Website mit gleicher Domain gefunden; bitte Matomo-Site-ID wählen.")
+        data = await mt.overview(settings, id_site, days)
+    except mt.MatomoError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    crawl = latest_crawl(db, site.id)
+    crawl_pages = []
+    if crawl:
+        crawl_pages = [{"id": i, "url": u, "title": t, "indexable": ix, "word_count": w, "inlinks": il, "issue_count": ic}
+                       for i, u, t, ix, w, il, ic in db.execute(
+                           select(Page.id, Page.url, Page.title, Page.indexable, Page.word_count, Page.inlinks, Page.issue_count)
+                           .where(Page.crawl_id == crawl.id, Page.is_html.is_(True)).limit(20000))]
+    joined = mt.join_crawl(data.pop("pages"), crawl_pages)
+    return {**data, **joined, "crawl_id": crawl.id if crawl else None}
 
 
 # ----------------------------------------------------------------------------- AI
@@ -448,7 +483,7 @@ def _audit_context(db: Session, crawl: Crawl) -> dict:
 def _page_context(db: Session, crawl: Crawl, page_id: int) -> dict:
     p = db.get(Page, page_id)
     if p is None or p.crawl_id != crawl.id:
-        raise HTTPException(404, "Page not found")
+        raise HTTPException(404, "Seite nicht gefunden")
     text = db.scalar(select(Page.text).where(Page.id == p.id)) or ""
     data = p.data or {}
     return {"url": p.url, "title": p.title, "meta_description": p.meta_description, "h1": p.h1, "word_count": p.word_count,
@@ -460,7 +495,7 @@ def _page_context(db: Session, crawl: Crawl, page_id: int) -> dict:
 @router.post("/ai/run")
 async def ai_run(body: AITaskIn, user: User = Depends(current_user), db: Session = Depends(get_db)) -> dict:
     if body.task not in ai.TASKS:
-        raise HTTPException(404, "Unknown AI task")
+        raise HTTPException(404, "Unbekannte KI-Aufgabe")
     needs = ai.TASKS[body.task]["needs"]
     crawl = get_crawl_for(db, user, body.crawl_id) if body.crawl_id else None
     site = get_site_for(db, user, body.site_id) if body.site_id else (db.get(Site, crawl.site_id) if crawl else None)
@@ -468,7 +503,7 @@ async def ai_run(body: AITaskIn, user: User = Depends(current_user), db: Session
         crawl = latest_crawl(db, site.id)
     data: dict[str, Any] = {}
     if needs in ("audit", "issue", "page", "page_links", "gsc") and crawl is None and needs != "gsc":
-        raise HTTPException(400, "This task needs a completed crawl")
+        raise HTTPException(400, "Diese Aufgabe braucht einen abgeschlossenen Crawl")
     if needs == "audit":
         data = {"site": site.url if site else None, "audit": _audit_context(db, crawl)}
         if site and body.task == "action_plan":
@@ -503,7 +538,7 @@ async def ai_run(body: AITaskIn, user: User = Depends(current_user), db: Session
         data = cmp
     elif needs == "serp":
         if not body.serp or not body.keyword:
-            raise HTTPException(400, "Run a SERP analysis first, then request the brief")
+            raise HTTPException(400, "Zuerst eine SERP-Analyse ausführen, dann das Briefing anfordern")
         s = body.serp
         data = {"keyword": body.keyword, "intent": s.get("intent"), "summary": s.get("summary"), "heading_topics": (s.get("heading_topics") or [])[:20],
                 "common_terms": (s.get("common_terms") or [])[:30], "questions": (s.get("questions") or [])[:15],
@@ -514,7 +549,7 @@ async def ai_run(body: AITaskIn, user: User = Depends(current_user), db: Session
             raise HTTPException(400, "site_id is required")
         ins = gsc.insights(db, site.id)
         if not ins.get("has_data") or not ins.get("dated"):
-            raise HTTPException(400, "This task needs dated Search Console data covering two comparison periods")
+            raise HTTPException(400, "Diese Aufgabe braucht datierte Search-Console-Daten für zwei Vergleichszeiträume")
         data = {"window_days": ins["window_days"], "declining_queries": ins["declining_queries"][:25], "declining_pages": ins["declining_pages"][:15],
                 "lost_queries": ins["lost_queries"][:15]}
         if crawl:
@@ -527,4 +562,4 @@ async def ai_run(body: AITaskIn, user: User = Depends(current_user), db: Session
         raise HTTPException(400, str(exc)) from exc
     cfg = get_setting(db, "ai")
     return {"task": body.task, "output": text, "provider": cfg.get("provider"), "model": cfg.get("model"),
-            "grounding": "Generated from the data shown in this app for the selected item. Verify before acting; a language model can still be wrong."}
+            "grounding": "Aus den in der App angezeigten Daten zum gewählten Element erstellt. Vor dem Handeln prüfen; ein Sprachmodell kann sich irren."}

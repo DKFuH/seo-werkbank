@@ -43,7 +43,7 @@ function ReportRow({ report, disabled }: { report: Report; disabled: boolean }) 
         <div className="flex flex-wrap items-center gap-2">
           {report.formats.map((f) => (
             <Button key={f.label} size="sm" icon={<Download className="h-3.5 w-3.5" />} loading={busy === f.label} disabled={disabled || busy !== null}
-              title={disabled ? "Needs a completed crawl" : undefined} onClick={() => run(f)}>{f.label}</Button>
+              title={disabled ? "Braucht einen abgeschlossenen Crawl" : undefined} onClick={() => run(f)}>{f.label}</Button>
           ))}
         </div>
       </div>
@@ -70,8 +70,8 @@ export default function Reports() {
   if (!site) {
     return (
       <>
-        <PageHeader title="Reports" description="Every downloadable report and export in one place." />
-        <Card><EmptyState title="Add a website first" description="Reports are generated for the selected website." action={<Link to="/sites" className={`text-sm ${linkClass}`}>Go to Websites</Link>} /></Card>
+        <PageHeader title="Berichte" description="Alle Berichte und Exporte an einem Ort." />
+        <Card><EmptyState title="Zuerst eine Website anlegen" description="Berichte werden für die ausgewählte Website erstellt." action={<Link to="/sites" className={`text-sm ${linkClass}`}>Zu den Websites</Link>} /></Card>
       </>
     );
   }
@@ -79,50 +79,50 @@ export default function Reports() {
   const crawlPath = `/crawls/${crawlId}`;
   const exp = (dataset: string, format: string, label: string): Format => ({ label, path: `${crawlPath}/export`, query: { dataset, format }, fallback: `${site.domain}-${dataset}.${format}` });
   const crawlReports: Report[] = [
-    { title: "Technical audit report", description: "Shareable summary of the score, issues by severity and example URLs for each issue.",
+    { title: "Technischer Audit-Bericht", description: "Teilbare Zusammenfassung mit Score, Befunden nach Schweregrad und Beispiel-URLs je Befund.",
       formats: [{ label: "PDF", path: `${crawlPath}/report.pdf`, fallback: `seo-audit-${site.domain}.pdf` }] },
-    { title: "Full crawl workbook", description: "One Excel file with summary, issues, pages, broken links and redirects on separate sheets.", formats: [exp("all", "xlsx", "Excel")] },
-    { title: "Pages", description: "Every crawled URL with status, indexability, title, word count, depth, inlinks and score.", formats: [exp("pages", "csv", "CSV")] },
-    { title: "Issues", description: "Every issue occurrence with severity, affected URL, details and the recommended fix.", formats: [exp("issues", "csv", "CSV")] },
-    { title: "Links", description: "Every link found: source, target, anchor text, internal/external, nofollow and target status.", formats: [exp("links", "csv", "CSV")] },
-    { title: "Redirects", description: "Redirecting URLs with their full chain, hop count, loops and final status.", formats: [exp("redirects", "csv", "CSV")] },
-    { title: "Crawl data", description: "Crawl statistics and all pages in a machine-readable file for your own tooling.", formats: [exp("pages", "json", "JSON")] },
-    { title: "Generated XML sitemap", description: "A ready-to-upload sitemap built from the indexable pages found by the crawl (first file if the site needs several).",
+    { title: "Komplette Crawl-Arbeitsmappe", description: "Eine Excel-Datei mit Übersicht, Befunden, Seiten, defekten Links und Weiterleitungen auf eigenen Blättern.", formats: [exp("all", "xlsx", "Excel")] },
+    { title: "Seiten", description: "Jede gecrawlte URL mit Status, Indexierbarkeit, Title, Wortzahl, Tiefe, eingehenden Links und Score.", formats: [exp("pages", "csv", "CSV")] },
+    { title: "Befunde", description: "Jeder Befund mit Schweregrad, betroffener URL, Details und empfohlener Lösung.", formats: [exp("issues", "csv", "CSV")] },
+    { title: "Links", description: "Jeder gefundene Link: Quelle, Ziel, Ankertext, intern/extern, nofollow und Zielstatus.", formats: [exp("links", "csv", "CSV")] },
+    { title: "Weiterleitungen", description: "Weiterleitende URLs mit vollständiger Kette, Schrittzahl, Schleifen und Endstatus.", formats: [exp("redirects", "csv", "CSV")] },
+    { title: "Crawldaten", description: "Crawl-Statistik und alle Seiten maschinenlesbar für eigene Auswertungen.", formats: [exp("pages", "json", "JSON")] },
+    { title: "Erzeugte XML-Sitemap", description: "Hochladefertige Sitemap aus den indexierbaren Seiten des Crawls (erste Datei, falls mehrere nötig sind).",
       formats: [{ label: "XML", path: `${crawlPath}/sitemap.xml`, fallback: "sitemap.xml" }] },
   ];
   const siteReports: Report[] = [
-    { title: "Keyword report", description: "Tracked keywords with cluster, intent, Search Console metrics and imported volumes. Excel adds the page mapping.",
+    { title: "Keyword-Bericht", description: "Beobachtete Keywords mit Cluster, Intention, Search-Console-Werten und importierten Volumen. Excel ergänzt die Seitenzuordnung.",
       formats: [
         { label: "Excel", path: `/sites/${site.id}/keywords/export`, query: { format: "xlsx" }, fallback: `keywords-${site.domain}.xlsx` },
         { label: "CSV", path: `/sites/${site.id}/keywords/export`, query: { format: "csv" }, fallback: `keywords-${site.domain}.csv` },
       ] },
-    { title: "Competitor comparison", description: "Side-by-side comparison of this website with the competitors you added.",
+    { title: "Wettbewerbervergleich", description: "Direkter Vergleich dieser Website mit den angelegten Wettbewerbern.",
       formats: [{ label: "PDF", path: `/sites/${site.id}/competitors/report.pdf`, fallback: `competitors-${site.domain}.pdf` }] },
-    { title: "Backlinks", description: "Imported backlinks. Excel adds referring-domain and anchor-text summaries.",
+    { title: "Backlinks", description: "Importierte Backlinks. Excel ergänzt Übersichten zu Domains und Ankertexten.",
       formats: [
         { label: "Excel", path: `/sites/${site.id}/backlinks/export`, query: { format: "xlsx" }, fallback: `backlinks-${site.domain}.xlsx` },
         { label: "CSV", path: `/sites/${site.id}/backlinks/export`, query: { format: "csv" }, fallback: `backlinks-${site.domain}.csv` },
       ] },
   ];
   const accountReports: Report[] = [
-    { title: "Alerts", description: "The 500 most recent monitoring alerts across all of your websites.", formats: [{ label: "CSV", path: "/alerts/export", fallback: "alerts.csv" }] },
+    { title: "Meldungen", description: "Die 500 neuesten Monitoring-Meldungen aller deiner Websites.", formats: [{ label: "CSV", path: "/alerts/export", fallback: "alerts.csv" }] },
   ];
 
   return (
     <>
-      <PageHeader title="Reports" description={<>Every downloadable report and export for <span className="font-medium text-slate-700 dark:text-slate-200">{site.name}</span>.</>} />
+      <PageHeader title="Berichte" description={<>Alle Berichte und Exporte für <span className="font-medium text-slate-700 dark:text-slate-200">{site.name}</span>.</>} />
       <div className="space-y-4">
-        <Group title="Crawl reports" disabled={crawlId === null} reports={crawlReports}
-          description={crawlId !== null && site.last_crawl ? `From crawl #${crawlId} · ${fmtInt(site.last_crawl.pages_crawled)} URLs · ${fmtDateTime(site.last_crawl.finished_at)}` : "Built from the latest completed crawl"}
+        <Group title="Crawl-Berichte" disabled={crawlId === null} reports={crawlReports}
+          description={crawlId !== null && site.last_crawl ? `Aus Crawl #${crawlId} · ${fmtInt(site.last_crawl.pages_crawled)} URLs · ${fmtDateTime(site.last_crawl.finished_at)}` : "Aus dem letzten abgeschlossenen Crawl"}
           notice={crawlId === null ? (
             <Notice tone="warn">
-              {site.active_crawl ? "These reports unlock when the running crawl finishes. " : "These reports need a completed crawl. "}
-              <Link to="/crawler" className={linkClass}>{site.active_crawl ? "View progress" : "Start a crawl"}</Link>
+              {site.active_crawl ? "Diese Berichte werden frei, sobald der laufende Crawl fertig ist. " : "Diese Berichte brauchen einen abgeschlossenen Crawl. "}
+              <Link to="/crawler" className={linkClass}>{site.active_crawl ? "Fortschritt ansehen" : "Crawl starten"}</Link>
             </Notice>
           ) : undefined} />
-        <Group title="Website reports" description="Built from data you track or import for this website. Files can be empty if nothing has been added yet." reports={siteReports} />
-        <Group title="Account" description="Not tied to the selected website" reports={accountReports} />
-        <p className="text-xs text-slate-500 dark:text-slate-400">Need an older crawl? Individual crawls can be exported from the <Link to="/crawler" className={linkClass}>Crawler</Link> page.</p>
+        <Group title="Website-Berichte" description="Aus Daten, die du für diese Website erfasst oder importierst. Dateien können leer sein, solange nichts angelegt ist." reports={siteReports} />
+        <Group title="Konto" description="Unabhängig von der ausgewählten Website" reports={accountReports} />
+        <p className="text-xs text-slate-500 dark:text-slate-400">Älterer Crawl gebraucht? Einzelne Crawls lassen sich auf der Seite <Link to="/crawler" className={linkClass}>Crawler</Link> exportieren.</p>
       </div>
     </>
   );

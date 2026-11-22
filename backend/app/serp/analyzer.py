@@ -20,10 +20,10 @@ from ..keywords.research import classify_intent
 from ..text import content_tokens, is_question, stem, tfidf_terms
 
 PROVIDERS = {
-    "none": "No provider configured (paste result URLs manually)",
-    "searxng": "SearXNG (self-hosted metasearch, free)",
-    "google_cse": "Google Programmable Search JSON API (100 free queries/day)",
-    "brave": "Brave Search API (free tier available)",
+    "none": "Kein Anbieter eingerichtet (Ergebnis-URLs von Hand einfügen)",
+    "searxng": "SearXNG (selbst betriebene Metasuche, kostenlos)",
+    "google_cse": "Google Programmable Search JSON API (100 kostenlose Abfragen/Tag)",
+    "brave": "Brave Search API (kostenloser Tarif verfügbar)",
 }
 AUTHORITY_DOMAINS = {
     "wikipedia.org", "youtube.com", "amazon.com", "reddit.com", "quora.com", "linkedin.com", "facebook.com",
@@ -47,7 +47,7 @@ async def search(settings: dict, keyword: str, country: str = "us", lang: str = 
             if provider == "searxng":
                 base = (settings.get("searxng_url") or "").rstrip("/")
                 if not base:
-                    raise SerpError("SearXNG URL is not configured")
+                    raise SerpError("SearXNG-URL ist nicht eingerichtet")
                 r = await client.get(f"{base}/search", params={"q": keyword, "format": "json", "language": f"{lang}-{country.upper()}"})
                 r.raise_for_status()
                 data = r.json()
@@ -55,7 +55,7 @@ async def search(settings: dict, keyword: str, country: str = "us", lang: str = 
                 features = [f for f, k in (("answer box", "answers"), ("knowledge panel", "infoboxes"), ("related searches", "suggestions")) if data.get(k)]
             elif provider == "google_cse":
                 if not settings.get("google_cse_key") or not settings.get("google_cse_cx"):
-                    raise SerpError("Google Programmable Search key and engine ID (cx) are required")
+                    raise SerpError("Schlüssel und Suchmaschinen-ID (cx) für Google Programmable Search fehlen")
                 r = await client.get("https://www.googleapis.com/customsearch/v1", params={
                     "key": settings["google_cse_key"], "cx": settings["google_cse_cx"], "q": keyword,
                     "gl": country, "hl": lang, "num": min(num, 10)})
@@ -65,7 +65,7 @@ async def search(settings: dict, keyword: str, country: str = "us", lang: str = 
                 features = ["spelling suggestion"] if data.get("spelling") else []
             elif provider == "brave":
                 if not settings.get("brave_key"):
-                    raise SerpError("Brave Search API key is required")
+                    raise SerpError("Schlüssel für die Brave Search API fehlt")
                 r = await client.get("https://api.search.brave.com/res/v1/web/search",
                                      params={"q": keyword, "country": country, "search_lang": lang, "count": min(num, 20)},
                                      headers={"X-Subscription-Token": settings["brave_key"], "Accept": "application/json"})
@@ -76,18 +76,18 @@ async def search(settings: dict, keyword: str, country: str = "us", lang: str = 
                 features = [name for name, key in (("FAQ", "faq"), ("knowledge panel", "infobox"), ("videos", "videos"),
                                                    ("news", "news"), ("discussions", "discussions"), ("local pack", "locations")) if data.get(key)]
             else:
-                raise SerpError("No SERP provider is configured. Add one in Settings or paste result URLs manually.")
+                raise SerpError("Kein SERP-Anbieter eingerichtet. In den Einstellungen ergänzen oder Ergebnis-URLs von Hand einfügen.")
         except httpx.HTTPStatusError as exc:
             raise SerpError(f"{PROVIDERS.get(provider, provider)} answered HTTP {exc.response.status_code}") from exc
         except httpx.HTTPError as exc:
-            raise SerpError(f"Could not reach {PROVIDERS.get(provider, provider)}: {exc}") from exc
+            raise SerpError(f"{PROVIDERS.get(provider, provider)} nicht erreichbar: {exc}") from exc
     results = []
     for item in items:
         url = normalize_url(item.get("url") or "")
         if url and len(results) < num:
             results.append({"position": len(results) + 1, "url": url, "title": item.get("title") or "", "snippet": item.get("snippet") or ""})
     return {"provider": provider, "results": results, "features": features,
-            "note": "Positions reflect this provider's ordering, which can differ from what a user sees on Google."}
+            "note": "Die Positionen folgen der Reihenfolge dieses Anbieters und können von Google abweichen."}
 
 
 async def fetch_pages(urls: list[str], limit: int = 10) -> dict[str, dict]:
@@ -133,7 +133,7 @@ def estimate_difficulty(keyword: str, results: list[dict], pages: dict[str, dict
             "components": components,
             "inputs": {"authority_domains": authority, "homepage_results": homepages, "titles_matching_keyword": exact_titles,
                        "avg_word_count": round(avg_words) if avg_words else None, "results_considered": n},
-            "method": "Heuristic from SERP composition; no backlink data is used."}
+            "method": "Heuristik aus der Zusammensetzung der SERP; ohne Backlink-Daten."}
 
 
 def analyse(keyword: str, results: list[dict], pages: dict[str, dict], features: list[str] | None = None,

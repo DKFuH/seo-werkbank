@@ -86,7 +86,7 @@ def cancel_crawl(crawl_id: int, user: User = Depends(current_user), db: Session 
 def delete_crawl(crawl_id: int, user: User = Depends(current_user), db: Session = Depends(get_db)) -> None:
     crawl = get_crawl_for(db, user, crawl_id)
     if crawl.status in ("queued", "running"):
-        raise HTTPException(409, "Cancel the crawl before deleting it")
+        raise HTTPException(409, "Crawl vor dem Löschen abbrechen")
     for model in (Issue, Link, Page):
         db.execute(delete(model).where(model.crawl_id == crawl.id))
     db.delete(crawl)
@@ -138,7 +138,7 @@ def page_detail(crawl_id: int, page_id: int, user: User = Depends(current_user),
     crawl = get_crawl_for(db, user, crawl_id)
     p = db.get(Page, page_id)
     if p is None or p.crawl_id != crawl.id:
-        raise HTTPException(404, "Page not found")
+        raise HTTPException(404, "Seite nicht gefunden")
     issues = db.scalars(select(Issue).where(Issue.crawl_id == crawl.id, Issue.page_id == p.id).order_by(_SEV_ORDER)).all()
     inlinks = db.execute(select(Link.source_url, Link.anchor, Link.nofollow).where(Link.crawl_id == crawl.id, Link.target_url == p.url).limit(200)).all()
     outlinks = db.execute(select(Link.target_url, Link.anchor, Link.nofollow, Link.is_internal, Link.target_status, Link.target_error)
@@ -165,8 +165,8 @@ def issue_summary(crawl_id: int, user: User = Depends(current_user), db: Session
     return {"crawl": crawl_out(crawl), "groups": groups,
             "by_severity": {s: sum(g["count"] for g in groups if g["severity"] == s) for s in SEVERITIES},
             "by_category": {c: sum(g["count"] for g in groups if g["category"] == c) for c in sorted({g["category"] for g in groups})},
-            "scoring": "Each page starts at 100 and loses 25/10/4/1 points per critical/high/medium/low rule that fires on it. "
-                       "Site score = average page score minus 10/5/2/0.5 per site-wide critical/high/medium/low rule."}
+            "scoring": "Jede Seite startet bei 100 und verliert je ausgelöster kritischer/hoher/mittlerer/niedriger Regel 25/10/4/1 Punkte. "
+                       "Website-Score = Durchschnitt der Seiten-Scores minus 10/5/2/0,5 je websiteweiter kritischer/hoher/mittlerer/niedriger Regel."}
 
 
 @router.get("/crawls/{crawl_id}/issues/{rule_id}")
@@ -269,8 +269,8 @@ def internal_links(crawl_id: int, user: User = Depends(current_user), db: Sessio
         "inlink_distribution": {k: v for k, v in dist},
         "depth_distribution": (crawl.stats or {}).get("depth_distribution", {}),
         "anchors": [{"anchor": a, "links": c, "targets": t, "generic": a.lower() in generic, "ambiguous": t > 3 and a.lower() not in generic} for a, c, t in anchors],
-        "pagerank_note": "Internal PageRank approximates how link equity flows inside the site (average page = 1.0). "
-                         "It is computed from crawled internal links only and is unrelated to any search engine's metric.",
+        "pagerank_note": "Der interne PageRank schätzt, wie Linkkraft durch die Website fließt (Durchschnittsseite = 1,0). "
+                         "Er wird nur aus gecrawlten internen Links berechnet und ist keine Kennzahl einer Suchmaschine.",
     }
 
 
@@ -350,7 +350,7 @@ def sitemap_report(crawl_id: int, user: User = Depends(current_user), db: Sessio
         "indexable_missing_from_sitemap": [{"page_id": i, "url": u, "inlinks": n} for i, u, n in missing],
         "canonical_mismatch": [{"page_id": i, "url": u, "canonical": c} for i, u, c in mismatched],
         "indexable_pages": indexable_total,
-        "indexing_note": "Whether Google has indexed a URL can only be confirmed through Search Console. Connect it to see impressions per page.",
+        "indexing_note": "Ob Google eine URL indexiert hat, lässt sich nur über die Search Console bestätigen. Verbinden, um Impressionen je Seite zu sehen.",
     }
 
 
@@ -361,7 +361,7 @@ def generated_sitemap(crawl_id: int, part: int = 1, user: User = Depends(current
     urls = db.scalars(select(Page.url).where(Page.crawl_id == crawl.id, Page.indexable.is_(True)).order_by(Page.depth.asc().nulls_last(), Page.url)).all()
     docs = generate_sitemap([(u, None) for u in urls])
     if part < 1 or part > len(docs):
-        raise HTTPException(404, "No such sitemap part")
+        raise HTTPException(404, "Diesen Sitemap-Teil gibt es nicht")
     name = f"sitemap-{part}.xml" if len(docs) > 1 else "sitemap.xml"
     return download(docs[part - 1].encode("utf-8"), name, "application/xml")
 
@@ -371,7 +371,7 @@ def compare_crawls(crawl_id: int, other_id: int, user: User = Depends(current_us
     """What changed between two crawls of the same site (URLs added/removed, issues fixed/new)."""
     a, b = get_crawl_for(db, user, crawl_id), get_crawl_for(db, user, other_id)
     if a.site_id != b.site_id:
-        raise HTTPException(400, "Crawls belong to different sites")
+        raise HTTPException(400, "Die Crawls gehören zu verschiedenen Websites")
     ua = set(db.scalars(select(Page.url).where(Page.crawl_id == a.id)))
     ub = set(db.scalars(select(Page.url).where(Page.crawl_id == b.id)))
     ra, rb = (a.stats or {}).get("issues_by_rule", {}), (b.stats or {}).get("issues_by_rule", {})
@@ -407,7 +407,7 @@ def schema_report(crawl_id: int, user: User = Depends(current_user), db: Session
     pages.sort(key=lambda p: (-p["errors"], -p["warnings"]))
     return {"types": dict(sorted(type_pages.items(), key=lambda kv: -kv[1])), "pages": pages[:1000], "pages_without_schema": without,
             "pages_with_errors": sum(1 for p in pages if p["errors"]),
-            "note": "Validation covers required/recommended properties for common rich-result types; it is not a full schema.org validator."}
+            "note": "Geprüft werden Pflicht- und empfohlene Angaben gängiger Rich-Result-Typen; kein vollständiger schema.org-Validator."}
 
 
 @router.get("/crawls/{crawl_id}/hreflang")
@@ -475,8 +475,8 @@ def local_seo(crawl_id: int, user: User = Depends(current_user), db: Session = D
                 phones_seen[ph] += 1
             location_pages.append({"page_id": pid, "url": url, "title": title, "word_count": wc, "has_local_schema": bool(local_items),
                                    "phones_in_text": sorted(found)[:5], "has_map": "google.com/maps" in json.dumps(data.get("mixed_content", [])) or data.get("iframes", 0) > 0,
-                                   "issues": [m for m, bad in (("No LocalBusiness schema", not local_items), ("Thin content (<200 words)", (wc or 0) < 200),
-                                                               ("No phone number in page text", not found)) if bad]})
+                                   "issues": [m for m, bad in (("Kein LocalBusiness-Schema", not local_items), ("Wenig Inhalt (<200 Wörter)", (wc or 0) < 200),
+                                                               ("Keine Telefonnummer im Seitentext", not found)) if bad]})
     citations = db.scalars(select(Citation).where(Citation.site_id == crawl.site_id)).all()
     names = Counter(_norm_text(b["name"]) for b in businesses if b["name"])
     phones = Counter(_norm_phone(b["phone"]) for b in businesses if b["phone"])
@@ -493,7 +493,7 @@ def local_seo(crawl_id: int, user: User = Depends(current_user), db: Session = D
         "businesses": businesses, "location_pages": location_pages[:500], "citations": citation_rows,
         "nap": {"reference": ref, "name_variants": len(names), "phone_variants": len(phones), "address_variants": len(addresses),
                 "consistent": len(names) <= 1 and len(phones) <= 1 and len(addresses) <= 1,
-                "reference_source": "Most common values in the site's own LocalBusiness markup"},
+                "reference_source": "Häufigste Werte im LocalBusiness-Markup der eigenen Website"},
         "has_local_schema": bool(businesses),
         "gbp_note": "Google Business Profile data requires API access that Google grants per project; this module works from your site's "
                     "markup and citation lists you import (CSV with source, url, name, address, phone).",
@@ -519,7 +519,7 @@ def _dataset(db: Session, crawl: Crawl, dataset: str, limit: int = 200_000) -> l
     if dataset == "redirects":
         return [{"url": r["url"], "status_code": r["status_code"], "hops": r["hops"], "loop": r["loop"], "final_url": r["final_url"],
                  "final_status": r["final_status"], "chain": " -> ".join(r["chain"])} for r in _redirect_rows(db, crawl)]
-    raise HTTPException(400, "Unknown dataset. Use pages, issues, links, broken_links or redirects.")
+    raise HTTPException(400, "Unbekannter Datensatz. Erlaubt: pages, issues, links, broken_links, redirects.")
 
 
 @router.get("/crawls/{crawl_id}/export")
@@ -541,14 +541,14 @@ def export_crawl(crawl_id: int, dataset: str = "pages", format: str = "csv", use
     if format == "json":
         return download(json.dumps({"crawl": crawl_out(crawl, with_stats=True), dataset: rows}, default=str, ensure_ascii=False).encode("utf-8"),
                         f"{name}-{dataset}.json", "application/json")
-    raise HTTPException(400, "Unknown format. Use csv, xlsx or json.")
+    raise HTTPException(400, "Unbekanntes Format. Erlaubt: csv, xlsx, json.")
 
 
 @router.get("/crawls/{crawl_id}/report.pdf")
 def audit_report(crawl_id: int, user: User = Depends(current_user), db: Session = Depends(get_db)):
     crawl = get_crawl_for(db, user, crawl_id)
     if crawl.status != "completed":
-        raise HTTPException(409, "The report is available once the crawl has completed")
+        raise HTTPException(409, "Der Bericht ist verfügbar, sobald der Crawl abgeschlossen ist")
     site = db.get(Site, crawl.site_id)
     groups = []
     for rule_id, count in db.execute(select(Issue.rule_id, func.count()).where(Issue.crawl_id == crawl.id).group_by(Issue.rule_id)):

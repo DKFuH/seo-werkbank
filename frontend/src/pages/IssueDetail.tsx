@@ -9,7 +9,7 @@ import { fmtBytes, fmtInt, fmtMs, shortUrl, titleCase } from "../lib/format";
 
 /* ------------------------------------------------------------------ issue details renderer (shared with the page detail view) */
 const isUrl = (v: unknown): v is string => typeof v === "string" && /^https?:\/\//i.test(v);
-const LABELS: Record<string, string> = { ttfb_ms: "Time to first byte", other_urls: "Also on", points_to: "Which points to", x_robots_tag: "X-Robots-Tag", html_lang: "HTML lang", h1: "H1 headings", ids: "Duplicate ids" };
+const LABELS: Record<string, string> = { ttfb_ms: "Zeit bis zum ersten Byte", other_urls: "Auch auf", points_to: "Verweist auf", x_robots_tag: "X-Robots-Tag", html_lang: "HTML lang", h1: "H1-Überschriften", ids: "Doppelte IDs" };
 const label = (k: string) => LABELS[k] ?? titleCase(k);
 
 function scalar(key: string, v: unknown, base?: string): ReactNode {
@@ -64,7 +64,7 @@ function ListValue({ k, items, base }: { k: string; items: any[]; base?: string 
       </span>
       {items.length > 4 && (
         <button type="button" onClick={(e) => { e.stopPropagation(); setAll(!all); }} className="mt-0.5 text-xs font-medium text-brand-700 hover:underline dark:text-brand-300">
-          {all ? "Show fewer" : `+${items.length - 4} more`}
+          {all ? "Weniger anzeigen" : `+${items.length - 4} weitere`}
         </button>
       )}
     </span>
@@ -93,7 +93,7 @@ export function IssueDetails({ details, base }: { details: Record<string, any> |
 
 /* ------------------------------------------------------------------ AI helper (shared with the page detail view) */
 export function AiResult({ run, title = "AI suggestion" }: { run: { data?: any; error: unknown; isPending: boolean }; title?: string }) {
-  if (run.isPending) return <Card title={title}><Spinner label="Asking the AI provider…" /></Card>;
+  if (run.isPending) return <Card title={title}><Spinner label="KI-Anbieter wird gefragt…" /></Card>;
   if (run.error) return <ErrorBox error={run.error} />;
   if (!run.data) return null;
   return (
@@ -125,16 +125,16 @@ export default function IssueDetail() {
   const ai = useMutation({ mutationFn: () => api.post("/ai/run", { task: "explain_issue", crawl_id: crawlId, rule_id: ruleId }) });
 
   if (loading) return <Spinner />;
-  if (crawlId === null) return <>{backLink}<PageHeader title="Issue" /><NeedsCrawl hasSite={!!site} running={!!site?.active_crawl} /></>;
+  if (crawlId === null) return <>{backLink}<PageHeader title="Befund" /><NeedsCrawl hasSite={!!site} running={!!site?.active_crawl} /></>;
   if (q.isLoading) return <>{backLink}<Spinner /></>;
   if (q.error) return <>{backLink}<ErrorBox error={q.error} onRetry={() => q.refetch()} /></>;
 
   const rule = q.data.rule;
   const columns: Column<any>[] = [
-    { key: "url", header: "Affected URL", render: (i) => (
+    { key: "url", header: "Betroffene URL", render: (i) => (
       <div className="max-w-[26rem] break-all">
         {i.page_id !== null ? <span className="font-medium text-brand-700 dark:text-brand-300">{shortUrl(i.url, site?.url)}</span>
-          : <span className="inline-flex flex-wrap items-center gap-1.5"><Url href={i.url} label={shortUrl(i.url)} /><Badge>site-wide</Badge></span>}
+          : <span className="inline-flex flex-wrap items-center gap-1.5"><Url href={i.url} label={shortUrl(i.url)} /><Badge>websiteweit</Badge></span>}
       </div>
     ) },
     { key: "details", header: "Details", render: (i) => <IssueDetails details={i.details} base={site?.url} /> },
@@ -144,19 +144,19 @@ export default function IssueDetail() {
     <>
       {backLink}
       <PageHeader title={rule.title}
-        description={<span className="inline-flex flex-wrap items-center gap-2"><SeverityBadge severity={rule.severity} /><Badge>{titleCase(rule.category)}</Badge>{rule.scope === "site" && <Badge tone="purple">site-wide check</Badge>}<span>{fmtInt(q.data.total)} affected</span></span>}
-        actions={<Button icon={<Sparkles className="h-4 w-4" />} loading={ai.isPending} onClick={() => ai.mutate()} title="Optional. Needs an AI provider configured in Settings.">Explain with AI</Button>} />
+        description={<span className="inline-flex flex-wrap items-center gap-2"><SeverityBadge severity={rule.severity} /><Badge>{titleCase(rule.category)}</Badge>{rule.scope === "site" && <Badge tone="purple">websiteweite Prüfung</Badge>}<span>{fmtInt(q.data.total)} betroffen</span></span>}
+        actions={<Button icon={<Sparkles className="h-4 w-4" />} loading={ai.isPending} onClick={() => ai.mutate()} title="Optional. Braucht einen KI-Anbieter in den Einstellungen.">Mit KI erklären</Button>} />
       <div className="space-y-4">
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <Card title="Why it matters"><p className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">{rule.description}</p></Card>
-          <Card title="How to fix"><p className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">{rule.fix}</p></Card>
+          <Card title="Warum es wichtig ist"><p className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">{rule.description}</p></Card>
+          <Card title="So behebst du es"><p className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">{rule.fix}</p></Card>
         </div>
-        <AiResult run={ai} title="AI explanation" />
-        <Card title="Affected URLs" description={rule.scope === "site" ? "This check applies to the website as a whole." : "Select a row to open the page's full report."} padded={false}>
+        <AiResult run={ai} title="KI-Erklärung" />
+        <Card title="Betroffene URLs" description={rule.scope === "site" ? "Diese Prüfung gilt für die Website als Ganzes." : "Zeile anklicken, um den vollständigen Seitenbericht zu öffnen."} padded={false}>
           <div className={q.isPlaceholderData ? "opacity-60 transition-opacity" : ""}>
             <DataTable columns={columns} rows={q.data.items} rowKey={(_, i) => i}
               onRowClick={(i) => { if (i.page_id !== null) navigate(`/pages/${crawlId}/${i.page_id}`); }}
-              empty={<EmptyState title="No affected URLs" description="This issue does not occur in the latest crawl. It may have been fixed since you opened the audit." />} />
+              empty={<EmptyState title="Keine betroffenen URLs" description="Der Befund tritt im letzten Crawl nicht auf. Vielleicht wurde er inzwischen behoben." />} />
             <Pagination page={page} perPage={q.data.per_page} total={q.data.total} onPage={setPage} />
           </div>
         </Card>

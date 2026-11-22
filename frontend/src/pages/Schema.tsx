@@ -35,8 +35,8 @@ function CodeBlock({ code, label }: { code: string; label: string }) {
       <div className="flex items-center justify-between gap-2 border-b border-slate-200 bg-slate-50 px-3 py-1.5 dark:border-slate-800 dark:bg-slate-900/60">
         <span className="text-xs font-medium text-slate-600 dark:text-slate-300">{label}</span>
         <div className="flex items-center gap-2">
-          {failed && <span className="text-xs text-red-600 dark:text-red-400">Copy blocked by the browser; select the text instead</span>}
-          <Button size="sm" variant="ghost" onClick={copy} icon={copied ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}>{copied ? "Copied" : "Copy"}</Button>
+          {failed && <span className="text-xs text-red-600 dark:text-red-400">Kopieren vom Browser blockiert; Text bitte markieren</span>}
+          <Button size="sm" variant="ghost" onClick={copy} icon={copied ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}>{copied ? "Kopiert" : "Kopieren"}</Button>
         </div>
       </div>
       <pre className="max-h-96 overflow-auto bg-white p-3 text-xs leading-relaxed text-slate-800 dark:bg-slate-950 dark:text-slate-200"><code>{code}</code></pre>
@@ -45,9 +45,9 @@ function CodeBlock({ code, label }: { code: string; label: string }) {
 }
 
 const LEVELS: { id: string; label: string; tone: string; help: string }[] = [
-  { id: "error", label: "Errors", tone: "red", help: "Missing required properties. The item is not eligible for the rich result." },
-  { id: "structure", label: "Structure problems", tone: "orange", help: "Problems with @context, @type or the shape of the item." },
-  { id: "warning", label: "Warnings", tone: "amber", help: "Missing recommended properties. Valid, but less complete." },
+  { id: "error", label: "Fehler", tone: "red", help: "Pflichtangaben fehlen. Das Element kommt für kein Rich Result in Frage." },
+  { id: "structure", label: "Strukturprobleme", tone: "orange", help: "Probleme mit @context, @type oder dem Aufbau des Elements." },
+  { id: "warning", label: "Warnungen", tone: "amber", help: "Empfohlene Angaben fehlen. Gültig, aber unvollständiger." },
 ];
 
 function ValidationResult({ result }: { result: any }) {
@@ -59,25 +59,25 @@ function ValidationResult({ result }: { result: any }) {
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
         {valid ? (
-          <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-700 dark:text-emerald-400"><CheckCircle2 className="h-5 w-5" /> Valid</span>
+          <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-700 dark:text-emerald-400"><CheckCircle2 className="h-5 w-5" /> Gültig</span>
         ) : (
-          <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-red-700 dark:text-red-400"><XCircle className="h-5 w-5" /> Invalid</span>
+          <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-red-700 dark:text-red-400"><XCircle className="h-5 w-5" /> Ungültig</span>
         )}
         <Badge tone={result?.errors ? "red" : "green"}>{fmtInt(result?.errors ?? 0)} error{result?.errors === 1 ? "" : "s"}</Badge>
         <Badge tone={result?.warnings ? "amber" : "gray"}>{fmtInt(result?.warnings ?? 0)} warning{result?.warnings === 1 ? "" : "s"}</Badge>
         {parseErrors.length > 0 && <Badge tone="red">{parseErrors.length} parse error{parseErrors.length === 1 ? "" : "s"}</Badge>}
       </div>
       <div>
-        <div className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Types found</div>
+        <div className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Gefundene Typen</div>
         {types.length ? <div className="flex flex-wrap gap-1">{types.map((t) => <Badge key={t} tone="blue">{t}</Badge>)}</div>
-          : <p className="text-sm text-slate-500 dark:text-slate-400">No JSON-LD items with an @type were found.</p>}
+          : <p className="text-sm text-slate-500 dark:text-slate-400">Keine JSON-LD-Elemente mit @type gefunden.</p>}
         {result?.microdata_types?.length > 0 && (
           <div className="mt-2 flex flex-wrap items-center gap-1 text-xs text-slate-500 dark:text-slate-400">Microdata (not validated): {result.microdata_types.map((t: string) => <Badge key={t}>{t}</Badge>)}</div>
         )}
       </div>
       {parseErrors.length > 0 && (
         <div>
-          <div className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Parse errors</div>
+          <div className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Parse-Fehler</div>
           <ul className="space-y-1">{parseErrors.map((e, i) => <li key={i}><ErrorBox error={e} /></li>)}</ul>
         </div>
       )}
@@ -103,7 +103,7 @@ function ValidationResult({ result }: { result: any }) {
         );
       })}
       {valid && findings.length === 0 && parseErrors.length === 0 && types.length > 0 && (
-        <Notice tone="success">All required and recommended properties are present for the types this validator knows.</Notice>
+        <Notice tone="success">Für die Typen, die dieser Validator kennt, sind alle Pflicht- und empfohlenen Angaben vorhanden.</Notice>
       )}
     </div>
   );
@@ -121,7 +121,7 @@ function Overview({ onGenerate }: { onGenerate: (type: string) => void }) {
   const perPage = 25;
 
   if (!crawlId) return <NeedsCrawl hasSite={!!site} running={!!site?.active_crawl} />;
-  if (q.isLoading) return <Spinner label="Validating structured data…" />;
+  if (q.isLoading) return <Spinner label="Strukturierte Daten werden geprüft…" />;
   if (q.error) return <ErrorBox error={q.error} onRetry={() => q.refetch()} />;
   const d = q.data ?? {};
   const types = Object.entries((d.types ?? {}) as Record<string, number>).map(([type, pages]) => ({ type, pages }));
@@ -134,26 +134,26 @@ function Overview({ onGenerate }: { onGenerate: (type: string) => void }) {
   const columns: Column<any>[] = [
     { key: "url", header: "URL", render: (p) => <div className="max-w-sm"><Url href={p.url} label={shortUrl(p.url, site?.url)} /></div> },
     {
-      key: "types", header: "Types", render: (p) => (
+      key: "types", header: "Typen", render: (p) => (
         <div className="flex max-w-xs flex-wrap gap-1">
           {(p.types ?? []).map((t: string) => <Badge key={t} tone="blue">{t}</Badge>)}
-          {(p.microdata ?? []).map((t: string) => <Badge key={`m-${t}`} title="Found as microdata">{t}</Badge>)}
-          {!p.types?.length && !p.microdata?.length && <span className="text-slate-400">none</span>}
+          {(p.microdata ?? []).map((t: string) => <Badge key={`m-${t}`} title="Als Microdata gefunden">{t}</Badge>)}
+          {!p.types?.length && !p.microdata?.length && <span className="text-slate-400">keine</span>}
         </div>
       ),
     },
-    { key: "errors", header: "Errors", align: "right", render: (p) => (p.errors ? <Badge tone="red">{p.errors}</Badge> : "0") },
-    { key: "warnings", header: "Warnings", align: "right", render: (p) => (p.warnings ? <Badge tone="amber">{p.warnings}</Badge> : "0") },
+    { key: "errors", header: "Fehler", align: "right", render: (p) => (p.errors ? <Badge tone="red">{p.errors}</Badge> : "0") },
+    { key: "warnings", header: "Warnungen", align: "right", render: (p) => (p.warnings ? <Badge tone="amber">{p.warnings}</Badge> : "0") },
     {
-      key: "problems", header: "Problems", render: (p) => p.problems?.length ? (
+      key: "problems", header: "Probleme", render: (p) => p.problems?.length ? (
         <ul className="max-w-sm list-disc space-y-0.5 pl-4 text-xs">{p.problems.map((m: string, i: number) => <li key={i} className="break-words">{m}</li>)}</ul>
       ) : <span className="text-slate-400">–</span>,
     },
     {
-      key: "recommended", header: "Recommended types", tooltip: "Suggested from URL patterns, depth and headings. Click a type to open its template.", render: (p) => p.recommended?.length ? (
+      key: "recommended", header: "Empfohlene Typen", tooltip: "Abgeleitet aus URL-Mustern, Tiefe und Überschriften. Typ anklicken, um die Vorlage zu öffnen.", render: (p) => p.recommended?.length ? (
         <div className="flex max-w-xs flex-wrap gap-1">
           {p.recommended.map((r: any) => (
-            <button key={r.type} title={`${r.reason}. Open the generator`} onClick={(e) => { e.stopPropagation(); onGenerate(r.type); }}
+            <button key={r.type} title={`${r.reason}. Generator öffnen`} onClick={(e) => { e.stopPropagation(); onGenerate(r.type); }}
               className="rounded-md bg-violet-50 px-1.5 py-0.5 text-xs font-medium text-violet-700 ring-1 ring-inset ring-violet-600/20 hover:bg-violet-100 dark:bg-violet-950/50 dark:text-violet-300 dark:hover:bg-violet-900/50">
               + {r.type}
             </button>
@@ -166,43 +166,43 @@ function Overview({ onGenerate }: { onGenerate: (type: string) => void }) {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Stat label="Schema types in use" value={fmtInt(types.length)} />
-        <Stat label="Pages with errors" value={fmtInt(d.pages_with_errors)} tone={d.pages_with_errors ? "bad" : "good"} />
-        <Stat label="Pages without schema" value={fmtInt(d.pages_without_schema)} tone={d.pages_without_schema ? "warn" : "good"} tooltip="HTML pages (200) with no JSON-LD and no microdata" />
-        <Stat label="Pages with suggestions" value={fmtInt(pages.filter((p) => p.recommended?.length).length)} tooltip="Indexable pages where another schema type is likely to fit" />
+        <Stat label="Verwendete Schema-Typen" value={fmtInt(types.length)} />
+        <Stat label="Seiten mit Fehlern" value={fmtInt(d.pages_with_errors)} tone={d.pages_with_errors ? "bad" : "good"} />
+        <Stat label="Seiten ohne Schema" value={fmtInt(d.pages_without_schema)} tone={d.pages_without_schema ? "warn" : "good"} tooltip="HTML-Seiten (200) ohne JSON-LD und ohne Microdata" />
+        <Stat label="Seiten mit Vorschlägen" value={fmtInt(pages.filter((p) => p.recommended?.length).length)} tooltip="Indexierbare Seiten, zu denen ein weiterer Schema-Typ passen dürfte" />
       </div>
-      <Card title="Types by number of pages">
+      <Card title="Typen nach Anzahl Seiten">
         {types.length === 0 ? (
-          <EmptyState title="No structured data found" description="None of the crawled pages contain JSON-LD. Use the Generator tab to create markup for your key pages." />
+          <EmptyState title="Keine strukturierten Daten gefunden" description="Keine gecrawlte Seite enthält JSON-LD. Mit dem Generator Markup für die wichtigsten Seiten erstellen." />
         ) : (
-          <div style={{ height: Math.max(160, Math.min(types.length, 20) * 28 + 40) }} role="img" aria-label="Schema types by number of pages">
+          <div style={{ height: Math.max(160, Math.min(types.length, 20) * 28 + 40) }} role="img" aria-label="Schema-Typen nach Anzahl Seiten">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={types.slice(0, 20)} layout="vertical" margin={{ top: 4, right: 16, bottom: 4, left: 8 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#94a3b833" horizontal={false} />
                 <XAxis type="number" allowDecimals={false} tick={axisTick} tickLine={false} axisLine={false} />
                 <YAxis type="category" dataKey="type" width={150} tick={axisTick} tickLine={false} axisLine={{ stroke: "#94a3b855" }} />
                 <ChartTooltip cursor={{ fill: "#94a3b822" }} contentStyle={tooltipStyle} labelStyle={{ color: "#f8fafc" }} itemStyle={{ color: "#f8fafc" }} />
-                <Bar dataKey="pages" name="Pages" fill={chartColors[0]} radius={[0, 4, 4, 0]} maxBarSize={18} />
+                <Bar dataKey="pages" name="Seiten" fill={chartColors[0]} radius={[0, 4, 4, 0]} maxBarSize={18} />
               </BarChart>
             </ResponsiveContainer>
           </div>
         )}
       </Card>
-      <Card padded={false} title="Pages" description="Pages with structured data, markup problems or a recommended type"
+      <Card padded={false} title="Seiten" description="Seiten mit strukturierten Daten, Markup-Problemen oder empfohlenem Typ"
         actions={
           <>
-            <Select value={filter} onChange={(e) => setFilter(e.target.value as typeof filter)} aria-label="Filter pages" className="w-44">
-              <option value="all">All pages</option>
-              <option value="errors">With errors</option>
-              <option value="warnings">With warnings</option>
-              <option value="recommended">With suggestions</option>
+            <Select value={filter} onChange={(e) => setFilter(e.target.value as typeof filter)} aria-label="Seiten filtern" className="w-44">
+              <option value="all">Alle Seiten</option>
+              <option value="errors">Mit Fehlern</option>
+              <option value="warnings">Mit Warnungen</option>
+              <option value="recommended">Mit Vorschlägen</option>
             </Select>
-            <SearchInput value={search} onChange={setSearch} placeholder="Filter by URL or type…" />
+            <SearchInput value={search} onChange={setSearch} placeholder="Nach URL oder Typ filtern…" />
           </>
         }>
         <DataTable columns={columns} rows={rows.slice((page - 1) * perPage, page * perPage)} rowKey={(p) => p.page_id}
           onRowClick={(p) => navigate(`/pages/${crawlId}/${p.page_id}`)}
-          empty={<EmptyState title={pages.length ? "No pages match" : "Nothing to report"} description={pages.length ? "Change the filter or search term." : "No page has structured data, problems or suggestions."} />} />
+          empty={<EmptyState title={pages.length ? "Keine passenden Seiten" : "Nichts zu melden"} description={pages.length ? "Filter oder Suchbegriff ändern." : "Keine Seite hat strukturierte Daten, Probleme oder Vorschläge."} />} />
         {rows.length > 0 && <Pagination page={page} perPage={perPage} total={rows.length} onPage={setPage} />}
       </Card>
       {d.note && <Notice>{d.note}</Notice>}
@@ -224,34 +224,34 @@ function Validator() {
   };
   return (
     <div className="grid gap-4 lg:grid-cols-2">
-      <Card title="Validate structured data" description="Check a live page or paste JSON-LD (with or without the <script> tag)">
+      <Card title="Strukturierte Daten prüfen" description="Live-Seite prüfen oder JSON-LD einfügen (mit oder ohne <script>-Tag)">
         <form onSubmit={submit} className="space-y-4">
-          <div className="inline-flex rounded-lg border border-slate-300 p-0.5 dark:border-slate-700" role="group" aria-label="Input type">
+          <div className="inline-flex rounded-lg border border-slate-300 p-0.5 dark:border-slate-700" role="group" aria-label="Eingabeart">
             {(["url", "jsonld"] as const).map((m) => (
               <button key={m} type="button" aria-pressed={mode === m} onClick={() => { setMode(m); run.reset(); }}
                 className={mode === m ? "rounded-md bg-brand-600 px-3 py-1 text-xs font-medium text-white" : "rounded-md px-3 py-1 text-xs font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"}>
-                {m === "url" ? "By URL" : "Paste JSON-LD"}
+                {m === "url" ? "Per URL" : "JSON-LD einfügen"}
               </button>
             ))}
           </div>
           {mode === "url" ? (
-            <Field label="Page URL" hint="The page is fetched by the server and its JSON-LD blocks are extracted.">
-              <Input type="url" required value={effectiveUrl} onChange={(e) => setUrl(e.target.value)} placeholder="https://example.com/product" />
+            <Field label="Seiten-URL" hint="Der Server ruft die Seite ab und liest ihre JSON-LD-Blöcke aus.">
+              <Input type="url" required value={effectiveUrl} onChange={(e) => setUrl(e.target.value)} placeholder="https://example.de/produkt" />
             </Field>
           ) : (
-            <Field label="JSON-LD" hint="A single object, an array, or an @graph document.">
+            <Field label="JSON-LD" hint="Ein einzelnes Objekt, ein Array oder ein @graph-Dokument.">
               <Textarea required rows={14} spellCheck={false} value={jsonld} onChange={(e) => setJsonld(e.target.value)} className="font-mono text-xs"
                 placeholder={'{\n  "@context": "https://schema.org",\n  "@type": "Organization",\n  "name": "Example"\n}'} />
             </Field>
           )}
-          <Button type="submit" variant="primary" loading={run.isPending}>Validate</Button>
+          <Button type="submit" variant="primary" loading={run.isPending}>Prüfen</Button>
         </form>
       </Card>
-      <Card title="Result">
-        {run.isPending ? <Spinner label={mode === "url" ? "Fetching and validating…" : "Validating…"} />
+      <Card title="Ergebnis">
+        {run.isPending ? <Spinner label={mode === "url" ? "Wird abgerufen und geprüft…" : "Wird geprüft…"} />
           : run.error ? <ErrorBox error={run.error} onRetry={() => run.mutate()} />
           : run.data ? <ValidationResult result={run.data} />
-          : <EmptyState title="No validation yet" description="Enter a URL or paste markup, then choose Validate. Checks cover required and recommended properties of common rich-result types." />}
+          : <EmptyState title="Noch keine Prüfung" description="URL eingeben oder Markup einfügen und auf Prüfen klicken. Geprüft werden Pflicht- und empfohlene Angaben gängiger Rich-Result-Typen." />}
       </Card>
     </div>
   );
@@ -300,7 +300,7 @@ function Generator({ initialType }: { initialType: string | null }) {
 
   if (typesQ.isLoading) return <Spinner />;
   if (typesQ.error) return <ErrorBox error={typesQ.error} onRetry={() => typesQ.refetch()} />;
-  if (!active) return <Card><EmptyState title="No templates available" description="The server did not return any schema templates." /></Card>;
+  if (!active) return <Card><EmptyState title="Keine Vorlagen verfügbar" description="Der Server hat keine Schema-Vorlagen geliefert." /></Card>;
 
   const template: Record<string, any> = templateQ.data?.jsonld ?? {};
   const spec = typesQ.data?.validated_types?.[active];
@@ -316,9 +316,9 @@ function Generator({ initialType }: { initialType: string | null }) {
 
   return (
     <div className="grid gap-4 lg:grid-cols-2">
-      <Card title="Template" description="Pick a type, fill in the fields, then generate the markup">
+      <Card title="Vorlage" description="Typ wählen, Felder ausfüllen, dann Markup erzeugen">
         <form onSubmit={submit} className="space-y-4">
-          <Field label="Schema type">
+          <Field label="Schema-Typ">
             <Select value={active} onChange={(e) => setType(e.target.value)}>
               {templates.map((t) => <option key={t} value={t}>{t}</option>)}
             </Select>
@@ -329,13 +329,13 @@ function Generator({ initialType }: { initialType: string | null }) {
               {spec.recommended.length > 0 && <> · Recommended: {spec.recommended.join(", ")}</>}
             </p>
           )}
-          {templateQ.isLoading ? <Spinner label="Loading template…" /> : templateQ.error ? <ErrorBox error={templateQ.error} onRetry={() => templateQ.refetch()} /> : (
+          {templateQ.isLoading ? <Spinner label="Vorlage wird geladen…" /> : templateQ.error ? <ErrorBox error={templateQ.error} onRetry={() => templateQ.refetch()} /> : (
             <>
               <div className="grid gap-3 sm:grid-cols-2">
                 {keys.filter((k) => simple(template[k]) || isStringList(template[k])).map((key) => {
                   const list = isStringList(template[key]);
                   return (
-                    <Field key={key} label={`${labelOf(key)}${required(key) ? " *" : ""}`} hint={list ? "Separate several values with commas" : undefined}>
+                    <Field key={key} label={`${labelOf(key)}${required(key) ? " *" : ""}`} hint={list ? "Mehrere Werte durch Kommas trennen" : undefined}>
                       <Input type={typeof template[key] === "number" ? "number" : "text"} value={form[key] ?? ""}
                         placeholder={list ? "" : String(template[key] ?? "")} onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))} />
                     </Field>
@@ -363,9 +363,9 @@ function Generator({ initialType }: { initialType: string | null }) {
                 </p>
               )}
               <div className="flex flex-wrap items-center gap-2">
-                <Button type="submit" variant="primary" loading={generate.isPending}>Generate markup</Button>
-                <Button type="button" variant="ghost" disabled={!dirty && !generate.data} onClick={() => { setForm({}); generate.reset(); }}>Reset fields</Button>
-                {generate.data && dirty && <span className="text-xs text-slate-500 dark:text-slate-400">Generate again after changing fields.</span>}
+                <Button type="submit" variant="primary" loading={generate.isPending}>Markup erzeugen</Button>
+                <Button type="button" variant="ghost" disabled={!dirty && !generate.data} onClick={() => { setForm({}); generate.reset(); }}>Felder leeren</Button>
+                {generate.data && dirty && <span className="text-xs text-slate-500 dark:text-slate-400">Nach Änderungen erneut erzeugen.</span>}
               </div>
               {generate.error ? <ErrorBox error={generate.error} /> : null}
             </>
@@ -373,16 +373,16 @@ function Generator({ initialType }: { initialType: string | null }) {
         </form>
       </Card>
       <div className="space-y-4">
-        <Card title="Generated markup" description="Paste the HTML snippet into the page's <head> or <body>">
-          {!result ? (templateQ.error ? <EmptyState title="No markup" description="The template could not be loaded." /> : <Spinner />) : (
+        <Card title="Erzeugtes Markup" description="HTML-Schnipsel in <head> oder <body> der Seite einfügen">
+          {!result ? (templateQ.error ? <EmptyState title="Kein Markup" description="Die Vorlage konnte nicht geladen werden." /> : <Spinner />) : (
             <div className="space-y-3">
-              <CodeBlock label="HTML snippet" code={result.html} />
+              <CodeBlock label="HTML-Schnipsel" code={result.html} />
               <CodeBlock label="JSON-LD" code={JSON.stringify(result.jsonld, null, 2)} />
             </div>
           )}
         </Card>
         {result?.validation && (
-          <Card title="Validation of the generated markup" description="Empty template fields count as missing">
+          <Card title="Prüfung des erzeugten Markups" description="Leere Vorlagenfelder gelten als fehlend">
             <ValidationResult result={result.validation} />
           </Card>
         )}
@@ -403,9 +403,9 @@ export default function Schema() {
   };
   return (
     <>
-      <PageHeader title="Structured data" description="Audit the schema.org markup found by the crawl, validate any page or snippet, and generate JSON-LD from templates." />
+      <PageHeader title="Strukturierte Daten" description="schema.org-Markup aus dem Crawl prüfen, beliebige Seiten oder Schnipsel validieren und JSON-LD aus Vorlagen erzeugen." />
       <Tabs<TabId> value={tab} onChange={(id) => go(id)} tabs={[
-        { id: "overview", label: "Site overview" },
+        { id: "overview", label: "Website-Überblick" },
         { id: "validator", label: "Validator" },
         { id: "generator", label: "Generator" },
       ]} />

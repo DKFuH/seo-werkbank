@@ -39,30 +39,30 @@ function Compare({ siteId, crawlId }: { siteId: number; crawlId: number }) {
 
   const changed: any[] = (cmp.data?.issues ?? []).filter((i: any) => i.change !== 0);
   const columns: Column<any>[] = [
-    { key: "severity", header: "Severity", render: (i) => <SeverityBadge severity={i.severity} /> },
-    { key: "title", header: "Issue", render: (i) => <div className="max-w-[26rem] whitespace-normal font-medium text-slate-900 dark:text-slate-100">{i.title}</div> },
-    { key: "previous", header: "Previous", align: "right", render: (i) => fmtInt(i.previous) },
-    { key: "current", header: "Current", align: "right", render: (i) => fmtInt(i.current) },
-    { key: "change", header: "Change", align: "right", render: (i) => <Change value={i.change} /> },
+    { key: "severity", header: "Schweregrad", render: (i) => <SeverityBadge severity={i.severity} /> },
+    { key: "title", header: "Befund", render: (i) => <div className="max-w-[26rem] whitespace-normal font-medium text-slate-900 dark:text-slate-100">{i.title}</div> },
+    { key: "previous", header: "Vorher", align: "right", render: (i) => fmtInt(i.previous) },
+    { key: "current", header: "Jetzt", align: "right", render: (i) => fmtInt(i.current) },
+    { key: "change", header: "Änderung", align: "right", render: (i) => <Change value={i.change} /> },
   ];
   return (
-    <Card title="Compare with previous crawl" description={`Crawl #${crawlId} against an earlier completed crawl`} padded={false}
+    <Card title="Mit früherem Crawl vergleichen" description={`Crawl #${crawlId} gegen einen früheren abgeschlossenen Crawl`} padded={false}
       actions={
-        <Select value={previousId} onChange={(e) => setChosen(Number(e.target.value))} className="w-auto" aria-label="Crawl to compare against">
+        <Select value={previousId} onChange={(e) => setChosen(Number(e.target.value))} className="w-auto" aria-label="Vergleichs-Crawl">
           {others.map((c) => <option key={c.id} value={c.id}>#{c.id} · {fmtDateTime(c.finished_at)}</option>)}
         </Select>
       }>
       {cmp.isLoading ? <Spinner /> : cmp.error ? <div className="p-3"><ErrorBox error={cmp.error} onRetry={() => cmp.refetch()} /></div> : (
         <>
           <div className="grid grid-cols-1 gap-4 p-4 sm:grid-cols-3">
-            <Stat label="Score change" value={cmp.data.score_change === null ? "–" : <Change value={cmp.data.score_change} goodWhenUp />}
+            <Stat label="Score-Änderung" value={cmp.data.score_change === null ? "–" : <Change value={cmp.data.score_change} goodWhenUp />}
               hint={`${fmtNum(cmp.data.previous.score, 0)} → ${fmtNum(cmp.data.current.score, 0)}`} />
-            <Stat label="URLs added" value={fmtInt(cmp.data.added_count)} hint="Found now, absent from the earlier crawl" />
-            <Stat label="URLs removed" value={fmtInt(cmp.data.removed_count)} hint="In the earlier crawl, not found now" />
+            <Stat label="Neue URLs" value={fmtInt(cmp.data.added_count)} hint="Jetzt gefunden, im früheren Crawl nicht vorhanden" />
+            <Stat label="Entfallene URLs" value={fmtInt(cmp.data.removed_count)} hint="Im früheren Crawl vorhanden, jetzt nicht gefunden" />
           </div>
           <div className="border-t border-slate-100 dark:border-slate-800">
             <DataTable columns={columns} rows={changed} rowKey={(i) => i.id} dense onRowClick={(i) => navigate(`/audit/issues/${i.id}`)}
-              empty={<EmptyState title="No change in issues" description="Every rule affects the same number of URLs in both crawls." />} />
+              empty={<EmptyState title="Keine Änderung bei den Befunden" description="Jede Regel betrifft in beiden Crawls gleich viele URLs." />} />
           </div>
         </>
       )}
@@ -89,7 +89,7 @@ export default function Audit() {
 
   if (loading) return <Spinner />;
   if (!site || crawlId === null) {
-    return <><PageHeader title="Site Audit" description="Technical SEO issues found by the latest crawl, ranked by severity." /><NeedsCrawl hasSite={!!site} running={!!site?.active_crawl} /></>;
+    return <><PageHeader title="Website-Audit" description="Technische SEO-Befunde des letzten Crawls, nach Schweregrad sortiert." /><NeedsCrawl hasSite={!!site} running={!!site?.active_crawl} /></>;
   }
 
   const downloadPdf = async () => {
@@ -105,12 +105,12 @@ export default function Audit() {
   };
 
   const header = (
-    <PageHeader title="Site Audit" description={<>Technical SEO issues for <span className="font-medium text-slate-700 dark:text-slate-200">{site.name}</span>, ranked by severity.</>}
+    <PageHeader title="Website-Audit" description={<>Technische SEO-Befunde für <span className="font-medium text-slate-700 dark:text-slate-200">{site.name}</span>, nach Schweregrad sortiert.</>}
       actions={<>
-        <Button icon={<FileDown className="h-4 w-4" />} loading={pdfBusy} onClick={downloadPdf}>PDF report</Button>
-        <ExportMenu label="Export issues" formats={[
-          { label: "Issues (CSV)", path: `/crawls/${crawlId}/export`, query: { dataset: "issues", format: "csv" } },
-          { label: "Issues (Excel)", path: `/crawls/${crawlId}/export`, query: { dataset: "issues", format: "xlsx" } },
+        <Button icon={<FileDown className="h-4 w-4" />} loading={pdfBusy} onClick={downloadPdf}>PDF-Bericht</Button>
+        <ExportMenu label="Befunde exportieren" formats={[
+          { label: "Befunde (CSV)", path: `/crawls/${crawlId}/export`, query: { dataset: "issues", format: "csv" } },
+          { label: "Befunde (Excel)", path: `/crawls/${crawlId}/export`, query: { dataset: "issues", format: "xlsx" } },
         ]} />
       </>} />
   );
@@ -123,15 +123,15 @@ export default function Audit() {
   const tones = { critical: "bad", high: "warn", medium: undefined, low: undefined } as const;
 
   const columns: Column<any>[] = [
-    { key: "severity", header: "Severity", render: (g) => <SeverityBadge severity={g.severity} /> },
-    { key: "title", header: "Issue", render: (g) => (
+    { key: "severity", header: "Schweregrad", render: (g) => <SeverityBadge severity={g.severity} /> },
+    { key: "title", header: "Befund", render: (g) => (
       <div className="max-w-[34rem] whitespace-normal">
         <div className="font-medium text-slate-900 dark:text-slate-100">{g.title}</div>
         <div className="line-clamp-2 text-xs text-slate-500 dark:text-slate-400">{g.description}</div>
       </div>
     ) },
-    { key: "category", header: "Category", render: (g) => <Badge>{titleCase(g.category)}</Badge> },
-    { key: "count", header: "Affected", align: "right", tooltip: "URLs affected. Site-wide checks count once.", render: (g) => <span className="font-semibold text-slate-900 dark:text-slate-100">{fmtInt(g.count)}</span> },
+    { key: "category", header: "Kategorie", render: (g) => <Badge>{titleCase(g.category)}</Badge> },
+    { key: "count", header: "Betroffen", align: "right", tooltip: "Betroffene URLs. Websiteweite Prüfungen zählen einmal.", render: (g) => <span className="font-semibold text-slate-900 dark:text-slate-100">{fmtInt(g.count)}</span> },
   ];
 
   return (
@@ -150,26 +150,26 @@ export default function Audit() {
               </div>
             </div>
             <p className="mt-4 border-t border-slate-100 pt-3 text-xs leading-relaxed text-slate-500 dark:border-slate-800 dark:text-slate-400">
-              <span className="font-medium text-slate-700 dark:text-slate-300">How the score works. </span>{q.data.scoring}
+              <span className="font-medium text-slate-700 dark:text-slate-300">So wird der Score berechnet: </span>{q.data.scoring}
             </p>
           </Card>
           <div className="grid grid-cols-2 gap-4 lg:col-span-2 lg:grid-cols-4">
             {SEVERITIES.map((s) => (
-              <button key={s} onClick={() => setSeverity(severity === s ? "" : s)} aria-pressed={severity === s} title={`Filter by ${s}`}
+              <button key={s} onClick={() => setSeverity(severity === s ? "" : s)} aria-pressed={severity === s} title={`Nach ${titleCase(s)} filtern`}
                 className={`rounded-xl text-left transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 ${severity === s ? "ring-2 ring-brand-500" : ""}`}>
-                <Stat label={s} value={fmtInt(bySeverity[s] ?? 0)} tone={bySeverity[s] ? tones[s] : undefined} hint={`${groups.filter((g) => g.severity === s).length} issue types`} />
+                <Stat label={titleCase(s)} value={fmtInt(bySeverity[s] ?? 0)} tone={bySeverity[s] ? tones[s] : undefined} hint={`${groups.filter((g) => g.severity === s).length} Befundarten`} />
               </button>
             ))}
             <div className="col-span-2 lg:col-span-4">
-              <Card title="Issues by category">
-                {!categoryData.length ? <EmptyState title="No issues" description="Nothing to chart." /> : (
+              <Card title="Befunde nach Kategorie">
+                {!categoryData.length ? <EmptyState title="Keine Befunde" description="Nichts darzustellen." /> : (
                   <ResponsiveContainer width="100%" height={Math.max(150, categoryData.length * 26 + 30)}>
                     <BarChart data={categoryData} layout="vertical" margin={{ top: 0, right: 16, bottom: 0, left: 8 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#94a3b833" horizontal={false} />
                       <XAxis type="number" allowDecimals={false} tick={axisTick} />
                       <YAxis type="category" dataKey="name" width={120} tick={axisTick} />
                       <ChartTooltip contentStyle={tooltipStyle} cursor={{ fill: "#94a3b81a" }} />
-                      <Bar dataKey="value" name="Issues" radius={[0, 4, 4, 0]}>{categoryData.map((d, i) => <Cell key={d.name} fill={chartColors[i % chartColors.length]} />)}</Bar>
+                      <Bar dataKey="value" name="Befunde" radius={[0, 4, 4, 0]}>{categoryData.map((d, i) => <Cell key={d.name} fill={chartColors[i % chartColors.length]} />)}</Bar>
                     </BarChart>
                   </ResponsiveContainer>
                 )}
@@ -178,22 +178,22 @@ export default function Audit() {
           </div>
         </div>
 
-        <Card title="Issues" description="Select an issue to see the affected URLs and how to fix it." padded={false}>
+        <Card title="Befunde" description="Befund anklicken, um betroffene URLs und die Lösung zu sehen." padded={false}>
           <div className="flex flex-wrap items-center gap-2 border-b border-slate-100 p-3 dark:border-slate-800">
-            <SearchInput value={search} onChange={setSearch} placeholder="Search issues…" />
-            <Select value={severity} onChange={(e) => setSeverity(e.target.value)} className="w-auto" aria-label="Severity filter">
-              <option value="">All severities</option>
+            <SearchInput value={search} onChange={setSearch} placeholder="Befunde suchen…" />
+            <Select value={severity} onChange={(e) => setSeverity(e.target.value)} className="w-auto" aria-label="Schweregrad-Filter">
+              <option value="">Alle Schweregrade</option>
               {SEVERITIES.map((s) => <option key={s} value={s}>{titleCase(s)}</option>)}
             </Select>
-            <Select value={category} onChange={(e) => setCategory(e.target.value)} className="w-auto" aria-label="Category filter">
-              <option value="">All categories</option>
+            <Select value={category} onChange={(e) => setCategory(e.target.value)} className="w-auto" aria-label="Kategorie-Filter">
+              <option value="">Alle Kategorien</option>
               {Object.keys(q.data.by_category ?? {}).map((c) => <option key={c} value={c}>{titleCase(c)}</option>)}
             </Select>
             <span className="ml-auto text-xs text-slate-500 dark:text-slate-400">{rows.length} of {groups.length}</span>
           </div>
           <DataTable columns={columns} rows={rows} rowKey={(g) => g.id} onRowClick={(g) => navigate(`/audit/issues/${g.id}`)}
-            empty={groups.length ? <EmptyState title="No issues match" description="Clear the search or filters to see every issue." />
-              : <EmptyState title="No issues found" description="The latest crawl did not trigger any audit rule." />} />
+            empty={groups.length ? <EmptyState title="Keine passenden Befunde" description="Suche oder Filter zurücksetzen, um alle Befunde zu sehen." />
+              : <EmptyState title="Keine Befunde" description="Der letzte Crawl hat keine Audit-Regel ausgelöst." />} />
         </Card>
 
         <Compare siteId={site.id} crawlId={crawlId} />

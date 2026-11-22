@@ -156,7 +156,7 @@ async def run_local_lighthouse(url: str, strategy: str = "mobile", timeout_s: in
     """Run the Lighthouse CLI if installed (``npm i -g lighthouse``; needs Chrome). Lab data only."""
     exe = lighthouse_path()
     if not exe:
-        raise RuntimeError("Lighthouse CLI not found. Install Node.js and run: npm install -g lighthouse")
+        raise RuntimeError("Lighthouse-CLI nicht gefunden. Node.js installieren und ausführen: npm install -g lighthouse")
     s = get_settings()
     validate_url(url, s.allow_private_networks)
     parts = urlsplit(url)
@@ -173,10 +173,10 @@ async def run_local_lighthouse(url: str, strategy: str = "mobile", timeout_s: in
             stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=timeout_s)
         except TimeoutError:
             proc.kill()
-            raise RuntimeError("Local Lighthouse run timed out") from None
+            raise RuntimeError("Lokaler Lighthouse-Lauf hat das Zeitlimit überschritten") from None
     if proc.returncode != 0 or not stdout.strip():
         log.warning("lighthouse failed: %s", stderr.decode("utf-8", "replace")[-400:])
-        raise RuntimeError("Lighthouse failed. See the server log for details.")
+        raise RuntimeError("Lighthouse ist fehlgeschlagen. Details im Serverlog.")
     report = json.loads(stdout)
     # Chrome follows redirects on its own: refuse results from a page that ended up somewhere non-public.
     final = report.get("finalDisplayedUrl") or report.get("finalUrl") or url

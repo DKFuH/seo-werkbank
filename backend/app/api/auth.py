@@ -60,16 +60,16 @@ def register(body: Credentials, db: Session = Depends(get_db)) -> dict:
     with _register_lock:
         users = db.scalar(select(func.count()).select_from(User)) or 0
         if users > 0 and not get_settings().allow_registration:
-            raise HTTPException(403, "Registration is disabled on this instance")
+            raise HTTPException(403, "Die Registrierung ist auf dieser Instanz deaktiviert")
         if db.scalar(select(User).where(User.email == email)):
-            raise HTTPException(409, "An account with this email already exists")
+            raise HTTPException(409, "Ein Konto mit dieser E-Mail-Adresse existiert bereits")
         user = User(email=email, password_hash=hash_password(body.password), is_admin=users == 0)
         db.add(user)
         try:
             db.commit()
         except IntegrityError:
             db.rollback()
-            raise HTTPException(409, "An account with this email already exists") from None
+            raise HTTPException(409, "Ein Konto mit dieser E-Mail-Adresse existiert bereits") from None
     return {"access_token": access_token_for(user), "token_type": "bearer", "user": _user_out(user)}
 
 
@@ -78,14 +78,14 @@ def login(body: LoginBody, db: Session = Depends(get_db)) -> dict:
     email = body.email.lower().strip()
     fail_key = f"fail:{email}"
     if limiter.count(fail_key, FAIL_WINDOW_S) >= FAIL_LIMIT:
-        raise HTTPException(429, "Too many failed sign-in attempts for this account. Try again in a few minutes.",
+        raise HTTPException(429, "Zu viele fehlgeschlagene Anmeldeversuche für dieses Konto. In ein paar Minuten erneut versuchen.",
                             headers={"Retry-After": "300"})
     user = db.scalar(select(User).where(User.email == email))
     # Always run one hash verification so response time does not reveal whether the account exists.
     ok = verify_password(body.password, user.password_hash if user else _DUMMY_HASH)
     if not user or not ok or not user.is_active:
         limiter.hit(fail_key, FAIL_WINDOW_S)
-        raise HTTPException(401, "Incorrect email or password")
+        raise HTTPException(401, "E-Mail-Adresse oder Passwort falsch")
     limiter.clear(fail_key)
     return {"access_token": access_token_for(user), "token_type": "bearer", "user": _user_out(user)}
 

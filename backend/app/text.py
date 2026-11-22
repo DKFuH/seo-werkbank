@@ -20,6 +20,30 @@ STOPWORDS = set(
     "won't would wouldn't you you'd you'll you're you've your yours yourself yourselves will just get got one two "
     "may might much many via per etc us new use used using like make made within without however therefore".split()
 )
+# German stopwords as well: most analysed pages of this installation are German, and English-only filtering
+# turned "der", "und", "nicht" into "related terms".
+DE_STOPWORDS = set(
+    "aber alle allem allen aller alles als also am an ander andere anderem anderen anderer anderes anderm andern "
+    "anders auch auf aus bei beim bin bis bist da dabei dadurch dafür dagegen daher dahin damals damit danach daneben "
+    "dann daran darauf daraus darf darfst darin darum darunter darüber das dass dasselbe davon davor dazu dein deine "
+    "deinem deinen deiner deines dem demselben den denen denn dennoch denselben der deren derer derselbe derselben des "
+    "deshalb desselben dessen dich die dies diese dieselbe dieselben diesem diesen dieser dieses dir doch dort du durch "
+    "dürfen ebenso ein eine einem einen einer eines einige einigem einigen einiger einiges einmal einzeln er es etwa "
+    "etwas euch euer eure eurem euren eurer eures falls für gab gar gegen gehabt geht gemacht gewesen gibt gleich "
+    "hab habe haben hast hat hatte hatten hattest hier hin hinter ich ihm ihn ihnen ihr ihre ihrem ihren ihrer ihres "
+    "im immer in indem ins ist ja je jede jedem jeden jeder jedes jedoch jene jenem jenen jener jenes jetzt kann kannst "
+    "kaum kein keine keinem keinen keiner keines können könnte lassen man manche manchem manchen mancher manches mehr "
+    "mein meine meinem meinen meiner meines meist mich mir mit muss musst müssen musste nach nachdem nein nicht nichts "
+    "noch nun nur ob oben oder ohne paar per rund schon sehr sein seine seinem seinen seiner seines seit selbst sich sie "
+    "sind so sodass solche solchem solchen solcher solches soll sollen sollte sollten sondern sowie sowohl statt über "
+    "überhaupt um und uns unser unsere unserem unseren unserer unseres unter viel viele vielen vom von vor wann war "
+    "waren warst warum was weder weil weiter weitere weiteren welche welchem welchen welcher welches wenn wer werde "
+    "werden werdet weshalb wie wieder will wir wird wirst wo wobei wohl wollen wollte worden wurde wurden während "
+    "zu zum zur zwar zwischen eher ganz geben gilt mal sowas bzw ca dazu z b zb usw ggf inkl etc bitte".split()
+)
+
+EN_STOPWORDS = STOPWORDS
+STOPWORDS = STOPWORDS | DE_STOPWORDS
 QUESTION_WORDS = ("who", "what", "when", "where", "why", "how", "which", "can", "does", "do", "is", "are", "will", "should")
 
 

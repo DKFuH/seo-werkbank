@@ -155,7 +155,7 @@ def test_sitemap_schema_hreflang_local(client, auth, crawled):
 def test_exports(client, auth, crawled):
     cid = crawled["crawl_id"]
     csv_r = client.get(f"/api/crawls/{cid}/export", headers=auth, params={"dataset": "issues", "format": "csv"})
-    assert csv_r.status_code == 200 and "attachment" in csv_r.headers["content-disposition"] and "Broken internal links" in csv_r.text
+    assert csv_r.status_code == 200 and "attachment" in csv_r.headers["content-disposition"] and "Defekte interne Links" in csv_r.text
     pages_csv = client.get(f"/api/crawls/{cid}/export", headers=auth, params={"dataset": "pages"}).text
     assert pages_csv.count("\n") > 40 and "status_code" in pages_csv.splitlines()[0]
     x = client.get(f"/api/crawls/{cid}/export", headers=auth, params={"dataset": "all", "format": "xlsx"})
@@ -229,7 +229,7 @@ def test_backlinks_flow(client, auth, crawled):
     rows = {b["source_url"].rsplit("/", 1)[1]: b for b in client.get(f"/api/sites/{sid}/backlinks", headers=auth).json()["items"]}
     assert rows["linker"]["status"] == "live" and rows["linker"]["nofollow"] is True and rows["linker"]["anchor"] == "about the fixture"
     s = client.get(f"/api/sites/{sid}/backlinks/summary", headers=auth).json()
-    assert s["total"] == 3 and s["referring_domains"] == 1 and "not a complete picture" in s["coverage_note"]
+    assert s["total"] == 3 and s["referring_domains"] == 1 and "kein vollständiges Bild" in s["coverage_note"]
     assert s["broken_targets"][0]["url"] == base + "/does-not-exist" and s["opportunities"][0]["type"] == "reclaim"
     assert "linker" in client.get(f"/api/sites/{sid}/backlinks/export", headers=auth).text
     assert client.post(f"/api/sites/{sid}/backlinks/import", headers=auth, files={"file": ("x.csv", b"foo,bar\n1,2\n", "text/csv")}).status_code == 400
@@ -257,7 +257,7 @@ def test_gsc_csv_import_and_insights(client, auth, crawled):
     ins = client.get(f"/api/sites/{sid}/gsc/insights", headers=auth).json()
     assert ins["declining_queries"][0]["key"] == "seo audit tool" and ins["declining_queries"][0]["click_change"] == -224
     assert any(q["key"] == "brand new query" for q in ins["new_queries"])
-    assert any(o["key"] == "striking keyword" and o["type"] == "striking distance" and "Estimate" in o["basis"] for o in ins["opportunities"])
+    assert any(o["key"] == "striking keyword" and o["type"] == "striking distance" and "Schätzung" in o["basis"] for o in ins["opportunities"])
     assert ins["cannibalisation"][0]["query"] == "striking keyword" and len(ins["cannibalisation"][0]["pages"]) == 2
     assert client.post(f"/api/sites/{sid}/gsc/import", headers=auth, files={"file": ("bad.csv", b"a,b\n1,2\n", "text/csv")}).status_code == 400
     assert client.get("/api/gsc/status", headers=auth).json()["connected"] is False
@@ -314,7 +314,7 @@ def test_competitor_flow(client, auth, crawled):
     rival = cmp["competitors"][0]["profile"]
     assert cmp["site"]["profile"]["indexable_pages"] > 20 and rival["indexable_pages"] >= 20 and rival["avg_word_count"] > 200
     assert rival["keyword_overlap"]["gaps"] and any(g["term"].startswith("big") for g in rival["keyword_overlap"]["gaps"])
-    assert any("not verifiable" in n for n in cmp["notes"])
+    assert any("nicht prüfen" in n for n in cmp["notes"])
     assert client.get(f"/api/sites/{sid}/competitors/report.pdf", headers=auth).content[:5] == b"%PDF-"
     assert client.get(f"/api/sites/{sid}/crawls", headers=auth).json()[0]["competitor_id"] is None  # competitor crawls stay separate
     assert client.delete(f"/api/sites/{sid}/competitors/{comp['id']}", headers=auth).status_code == 204
@@ -338,7 +338,7 @@ def test_ai_prompt_is_grounded_in_real_data(client, auth, crawled, monkeypatch):
     monkeypatch.setattr(ai, "complete", fake_complete)
     r = client.post("/api/ai/run", headers=auth, json={"task": "explain_issue", "crawl_id": crawled["crawl_id"], "rule_id": "redirect_loop"})
     assert r.status_code == 200 and r.json()["output"] == "ok"
-    assert "/loop-a" in seen["prompt"] and "Redirect loop" in seen["prompt"] and "Do not invent" in seen["system"]
+    assert "/loop-a" in seen["prompt"] and "Weiterleitungsschleife" in seen["prompt"] and "Do not invent" in seen["system"]
 
 
 def test_crawl_limits_cancel_and_delete(client, auth, fixture_site):

@@ -42,7 +42,7 @@ export default function International() {
   useEffect(() => setPage(1), [search]);
   const perPage = 25;
 
-  const header = <PageHeader title="International SEO" description="hreflang annotations, language attributes and locale URL structure for sites that target several languages or countries." />;
+  const header = <PageHeader title="Internationales SEO" description="hreflang-Angaben, Sprachattribute und Länder-URL-Struktur für Websites mit mehreren Sprachen oder Ländern." />;
   if (!crawlId) return <>{header}<NeedsCrawl hasSite={!!site} running={!!site?.active_crawl} /></>;
   if (q.isLoading) return <>{header}<Spinner /></>;
   if (q.error) return <>{header}<ErrorBox error={q.error} onRetry={() => q.refetch()} /></>;
@@ -65,13 +65,13 @@ export default function International() {
   });
 
   const issueColumns: Column<any>[] = [
-    { key: "severity", header: "Severity", render: (i) => <SeverityBadge severity={i.severity} /> },
-    { key: "title", header: "Issue", render: (i) => <div className="max-w-xl"><div className="font-medium text-slate-900 dark:text-slate-100">{i.title}</div><div className="text-xs text-slate-500 dark:text-slate-400">{i.fix}</div></div> },
-    { key: "count", header: "Affected URLs", align: "right", render: (i) => fmtInt(i.count) },
+    { key: "severity", header: "Schweregrad", render: (i) => <SeverityBadge severity={i.severity} /> },
+    { key: "title", header: "Befund", render: (i) => <div className="max-w-xl"><div className="font-medium text-slate-900 dark:text-slate-100">{i.title}</div><div className="text-xs text-slate-500 dark:text-slate-400">{i.fix}</div></div> },
+    { key: "count", header: "Betroffene URLs", align: "right", render: (i) => fmtInt(i.count) },
   ];
   const pageColumns: Column<any>[] = [
     {
-      key: "url", header: "Page", render: (p) => {
+      key: "url", header: "Seite", render: (p) => {
         const open = expanded.has(p.page_id);
         const alts: any[] = p.alternates ?? [];
         const selfRef = alts.some((a) => a.href === p.url);
@@ -88,13 +88,13 @@ export default function International() {
                     <li key={i} className="flex items-start gap-2 px-2.5 py-1.5 text-xs">
                       <span className="w-20 shrink-0"><Badge tone={a.lang.toLowerCase() === "x-default" ? "purple" : "blue"}>{a.lang}</Badge></span>
                       <Url href={a.href} className="min-w-0 flex-1" />
-                      {a.href === p.url && <Badge tone="green" title="The page lists itself, as it should">self</Badge>}
+                      {a.href === p.url && <Badge tone="green" title="Die Seite nennt sich selbst, wie es sein soll">selbst</Badge>}
                     </li>
                   ))}
                 </ul>
                 <div className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 bg-slate-50 px-2.5 py-1.5 text-xs dark:border-slate-800 dark:bg-slate-900/60">
-                  {selfRef ? <span className="text-slate-500 dark:text-slate-400">Includes a self-reference.</span> : <span className="text-amber-700 dark:text-amber-300">No self-referencing alternate.</span>}
-                  <button className="font-medium text-brand-700 hover:underline dark:text-brand-300" onClick={() => navigate(`/pages/${crawlId}/${p.page_id}`)}>Open page details</button>
+                  {selfRef ? <span className="text-slate-500 dark:text-slate-400">Enthält einen Selbstverweis.</span> : <span className="text-amber-700 dark:text-amber-300">Kein selbstreferenzierender Eintrag.</span>}
+                  <button className="font-medium text-brand-700 hover:underline dark:text-brand-300" onClick={() => navigate(`/pages/${crawlId}/${p.page_id}`)}>Seitendetails öffnen</button>
                 </div>
               </div>
             )}
@@ -102,10 +102,10 @@ export default function International() {
         );
       },
     },
-    { key: "lang", header: "html lang", render: (p) => (p.html_lang ? <Badge>{p.html_lang}</Badge> : <Badge tone="amber">missing</Badge>) },
-    { key: "count", header: "Alternates", align: "right", render: (p) => fmtInt((p.alternates ?? []).length) },
+    { key: "lang", header: "html lang", render: (p) => (p.html_lang ? <Badge>{p.html_lang}</Badge> : <Badge tone="amber">fehlt</Badge>) },
+    { key: "count", header: "Alternativen", align: "right", render: (p) => fmtInt((p.alternates ?? []).length) },
     {
-      key: "langs", header: "Languages", render: (p) => {
+      key: "langs", header: "Sprachen", render: (p) => {
         const langs: string[] = (p.alternates ?? []).map((a: any) => a.lang);
         return (
           <div className="flex max-w-xs flex-wrap gap-1">
@@ -121,61 +121,61 @@ export default function International() {
     <>
       {header}
       <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-5">
-        <Stat label="Pages with hreflang" value={fmtInt(d.pages_with_hreflang)} />
-        <Stat label="hreflang values" value={fmtInt(Object.keys(hreflang).length)} hint={hreflang["x-default"] ? "includes x-default" : Object.keys(hreflang).length ? "no x-default" : undefined} />
-        <Stat label="html lang values" value={fmtInt(langCount)} hint={missingLang ? `${fmtInt(missingLang)} pages without lang` : "set on every page"} tone={missingLang ? "warn" : undefined} />
-        <Stat label="URL locale folders" value={fmtInt(Object.keys(locales).length)} tooltip="Locale-looking first path segments such as /en/ or /de-ch/" />
-        <Stat label="International issues" value={fmtInt(issueTotal)} tone={issueTotal ? "bad" : "good"} hint={`${issues.length} issue type${issues.length === 1 ? "" : "s"}`} />
+        <Stat label="Seiten mit hreflang" value={fmtInt(d.pages_with_hreflang)} />
+        <Stat label="hreflang-Werte" value={fmtInt(Object.keys(hreflang).length)} hint={hreflang["x-default"] ? "mit x-default" : Object.keys(hreflang).length ? "ohne x-default" : undefined} />
+        <Stat label="html-lang-Werte" value={fmtInt(langCount)} hint={missingLang ? `${fmtInt(missingLang)} Seiten ohne lang` : "auf jeder Seite gesetzt"} tone={missingLang ? "warn" : undefined} />
+        <Stat label="Sprachordner in URLs" value={fmtInt(Object.keys(locales).length)} tooltip="Erste Pfadsegmente, die nach Sprache aussehen, etwa /en/ oder /de-ch/" />
+        <Stat label="Internationale Befunde" value={fmtInt(issueTotal)} tone={issueTotal ? "bad" : "good"} hint={`${issues.length} ${issues.length === 1 ? "Befundart" : "Befundarten"}`} />
       </div>
 
       {!d.is_multilingual && (
         <Card className="mb-4">
-          <EmptyState icon={<Globe className="h-6 w-6" />} title="This site looks single-language"
+          <EmptyState icon={<Globe className="h-6 w-6" />} title="Die Website wirkt einsprachig"
             description={
               <>
-                No hreflang annotations, no second language in the html lang attributes and no locale folders were found, so there is nothing to
-                cross-check. That is fine for a site serving one audience. If you add translations or country versions later, give each version its
-                own URL (for example /en/ and /de/), add reciprocal hreflang links including a self-reference and an x-default, set a matching
-                html lang on every page, and crawl again. The language attribute statistics below still apply.
+                Keine hreflang-Angaben, keine zweite Sprache in den html-lang-Attributen und keine Sprachordner gefunden, es gibt also nichts
+                abzugleichen. Für eine Website mit einer Zielgruppe ist das in Ordnung. Kommen später Übersetzungen oder Länderversionen dazu: jeder Version
+                eine eigene URL geben (z. B. /en/ und /de/), gegenseitige hreflang-Links samt Selbstverweis und x-default setzen, passendes
+                html lang auf jeder Seite und neu crawlen. Die Statistik der Sprachattribute unten gilt trotzdem.
               </>
             } />
         </Card>
       )}
 
       {(d.is_multilingual || issues.length > 0) && (
-        <Card padded={false} title="Issues" description="Click an issue to see the affected URLs" className="mb-4">
+        <Card padded={false} title="Befunde" description="Befund anklicken, um die betroffenen URLs zu sehen" className="mb-4">
           <DataTable columns={issueColumns} rows={issues} rowKey={(i) => i.id} onRowClick={(i) => navigate(`/audit/issues/${i.id}`)}
-            empty={<EmptyState title="No international issues" description="hreflang annotations and language attributes passed every check." />} />
+            empty={<EmptyState title="Keine internationalen Befunde" description="hreflang-Angaben und Sprachattribute bestehen alle Prüfungen." />} />
         </Card>
       )}
 
       <div className="mb-4 grid gap-4 lg:grid-cols-3">
-        <Card title="hreflang values" description="Number of annotations per language/region code">
-          <Distribution data={hreflang} color={chartColors[0]} empty="No hreflang annotations found." />
+        <Card title="hreflang-Werte" description="Anzahl der Angaben je Sprach-/Regionscode">
+          <Distribution data={hreflang} color={chartColors[0]} empty="Keine hreflang-Angaben gefunden." />
         </Card>
-        <Card title="html lang attribute" description="Pages per declared document language">
-          <Distribution data={htmlLang} color={chartColors[1]} empty="No HTML pages in this crawl." highlight={(k) => (k === "missing" ? "warn" : undefined)} />
+        <Card title="html-lang-Attribut" description="Seiten je angegebener Dokumentsprache">
+          <Distribution data={htmlLang} color={chartColors[1]} empty="Keine HTML-Seiten in diesem Crawl." highlight={(k) => (k === "missing" ? "warn" : undefined)} />
         </Card>
-        <Card title="URL locale folders" description="Pages per locale path segment">
-          <Distribution data={locales} color={chartColors[3]} empty="No locale folders such as /en/ or /fr-ca/ in the URLs." />
+        <Card title="Sprachordner in URLs" description="Seiten je Sprach-Pfadsegment">
+          <Distribution data={locales} color={chartColors[3]} empty="Keine Sprachordner wie /en/ oder /fr-ca/ in den URLs." />
         </Card>
       </div>
 
       {missingLang > 0 && (
-        <div className="mb-4"><Notice tone="warn">{fmtInt(missingLang)} page{missingLang === 1 ? " has" : "s have"} no lang attribute on the &lt;html&gt; element. Screen readers and translation tools rely on it. See the <Link to="/audit" className="font-medium underline">audit</Link> for the affected URLs.</Notice></div>
+        <div className="mb-4"><Notice tone="warn">{fmtInt(missingLang)} {missingLang === 1 ? "Seite hat" : "Seiten haben"} kein lang-Attribut am &lt;html&gt;-Element. Screenreader und Übersetzungstools brauchen es. Betroffene URLs im <Link to="/audit" className="font-medium underline">Audit</Link>.</Notice></div>
       )}
 
       {d.is_multilingual && (
-        <Card padded={false} title="Pages with hreflang" description="Click a row to see its alternates" actions={<SearchInput value={search} onChange={setSearch} placeholder="Filter by URL or language…" />}>
+        <Card padded={false} title="Seiten mit hreflang" description="Zeile anklicken, um die Alternativen zu sehen" actions={<SearchInput value={search} onChange={setSearch} placeholder="Nach URL oder Sprache filtern…" />}>
           <DataTable columns={pageColumns} rows={rows.slice((page - 1) * perPage, page * perPage)} rowKey={(p) => p.page_id} onRowClick={(p) => toggle(p.page_id)}
-            empty={<EmptyState title={pages.length ? "No pages match" : "No hreflang annotations in the HTML"}
-              description={pages.length ? "Change the search term." : "The site uses several languages or locale folders, but no page declares hreflang alternates in its <head>. Add them so search engines can serve the right version."} />} />
+            empty={<EmptyState title={pages.length ? "Keine passenden Seiten" : "Keine hreflang-Angaben im HTML"}
+              description={pages.length ? "Suchbegriff ändern." : "Die Website nutzt mehrere Sprachen oder Sprachordner, aber keine Seite nennt hreflang-Alternativen im <head>. Ergänzen, damit Suchmaschinen die richtige Version ausspielen."} />} />
           {rows.length > 0 && <Pagination page={page} perPage={perPage} total={rows.length} onPage={setPage} />}
         </Card>
       )}
       {d.is_multilingual && (
         <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">
-          Up to 500 pages and 40 alternates per page are listed. {d.sitemap_checked ? "Sitemap files were found for this site; hreflang declared only in sitemaps is not listed in this table." : "No sitemap was found, so only hreflang in the HTML was read."}
+          Bis zu 500 Seiten und 40 Alternativen je Seite. {d.sitemap_checked ? "Für die Website wurden Sitemaps gefunden; hreflang, das nur in Sitemaps steht, fehlt in dieser Tabelle." : "Keine Sitemap gefunden, daher wurde nur hreflang im HTML gelesen."}
         </p>
       )}
     </>

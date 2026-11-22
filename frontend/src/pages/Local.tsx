@@ -31,7 +31,7 @@ export default function Local() {
     },
   });
 
-  const header = <PageHeader title="Local SEO" description="LocalBusiness markup, name/address/phone (NAP) consistency, location pages and the citations you track." />;
+  const header = <PageHeader title="Lokales SEO" description="LocalBusiness-Markup, Einheitlichkeit von Name/Adresse/Telefon (NAP), Standortseiten und erfasste Brancheneinträge." />;
   if (!crawlId) return <>{header}<NeedsCrawl hasSite={!!site} running={!!site?.active_crawl} /></>;
   if (q.isLoading) return <>{header}<Spinner /></>;
   if (q.error) return <>{header}<ErrorBox error={q.error} onRetry={() => q.refetch()} /></>;
@@ -48,76 +48,76 @@ export default function Local() {
   const perPage = 25;
 
   const businessColumns: Column<any>[] = [
-    { key: "name", header: "Name", render: (b) => <div className="max-w-xs"><div className="font-medium text-slate-900 dark:text-slate-100">{b.name || <span className="italic text-slate-400">no name</span>}</div><Url href={b.url} label={shortUrl(b.url, base)} className="text-xs" /></div> },
-    { key: "phone", header: "Phone", render: (b) => b.phone || <span className="text-slate-400">–</span> },
-    { key: "address", header: "Address", render: (b) => <span className="block max-w-xs break-words">{b.address || <span className="text-slate-400">–</span>}</span> },
+    { key: "name", header: "Name", render: (b) => <div className="max-w-xs"><div className="font-medium text-slate-900 dark:text-slate-100">{b.name || <span className="italic text-slate-400">kein Name</span>}</div><Url href={b.url} label={shortUrl(b.url, base)} className="text-xs" /></div> },
+    { key: "phone", header: "Telefon", render: (b) => b.phone || <span className="text-slate-400">–</span> },
+    { key: "address", header: "Adresse", render: (b) => <span className="block max-w-xs break-words">{b.address || <span className="text-slate-400">–</span>}</span> },
     { key: "geo", header: "Geo", render: (b) => <YesNo value={b.has_geo} /> },
-    { key: "hours", header: "Hours", render: (b) => <YesNo value={b.has_hours} /> },
+    { key: "hours", header: "Öffnungszeiten", render: (b) => <YesNo value={b.has_hours} /> },
     {
-      key: "problems", header: "Problems", render: (b) => b.problems?.length ? (
+      key: "problems", header: "Probleme", render: (b) => b.problems?.length ? (
         <ul className="max-w-sm list-disc space-y-0.5 pl-4 text-xs">{b.problems.map((p: string, i: number) => <li key={i} className="break-words">{p}</li>)}</ul>
-      ) : <Badge tone="green">none</Badge>,
+      ) : <Badge tone="green">keine</Badge>,
     },
   ];
   const locationColumns: Column<any>[] = [
-    { key: "url", header: "Page", render: (l) => <div className="max-w-sm"><Url href={l.url} label={shortUrl(l.url, base)} />{l.title && <div className="truncate text-xs text-slate-500 dark:text-slate-400">{l.title}</div>}</div> },
-    { key: "words", header: "Words", align: "right", render: (l) => fmtInt(l.word_count) },
-    { key: "schema", header: "Local schema", render: (l) => <YesNo value={l.has_local_schema} /> },
-    { key: "map", header: "Embed", tooltip: "An iframe (typically a map) was found on the page", render: (l) => <YesNo value={l.has_map} /> },
-    { key: "phones", header: "Phones in text", tooltip: "Digits only, as normalised for comparison", render: (l) => (l.phones_in_text?.length ? <span className="font-mono text-xs">{l.phones_in_text.join(", ")}</span> : <span className="text-slate-400">–</span>) },
+    { key: "url", header: "Seite", render: (l) => <div className="max-w-sm"><Url href={l.url} label={shortUrl(l.url, base)} />{l.title && <div className="truncate text-xs text-slate-500 dark:text-slate-400">{l.title}</div>}</div> },
+    { key: "words", header: "Wörter", align: "right", render: (l) => fmtInt(l.word_count) },
+    { key: "schema", header: "Lokales Schema", render: (l) => <YesNo value={l.has_local_schema} /> },
+    { key: "map", header: "Einbettung", tooltip: "Auf der Seite wurde ein iframe gefunden (meist eine Karte)", render: (l) => <YesNo value={l.has_map} /> },
+    { key: "phones", header: "Telefon im Text", tooltip: "Nur Ziffern, für den Vergleich normalisiert", render: (l) => (l.phones_in_text?.length ? <span className="font-mono text-xs">{l.phones_in_text.join(", ")}</span> : <span className="text-slate-400">–</span>) },
     {
-      key: "issues", header: "Issues", render: (l) => l.issues?.length ? (
+      key: "issues", header: "Befunde", render: (l) => l.issues?.length ? (
         <div className="flex max-w-sm flex-wrap gap-1">{l.issues.map((m: string) => <Badge key={m} tone="amber">{m}</Badge>)}</div>
-      ) : <Badge tone="green">none</Badge>,
+      ) : <Badge tone="green">keine</Badge>,
     },
   ];
   const mismatchCell = (c: any, field: string, value: string | null) => (
     <span className="block max-w-xs break-words">
       {value || <span className="text-slate-400">–</span>}
-      {c.mismatches?.includes(field) && <span className="ml-1.5"><Badge tone="red" title={`Differs from the reference ${field} in your site's markup`}>mismatch</Badge></span>}
+      {c.mismatches?.includes(field) && <span className="ml-1.5"><Badge tone="red" title={`Weicht vom Referenzwert (${field}) im Markup deiner Website ab`}>Abweichung</Badge></span>}
     </span>
   );
   const citationColumns: Column<any>[] = [
-    { key: "source", header: "Source", render: (c) => <div className="font-medium text-slate-900 dark:text-slate-100">{c.source}{c.url && <div className="font-normal"><Url href={c.url} label={shortUrl(c.url)} className="text-xs" /></div>}</div> },
+    { key: "source", header: "Quelle", render: (c) => <div className="font-medium text-slate-900 dark:text-slate-100">{c.source}{c.url && <div className="font-normal"><Url href={c.url} label={shortUrl(c.url)} className="text-xs" /></div>}</div> },
     { key: "name", header: "Name", render: (c) => mismatchCell(c, "name", c.name) },
-    { key: "address", header: "Address", render: (c) => mismatchCell(c, "address", c.address) },
-    { key: "phone", header: "Phone", render: (c) => mismatchCell(c, "phone", c.phone) },
-    { key: "consistent", header: "NAP", render: (c) => (c.consistent ? <Badge tone="green">consistent</Badge> : <Badge tone="red">{c.mismatches.length} mismatch{c.mismatches.length === 1 ? "" : "es"}</Badge>) },
+    { key: "address", header: "Adresse", render: (c) => mismatchCell(c, "address", c.address) },
+    { key: "phone", header: "Telefon", render: (c) => mismatchCell(c, "phone", c.phone) },
+    { key: "consistent", header: "NAP", render: (c) => (c.consistent ? <Badge tone="green">einheitlich</Badge> : <Badge tone="red">{c.mismatches.length} {c.mismatches.length === 1 ? "Abweichung" : "Abweichungen"}</Badge>) },
   ];
-  const variants = (n: number | undefined) => (n === undefined ? "–" : n <= 1 ? <Badge tone="green">{n} variant{n === 1 ? "" : "s"}</Badge> : <Badge tone="red">{n} variants</Badge>);
+  const variants = (n: number | undefined) => (n === undefined ? "–" : n <= 1 ? <Badge tone="green">{n} {n === 1 ? "Variante" : "Varianten"}</Badge> : <Badge tone="red">{n} Varianten</Badge>);
 
   return (
     <>
       {header}
       <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Stat label="LocalBusiness items" value={fmtInt(businesses.length)} tone={businesses.length ? undefined : "warn"} />
-        <Stat label="NAP consistency" value={!businesses.length ? "–" : nap.consistent ? "Consistent" : "Inconsistent"} tone={!businesses.length ? undefined : nap.consistent ? "good" : "bad"} tooltip="Whether name, address and phone are identical across all LocalBusiness markup on the site" />
-        <Stat label="Location pages" value={fmtInt(locations.length)} hint={`${fmtInt(locations.filter((l) => l.issues?.length).length)} with issues`} />
-        <Stat label="Citations tracked" value={fmtInt(citations.length)} hint={citations.length ? `${fmtInt(inconsistent)} with mismatches` : "none imported"} tone={inconsistent ? "bad" : undefined} />
+        <Stat label="LocalBusiness-Elemente" value={fmtInt(businesses.length)} tone={businesses.length ? undefined : "warn"} />
+        <Stat label="NAP-Einheitlichkeit" value={!businesses.length ? "–" : nap.consistent ? "Einheitlich" : "Uneinheitlich"} tone={!businesses.length ? undefined : nap.consistent ? "good" : "bad"} tooltip="Ob Name, Adresse und Telefon in allen LocalBusiness-Markups der Website identisch sind" />
+        <Stat label="Standortseiten" value={fmtInt(locations.length)} hint={`${fmtInt(locations.filter((l) => l.issues?.length).length)} mit Befunden`} />
+        <Stat label="Erfasste Einträge" value={fmtInt(citations.length)} hint={citations.length ? `${fmtInt(inconsistent)} mit Abweichungen` : "keine importiert"} tone={inconsistent ? "bad" : undefined} />
       </div>
 
       {!d.has_local_schema && (
         <div className="mb-4">
           <Notice tone="warn">
-            No LocalBusiness structured data was found on this site. Without it there is no reference name, address and phone to compare against.{" "}
-            <Link to="/schema?tab=generator&type=LocalBusiness" className="font-medium underline">Create LocalBusiness markup in the Schema generator</Link>, add it to your contact or location page, then crawl again.
+            Auf dieser Website wurden keine LocalBusiness-Daten gefunden. Ohne sie gibt es keinen Referenzwert für Name, Adresse und Telefon.{" "}
+            <Link to="/schema?tab=generator&type=LocalBusiness" className="font-medium underline">LocalBusiness-Markup im Schema-Generator erstellen</Link>, auf der Kontakt- oder Standortseite einbinden und neu crawlen.
           </Notice>
         </div>
       )}
 
-      <Card title="NAP consistency" description={nap.reference_source} className="mb-4"
-        actions={businesses.length ? (nap.consistent ? <Badge tone="green">consistent</Badge> : <Badge tone="red">inconsistent</Badge>) : <Badge>no data</Badge>}>
+      <Card title="NAP-Einheitlichkeit" description={nap.reference_source} className="mb-4"
+        actions={businesses.length ? (nap.consistent ? <Badge tone="green">einheitlich</Badge> : <Badge tone="red">uneinheitlich</Badge>) : <Badge>keine Daten</Badge>}>
         {!businesses.length ? (
-          <EmptyState icon={<MapPin className="h-6 w-6" />} title="No reference NAP yet" description="The reference name, address and phone are taken from your site's LocalBusiness markup. Add the markup to enable this check." />
+          <EmptyState icon={<MapPin className="h-6 w-6" />} title="Noch keine Referenz-NAP" description="Name, Adresse und Telefon werden aus dem LocalBusiness-Markup deiner Website gelesen. Markup ergänzen, um diese Prüfung zu aktivieren." />
         ) : (
           <div className="grid gap-3 sm:grid-cols-3">
-            {([["Name", ref.name, nap.name_variants], ["Phone", ref.phone, nap.phone_variants], ["Address", ref.address, nap.address_variants]] as [string, string | null, number][]).map(([label, value, n]) => (
+            {([["Name", ref.name, nap.name_variants], ["Telefon", ref.phone, nap.phone_variants], ["Adresse", ref.address, nap.address_variants]] as [string, string | null, number][]).map(([label, value, n]) => (
               <div key={label} className="rounded-lg border border-slate-200 p-3 dark:border-slate-800">
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{label}</span>
                   {variants(n)}
                 </div>
-                <div className="mt-1.5 break-words text-sm font-medium text-slate-900 dark:text-slate-100">{value || <span className="font-normal text-slate-400">not in markup</span>}</div>
+                <div className="mt-1.5 break-words text-sm font-medium text-slate-900 dark:text-slate-100">{value || <span className="font-normal text-slate-400">nicht im Markup</span>}</div>
               </div>
             ))}
             <p className="text-xs text-slate-500 dark:text-slate-400 sm:col-span-3">
@@ -127,34 +127,34 @@ export default function Local() {
         )}
       </Card>
 
-      <Card padded={false} title="Businesses in structured data" description="One row per LocalBusiness item found in JSON-LD" className="mb-4">
+      <Card padded={false} title="Unternehmen in strukturierten Daten" description="Eine Zeile je LocalBusiness-Element im JSON-LD" className="mb-4">
         <DataTable columns={businessColumns} rows={businesses} rowKey={(b, i) => `${b.page_id}-${i}`} onRowClick={open}
-          empty={<EmptyState title="No LocalBusiness markup" description="None of the crawled pages contain LocalBusiness (or a subtype such as Restaurant or Store) in JSON-LD."
-            action={<Link to="/schema?tab=generator&type=LocalBusiness" className={`text-sm ${linkClass}`}>Open the Schema generator</Link>} />} />
+          empty={<EmptyState title="Kein LocalBusiness-Markup" description="Keine gecrawlte Seite enthält LocalBusiness (oder einen Untertyp wie Restaurant oder Store) im JSON-LD."
+            action={<Link to="/schema?tab=generator&type=LocalBusiness" className={`text-sm ${linkClass}`}>Schema-Generator öffnen</Link>} />} />
       </Card>
 
-      <Card padded={false} title="Location pages" description="Pages with local markup or a location-like URL (/contact, /locations, /store…)" className="mb-4">
+      <Card padded={false} title="Standortseiten" description="Seiten mit lokalem Markup oder standorttypischer URL (/kontakt, /standort, /store…)" className="mb-4">
         <DataTable columns={locationColumns} rows={locations.slice((locPage - 1) * perPage, locPage * perPage)} rowKey={(l) => l.page_id} onRowClick={open}
-          empty={<EmptyState title="No location pages found" description="No page has LocalBusiness markup or a URL containing /contact, /location, /store, /branch, /office, /find-us or /areas." />} />
+          empty={<EmptyState title="Keine Standortseiten gefunden" description="Keine Seite hat LocalBusiness-Markup oder eine URL mit /contact, /location, /store, /branch, /office, /find-us oder /areas." />} />
         {locations.length > 0 && <Pagination page={locPage} perPage={perPage} total={locations.length} onPage={setLocPage} />}
       </Card>
 
-      <Card padded={false} title="Citations" description="Listings on directories and platforms, compared with the reference NAP" className="mb-4"
-        actions={site ? <FileButton label="Import citations CSV" accept=".csv,.txt" loading={importCitations.isPending} onFile={(f) => importCitations.mutate(f)} /> : undefined}>
+      <Card padded={false} title="Brancheneinträge" description="Einträge in Verzeichnissen und Plattformen, verglichen mit der Referenz-NAP" className="mb-4"
+        actions={site ? <FileButton label="Einträge-CSV importieren" accept=".csv,.txt" loading={importCitations.isPending} onFile={(f) => importCitations.mutate(f)} /> : undefined}>
         <div className="space-y-3 border-b border-slate-100 p-4 dark:border-slate-800">
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            CSV with a header row and the columns <code className="rounded bg-slate-100 px-1 dark:bg-slate-800">source</code>,{" "}
+            CSV mit Kopfzeile und den Spalten <code className="rounded bg-slate-100 px-1 dark:bg-slate-800">source</code>,{" "}
             <code className="rounded bg-slate-100 px-1 dark:bg-slate-800">url</code>, <code className="rounded bg-slate-100 px-1 dark:bg-slate-800">name</code>,{" "}
             <code className="rounded bg-slate-100 px-1 dark:bg-slate-800">address</code>, <code className="rounded bg-slate-100 px-1 dark:bg-slate-800">phone</code>.
-            Only <em>source</em> is required (for example “Yelp”). Each import replaces the previous list; up to 5,000 rows.
+            Pflicht ist nur <em>source</em> (z. B. „Gelbe Seiten“). Jeder Import ersetzt die bisherige Liste; bis zu 5.000 Zeilen.
           </p>
           {importCitations.error ? <ErrorBox error={importCitations.error} /> : null}
           {imported !== null && (imported > 0
             ? <Notice tone="success">Imported {fmtInt(imported)} citation{imported === 1 ? "" : "s"}.</Notice>
-            : <Notice tone="warn">No rows were imported, and the previous list was cleared. Check that the file has a header row with a “source” column.</Notice>)}
+            : <Notice tone="warn">Keine Zeilen importiert, die bisherige Liste wurde geleert. Prüfen, ob die Datei eine Kopfzeile mit Spalte „source“ hat.</Notice>)}
         </div>
         <DataTable columns={citationColumns} rows={citations} rowKey={(c) => c.id}
-          empty={<EmptyState title="No citations imported" description="Import a CSV of your directory listings to check that each one shows the same name, address and phone as your website." />} />
+          empty={<EmptyState title="Keine Einträge importiert" description="CSV deiner Verzeichniseinträge importieren und prüfen, ob überall dieselben Angaben zu Name, Adresse und Telefon stehen wie auf der Website." />} />
       </Card>
 
       {d.gbp_note && <Notice>{d.gbp_note}</Notice>}

@@ -8,7 +8,7 @@ import {
 } from "../components/ui";
 import { api } from "../lib/api";
 import { useSite } from "../lib/context";
-import { fmtInt, fmtNum, shortUrl } from "../lib/format";
+import { fmtInt, fmtNum, shortUrl, titleCase } from "../lib/format";
 
 type Tab = "research" | "saved" | "mapping" | "cluster";
 
@@ -21,9 +21,9 @@ function IntentBadge({ intent, confidence }: { intent: string | null | undefined
   if (!intent) return <span className="text-slate-400">–</span>;
   return (
     <span className="inline-flex items-center gap-1.5">
-      <Badge tone={INTENT_TONE[intent] ?? "gray"} title="Rule-based estimate">{intent}</Badge>
+      <Badge tone={INTENT_TONE[intent] ?? "gray"} title="Regelbasierte Schätzung">{titleCase(intent)}</Badge>
       {confidence !== undefined && confidence !== null && (
-        <span className="text-xs tabular-nums text-slate-500 dark:text-slate-400" title="Rough confidence of the rule-based estimate">{Math.round(confidence * 100)}%</span>
+        <span className="text-xs tabular-nums text-slate-500 dark:text-slate-400" title="Grobe Sicherheit der regelbasierten Schätzung">{Math.round(confidence * 100)}%</span>
       )}
     </span>
   );
@@ -64,7 +64,7 @@ function parseLines(text: string): string[] {
 
 function ClusterGrid({ clusters }: { clusters: any[] }) {
   const [showAll, setShowAll] = useState<Record<string, boolean>>({});
-  if (!clusters.length) return <EmptyState title="No clusters" description="There were not enough keywords to group." />;
+  if (!clusters.length) return <EmptyState title="Keine Cluster" description="Zu wenige Keywords zum Gruppieren." />;
   return (
     <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
       {clusters.map((c, i) => {
@@ -84,7 +84,7 @@ function ClusterGrid({ clusters }: { clusters: any[] }) {
               {shown.map((k) => <Chip key={k}>{k}</Chip>)}
               {kws.length > 12 && (
                 <button className="text-xs font-medium text-brand-700 hover:underline dark:text-brand-300" onClick={() => setShowAll((s) => ({ ...s, [key]: !s[key] }))}>
-                  {showAll[key] ? "Show fewer" : `+${kws.length - 12} more`}
+                  {showAll[key] ? "Weniger anzeigen" : `+${kws.length - 12} weitere`}
                 </button>
               )}
             </div>
@@ -150,61 +150,61 @@ function ResearchTab() {
   const submit = (e: FormEvent) => { e.preventDefault(); if (seed.trim() && activeSources.length) suggest.mutate(); };
 
   const columns: Column<any>[] = [
-    { key: "sel", width: "32px", header: <RowCheck label="Select all visible keywords" checked={allVisibleSelected} onChange={toggleAll} />,
-      render: (k) => <RowCheck label={`Select ${k.keyword}`} checked={selected.has(k.keyword)} onChange={(v) => toggle(k.keyword, v)} /> },
+    { key: "sel", width: "32px", header: <RowCheck label="Alle sichtbaren Keywords auswählen" checked={allVisibleSelected} onChange={toggleAll} />,
+      render: (k) => <RowCheck label={`${k.keyword} auswählen`} checked={selected.has(k.keyword)} onChange={(v) => toggle(k.keyword, v)} /> },
     { key: "keyword", header: "Keyword", render: (k) => <span className="font-medium text-slate-900 dark:text-slate-100">{k.keyword}</span> },
-    { key: "type", header: "Type", render: (k) => <Badge tone={k.type === "question" ? "blue" : "gray"}>{k.type}</Badge> },
-    { key: "intent", header: <span className="inline-flex items-center gap-1.5">Intent <DataBadge kind="estimated" /></span>,
+    { key: "type", header: "Typ", render: (k) => <Badge tone={k.type === "question" ? "blue" : "gray"}>{titleCase(k.type)}</Badge> },
+    { key: "intent", header: <span className="inline-flex items-center gap-1.5">Intention <DataBadge kind="estimated" /></span>,
       render: (k) => <IntentBadge intent={k.intent} confidence={k.intent_confidence} /> },
-    { key: "sources", header: "Sources", tooltip: "Which autocomplete endpoints returned this suggestion",
+    { key: "sources", header: "Quellen", tooltip: "Welche Autocomplete-Dienste diesen Vorschlag geliefert haben",
       render: (k) => <span className="flex flex-wrap gap-1">{(k.sources ?? []).map((s: string) => <Chip key={s}>{s}</Chip>)}</span> },
-    { key: "words", header: "Words", align: "right", render: (k) => k.words },
-    { key: "volume", header: "Search volume", tooltip: "Autocomplete endpoints do not provide search volume. Import a Keyword Planner CSV under Saved keywords to add it.",
+    { key: "words", header: "Wörter", align: "right", render: (k) => k.words },
+    { key: "volume", header: "Suchvolumen", tooltip: "Autocomplete liefert kein Suchvolumen. Unter Gespeicherte Keywords eine Keyword-Planer-CSV importieren.",
       render: (k) => (k.search_volume !== null && k.search_volume !== undefined ? fmtInt(k.search_volume) : <DataBadge kind="unavailable" />) },
   ];
 
   return (
     <div className="space-y-4">
-      <Card title="Find keyword ideas" description="Real completions from public autocomplete endpoints, fetched at request time.">
+      <Card title="Keyword-Ideen finden" description="Echte Vervollständigungen öffentlicher Autocomplete-Dienste, live abgefragt.">
         <form onSubmit={submit} className="space-y-4">
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-12">
-            <Field label="Seed keyword" className="sm:col-span-2 lg:col-span-5">
-              <Input required maxLength={120} value={seed} onChange={(e) => setSeed(e.target.value)} placeholder="e.g. standing desk" />
+            <Field label="Ausgangs-Keyword" className="sm:col-span-2 lg:col-span-5">
+              <Input required maxLength={120} value={seed} onChange={(e) => setSeed(e.target.value)} placeholder="z. B. küchenplanung" />
             </Field>
-            <Field label="Language" hint="2-letter code" className="lg:col-span-2">
+            <Field label="Sprache" hint="2-stelliger Code" className="lg:col-span-2">
               <Input required pattern="[A-Za-z]{2}" maxLength={2} value={lang} onChange={(e) => setLang(e.target.value)} placeholder="en" />
             </Field>
-            <Field label="Country" hint="2-letter code" className="lg:col-span-2">
+            <Field label="Land" hint="2-stelliger Code" className="lg:col-span-2">
               <Input required pattern="[A-Za-z]{2}" maxLength={2} value={country} onChange={(e) => setCountry(e.target.value)} placeholder="us" />
             </Field>
-            <Field label="Depth" className="lg:col-span-3">
+            <Field label="Tiefe" className="lg:col-span-3">
               <Select value={depth} onChange={(e) => setDepth(e.target.value)}>
-                <option value="basic">Basic (questions + prepositions)</option>
-                <option value="deep">Deep (adds A–Z expansion, slower)</option>
+                <option value="basic">Einfach (Fragen + Präpositionen)</option>
+                <option value="deep">Tief (zusätzlich A–Z, langsamer)</option>
               </Select>
             </Field>
           </div>
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
-              <span className="text-xs font-medium text-slate-600 dark:text-slate-300">Sources</span>
+              <span className="text-xs font-medium text-slate-600 dark:text-slate-300">Quellen</span>
               <Checkbox label="Google" checked={sources.google} onChange={(v) => setSources((s) => ({ ...s, google: v }))} />
               <Checkbox label="Bing" checked={sources.bing} onChange={(v) => setSources((s) => ({ ...s, bing: v }))} />
               <Checkbox label="DuckDuckGo" checked={sources.duckduckgo} onChange={(v) => setSources((s) => ({ ...s, duckduckgo: v }))} />
             </div>
-            <Button type="submit" variant="primary" loading={suggest.isPending} disabled={!seed.trim() || !activeSources.length} icon={<Search className="h-4 w-4" />}>Get suggestions</Button>
+            <Button type="submit" variant="primary" loading={suggest.isPending} disabled={!seed.trim() || !activeSources.length} icon={<Search className="h-4 w-4" />}>Vorschläge holen</Button>
           </div>
-          {!activeSources.length && <p className="text-xs text-amber-700 dark:text-amber-300">Select at least one source.</p>}
+          {!activeSources.length && <p className="text-xs text-amber-700 dark:text-amber-300">Mindestens eine Quelle wählen.</p>}
         </form>
       </Card>
 
-      {suggest.isPending && <Card><Spinner label={depth === "deep" ? "Collecting suggestions (deep mode can take a minute)…" : "Collecting suggestions…"} /></Card>}
+      {suggest.isPending && <Card><Spinner label={depth === "deep" ? "Vorschläge werden gesammelt (tiefer Modus kann eine Minute dauern)…" : "Vorschläge werden gesammelt…"} /></Card>}
       {suggest.error && <ErrorBox error={suggest.error} onRetry={() => suggest.mutate()} />}
 
       {result && !suggest.isPending && (
         <>
           {errors.length > 0 && (
             <Notice tone="warn">
-              <p className="font-medium">Some sources failed and are missing from the results:</p>
+              <p className="font-medium">Einige Quellen sind fehlgeschlagen und fehlen in den Ergebnissen:</p>
               <ul className="mt-1 list-disc pl-5">{errors.map(([s, m]) => <li key={s}><span className="font-medium">{s}</span>: {m}</li>)}</ul>
             </Notice>
           )}
@@ -214,10 +214,10 @@ function ResearchTab() {
             </Notice>
           )}
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            <Stat label="Suggestions" value={fmtInt(all.length)} hint={`for "${result.seed}"`} />
-            <Stat label="Questions" value={fmtInt(all.filter((k) => k.type === "question").length)} />
-            <Stat label="Clusters" value={fmtInt((result.clusters ?? []).length)} tooltip="Lexical grouping by shared stemmed terms. At most 60 clusters are returned." />
-            <Stat label="Autocomplete requests" value={fmtInt(result.queries)} hint={Object.keys(result.sources ?? {}).join(", ")} />
+            <Stat label="Vorschläge" value={fmtInt(all.length)} hint={`für „${result.seed}“`} />
+            <Stat label="Fragen" value={fmtInt(all.filter((k) => k.type === "question").length)} />
+            <Stat label="Clusters" value={fmtInt((result.clusters ?? []).length)} tooltip="Lexikalische Gruppierung nach gemeinsamen Wortstämmen. Höchstens 60 Cluster." />
+            <Stat label="Autocomplete-Abfragen" value={fmtInt(result.queries)} hint={Object.keys(result.sources ?? {}).join(", ")} />
           </div>
 
           <Card padded={false}
@@ -238,30 +238,30 @@ function ResearchTab() {
                   CSV ({visible.length})
                 </Button>
                 <Button size="sm" variant="primary" icon={<Save className="h-3.5 w-3.5" />} loading={save.isPending} disabled={!site || !selected.size}
-                  title={site ? undefined : "Add a website first to save keywords"} onClick={() => save.mutate(Array.from(selected))}>
-                  Save selected to site{selected.size ? ` (${selected.size})` : ""}
+                  title={site ? undefined : "Zum Speichern zuerst eine Website anlegen"} onClick={() => save.mutate(Array.from(selected))}>
+                  Auswahl speichern{selected.size ? ` (${selected.size})` : ""}
                 </Button>
               </>
             ) : undefined}>
             {view === "keywords" ? (
               <>
                 <div className="flex flex-wrap items-center gap-2 border-b border-slate-100 p-3 dark:border-slate-800">
-                  <SearchInput value={q} onChange={(v) => { setQ(v); setPage(1); }} placeholder="Filter keywords…" />
-                  <Select className="w-auto" value={type} onChange={(e) => { setType(e.target.value); setPage(1); }} aria-label="Filter by type">
-                    <option value="">All types</option>
-                    {TYPES.map((t) => <option key={t} value={t}>{t === "question" ? "Questions" : t}</option>)}
+                  <SearchInput value={q} onChange={(v) => { setQ(v); setPage(1); }} placeholder="Keywords filtern…" />
+                  <Select className="w-auto" value={type} onChange={(e) => { setType(e.target.value); setPage(1); }} aria-label="Nach Typ filtern">
+                    <option value="">Alle Typen</option>
+                    {TYPES.map((t) => <option key={t} value={t}>{t === "question" ? "Fragen" : titleCase(t)}</option>)}
                   </Select>
-                  <Select className="w-auto" value={intent} onChange={(e) => { setIntent(e.target.value); setPage(1); }} aria-label="Filter by intent">
-                    <option value="">All intents</option>
+                  <Select className="w-auto" value={intent} onChange={(e) => { setIntent(e.target.value); setPage(1); }} aria-label="Nach Suchintention filtern">
+                    <option value="">Alle Suchintentionen</option>
                     {INTENTS.map((t) => <option key={t} value={t}>{t}</option>)}
                   </Select>
-                  {!site && <span className="text-xs text-slate-500 dark:text-slate-400">Add a website to save keywords.</span>}
+                  {!site && <span className="text-xs text-slate-500 dark:text-slate-400">Zum Speichern eine Website anlegen.</span>}
                 </div>
                 {save.error && <div className="p-3"><ErrorBox error={save.error} /></div>}
                 {save.data && <div className="p-3"><Notice tone="success">{save.data.added} new keyword{save.data.added === 1 ? "" : "s"} saved to {site?.name}. The site now has {save.data.total} saved keywords.</Notice></div>}
                 <DataTable dense columns={columns} rows={pageRows} rowKey={(k) => k.keyword}
-                  empty={<EmptyState title={all.length ? "No keywords match the filters" : "No suggestions returned"}
-                    description={all.length ? "Clear or change the filters above." : "The selected sources returned nothing for this seed. Try a broader seed or another language/country."} />} />
+                  empty={<EmptyState title={all.length ? "Keine passenden Keywords" : "Keine Vorschläge"}
+                    description={all.length ? "Filter oben zurücksetzen oder ändern." : "Die gewählten Quellen lieferten nichts. Allgemeineres Keyword oder andere Sprache/Land versuchen."} />} />
                 {visible.length > 0 && <Pagination page={page} perPage={PER_PAGE} total={visible.length} onPage={setPage} />}
               </>
             ) : (
@@ -272,8 +272,8 @@ function ResearchTab() {
       )}
 
       {!result && !suggest.isPending && !suggest.error && (
-        <Card><EmptyState icon={<Search className="h-6 w-6" />} title="Enter a seed keyword"
-          description="Suggestions come live from autocomplete endpoints. Search volume is never invented: it is only shown when you import it." /></Card>
+        <Card><EmptyState icon={<Search className="h-6 w-6" />} title="Ausgangs-Keyword eingeben"
+          description="Vorschläge kommen live aus Autocomplete-Diensten. Suchvolumen wird nie erfunden, sondern nur nach Import angezeigt." /></Card>
       )}
     </div>
   );
@@ -321,18 +321,18 @@ function SavedTab() {
   const dash = <span className="text-slate-400">–</span>;
 
   const columns: Column<any>[] = [
-    { key: "sel", width: "32px", header: <RowCheck label="Select all" checked={allSelected} onChange={(on) => setSelected(on ? new Set(visible.map((k) => k.id)) : new Set())} />,
-      render: (k) => <RowCheck label={`Select ${k.keyword}`} checked={selected.has(k.id)} onChange={(v) => toggle(k.id, v)} /> },
+    { key: "sel", width: "32px", header: <RowCheck label="Alle auswählen" checked={allSelected} onChange={(on) => setSelected(on ? new Set(visible.map((k) => k.id)) : new Set())} />,
+      render: (k) => <RowCheck label={`${k.keyword} auswählen`} checked={selected.has(k.id)} onChange={(v) => toggle(k.id, v)} /> },
     { key: "keyword", header: "Keyword", render: (k) => <span className="font-medium text-slate-900 dark:text-slate-100">{k.keyword}</span> },
-    { key: "cluster", header: "Cluster", tooltip: "Lexical cluster label, recomputed whenever keywords are added", render: (k) => (k.cluster ? <Chip>{k.cluster}</Chip> : dash) },
-    { key: "intent", header: <span className="inline-flex items-center gap-1.5">Intent <DataBadge kind="estimated" /></span>, render: (k) => <IntentBadge intent={k.intent} /> },
-    { key: "clicks", header: <span className="inline-flex items-center gap-1.5">Clicks <DataBadge kind="measured" /></span>, align: "right", render: (k) => (k.gsc ? fmtInt(k.gsc.clicks) : dash) },
-    { key: "impressions", header: "Impressions", align: "right", tooltip: "Google Search Console, measured", render: (k) => (k.gsc ? fmtInt(k.gsc.impressions) : dash) },
-    { key: "position", header: "Avg position", align: "right", tooltip: "Google Search Console, impression-weighted average", render: (k) => (k.gsc && k.gsc.position !== null ? fmtNum(k.gsc.position) : dash) },
-    { key: "volume", header: <span className="inline-flex items-center gap-1.5">Volume <DataBadge kind="imported" /></span>, align: "right",
+    { key: "cluster", header: "Cluster", tooltip: "Lexikalisches Cluster, neu berechnet, sobald Keywords hinzukommen", render: (k) => (k.cluster ? <Chip>{k.cluster}</Chip> : dash) },
+    { key: "intent", header: <span className="inline-flex items-center gap-1.5">Intention <DataBadge kind="estimated" /></span>, render: (k) => <IntentBadge intent={k.intent} /> },
+    { key: "clicks", header: <span className="inline-flex items-center gap-1.5">Klicks <DataBadge kind="measured" /></span>, align: "right", render: (k) => (k.gsc ? fmtInt(k.gsc.clicks) : dash) },
+    { key: "impressions", header: "Impressionen", align: "right", tooltip: "Google Search Console, gemessen", render: (k) => (k.gsc ? fmtInt(k.gsc.impressions) : dash) },
+    { key: "position", header: "Ø Position", align: "right", tooltip: "Google Search Console, nach Impressionen gewichteter Durchschnitt", render: (k) => (k.gsc && k.gsc.position !== null ? fmtNum(k.gsc.position) : dash) },
+    { key: "volume", header: <span className="inline-flex items-center gap-1.5">Volumen <DataBadge kind="imported" /></span>, align: "right",
       render: (k) => (k.volume_status === "imported" ? fmtInt(k.search_volume) : <DataBadge kind="unavailable" />) },
-    { key: "competition", header: "Competition", tooltip: "From your imported file, shown as provided", render: (k) => k.imported?.competition ?? dash },
-    { key: "source", header: "Source", render: (k) => <Badge>{k.source}</Badge> },
+    { key: "competition", header: "Wettbewerb", tooltip: "Aus deiner importierten Datei, unverändert", render: (k) => k.imported?.competition ?? dash },
+    { key: "source", header: "Quelle", render: (k) => <Badge>{k.source}</Badge> },
   ];
 
   return (
@@ -343,31 +343,31 @@ function SavedTab() {
             {legend.gsc && <span className="inline-flex items-center gap-1.5"><DataBadge kind="measured" /> {legend.gsc}</span>}
             {legend.imported && <span className="inline-flex items-center gap-1.5"><DataBadge kind="imported" /> {legend.imported}</span>}
             {legend.unavailable && <span className="inline-flex items-center gap-1.5"><DataBadge kind="unavailable" /> {legend.unavailable}</span>}
-            <span className="inline-flex items-center gap-1.5"><DataBadge kind="estimated" /> Intent labels are rule-based estimates</span>
+            <span className="inline-flex items-center gap-1.5"><DataBadge kind="estimated" /> Intentionen sind regelbasierte Schätzungen</span>
           </div>
         </Notice>
       )}
       {list.data && !list.data.has_gsc_data && (
-        <Notice tone="warn">No Search Console data for this site yet, so clicks, impressions and position are empty. <Link to="/search-console" className="font-medium underline">Connect or import Search Console data</Link>.</Notice>
+        <Notice tone="warn">Für diese Website gibt es noch keine Search-Console-Daten, Klicks, Impressionen und Position bleiben leer. <Link to="/search-console" className="font-medium underline">Search Console verbinden oder Daten importieren</Link>.</Notice>
       )}
 
-      <Card padded={false} title={`Saved keywords for ${site.name}`}
+      <Card padded={false} title={`Gespeicherte Keywords für ${site.name}`}
         actions={<>
-          <Button size="sm" icon={<Plus className="h-3.5 w-3.5" />} onClick={() => setAdding((a) => !a)}>Add keywords</Button>
-          <FileButton label="Import Keyword Planner CSV" loading={importCsv.isPending} onFile={(f) => importCsv.mutate(f)} />
+          <Button size="sm" icon={<Plus className="h-3.5 w-3.5" />} onClick={() => setAdding((a) => !a)}>Keywords hinzufügen</Button>
+          <FileButton label="Keyword-Planer-CSV importieren" loading={importCsv.isPending} onFile={(f) => importCsv.mutate(f)} />
           <ExportMenu formats={[
             { label: "CSV", path: `/sites/${site.id}/keywords/export`, query: { format: "csv" } },
-            { label: "Excel (XLSX, with page mapping)", path: `/sites/${site.id}/keywords/export`, query: { format: "xlsx" } },
+            { label: "Excel (XLSX, mit Seitenzuordnung)", path: `/sites/${site.id}/keywords/export`, query: { format: "xlsx" } },
           ]} />
         </>}>
         {adding && (
           <div className="space-y-2 border-b border-slate-100 p-3 dark:border-slate-800">
-            <Field label="Keywords, one per line" hint={`${manualList.length} keyword${manualList.length === 1 ? "" : "s"} (max 2,000 per batch). Duplicates are skipped.`}>
-              <Textarea rows={5} value={manual} onChange={(e) => setManual(e.target.value)} placeholder={"ergonomic office chair\nbest standing desk for small spaces"} />
+            <Field label="Keywords, eines pro Zeile" hint={`${manualList.length} ${manualList.length === 1 ? "Keyword" : "Keywords"} (max. 2.000 pro Durchgang). Duplikate werden übersprungen.`}>
+              <Textarea rows={5} value={manual} onChange={(e) => setManual(e.target.value)} placeholder={"küche planen\nküchenstudio in der nähe"} />
             </Field>
             <div className="flex gap-2">
-              <Button variant="primary" size="sm" loading={add.isPending} disabled={!manualList.length || manualList.length > 2000} onClick={() => add.mutate(manualList)}>Save keywords</Button>
-              <Button variant="ghost" size="sm" onClick={() => setAdding(false)}>Close</Button>
+              <Button variant="primary" size="sm" loading={add.isPending} disabled={!manualList.length || manualList.length > 2000} onClick={() => add.mutate(manualList)}>Keywords speichern</Button>
+              <Button variant="ghost" size="sm" onClick={() => setAdding(false)}>Schließen</Button>
             </div>
           </div>
         )}
@@ -376,20 +376,20 @@ function SavedTab() {
             {add.error && <ErrorBox error={add.error} />}
             {importCsv.error && <ErrorBox error={importCsv.error} />}
             {remove.error && <ErrorBox error={remove.error} />}
-            {add.data && <Notice tone="success">{add.data.added} keyword{add.data.added === 1 ? "" : "s"} added ({add.data.total} saved in total).</Notice>}
-            {importCsv.data && <Notice tone="success">Import finished: {importCsv.data.added} added, {importCsv.data.updated} updated with imported metrics.</Notice>}
+            {add.data && <Notice tone="success">{add.data.added} {add.data.added === 1 ? "Keyword" : "Keywords"} hinzugefügt ({add.data.total} insgesamt gespeichert).</Notice>}
+            {importCsv.data && <Notice tone="success">Import fertig: {importCsv.data.added} neu, {importCsv.data.updated} mit importierten Werten aktualisiert.</Notice>}
           </div>
         )}
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 p-3 dark:border-slate-800">
-          <SearchInput value={q} onChange={(v) => { setQ(v); setPage(1); }} placeholder="Filter by keyword or cluster…" />
+          <SearchInput value={q} onChange={(v) => { setQ(v); setPage(1); }} placeholder="Nach Keyword oder Cluster filtern…" />
           <Button size="sm" variant="danger" icon={<Trash2 className="h-3.5 w-3.5" />} disabled={!selected.size} loading={remove.isPending}
             onClick={() => remove.mutate(Array.from(selected))}>Delete selected{selected.size ? ` (${selected.size})` : ""}</Button>
         </div>
         {list.isLoading ? <Spinner /> : list.error ? <div className="p-3"><ErrorBox error={list.error} onRetry={() => list.refetch()} /></div> : (
           <>
             <DataTable dense columns={columns} rows={pageRows} rowKey={(k) => k.id}
-              empty={<EmptyState title={items.length ? "No keywords match the filter" : "No saved keywords yet"}
-                description={items.length ? "Clear the filter to see all keywords." : "Save suggestions from the Research tab, add keywords manually, or import a Google Ads Keyword Planner CSV (Keyword, Avg. monthly searches, Competition)."} />} />
+              empty={<EmptyState title={items.length ? "Keine passenden Keywords" : "Noch keine gespeicherten Keywords"}
+                description={items.length ? "Filter zurücksetzen, um alle Keywords zu sehen." : "Vorschläge aus dem Reiter Recherche speichern, Keywords manuell anlegen oder eine CSV aus dem Google-Ads-Keyword-Planer importieren (Keyword, Avg. monthly searches, Competition)."} />} />
             {visible.length > 0 && <Pagination page={page} perPage={PER_PAGE} total={visible.length} onPage={setPage} />}
           </>
         )}
@@ -407,7 +407,7 @@ function MappingTab() {
   const mapping = useQuery({ queryKey: ["keyword-mapping", siteId], queryFn: () => api.get(`/sites/${siteId}/keywords/mapping`), enabled: !!siteId });
 
   if (!site) return <NeedsCrawl hasSite={false} />;
-  if (mapping.isLoading) return <Card><Spinner label="Scoring keywords against crawled pages…" /></Card>;
+  if (mapping.isLoading) return <Card><Spinner label="Keywords werden mit den gecrawlten Seiten abgeglichen…" /></Card>;
   if (mapping.error) return <ErrorBox error={mapping.error} onRetry={() => mapping.refetch()} />;
 
   const data = mapping.data ?? {};
@@ -418,20 +418,20 @@ function MappingTab() {
   const tone: Record<string, string> = { mapped: "green", "cannibalisation risk": "orange", "no matching page": "gray" };
 
   if (!data.crawl_id) {
-    return <Card><EmptyState title="No completed crawl yet" description={data.message ?? "Run a crawl first so keywords can be mapped to pages."}
-      action={<Link to="/crawler" className="text-sm font-medium text-brand-700 hover:underline dark:text-brand-300">Go to Crawler</Link>} /></Card>;
+    return <Card><EmptyState title="Noch kein abgeschlossener Crawl" description={data.message ?? "Zuerst crawlen, damit Keywords Seiten zugeordnet werden können."}
+      action={<Link to="/crawler" className="text-sm font-medium text-brand-700 hover:underline dark:text-brand-300">Zum Crawler</Link>} /></Card>;
   }
 
   const columns: Column<any>[] = [
     { key: "keyword", header: "Keyword", render: (i) => <span className="font-medium text-slate-900 dark:text-slate-100">{i.keyword}</span> },
-    { key: "status", header: "Status", render: (i) => <Badge tone={tone[i.status] ?? "gray"}>{i.status}</Badge> },
-    { key: "best", header: "Best matching page", render: (i) => i.best_page ? (
+    { key: "status", header: "Status", render: (i) => <Badge tone={tone[i.status] ?? "gray"}>{({ mapped: "zugeordnet", "cannibalisation risk": "Kannibalisierungsrisiko", "no matching page": "keine passende Seite" } as Record<string, string>)[i.status] ?? i.status}</Badge> },
+    { key: "best", header: "Passendste Seite", render: (i) => i.best_page ? (
       <div className="max-w-md">
         <Url href={i.best_page.url} label={shortUrl(i.best_page.url, site.url)} />
-        <div className="text-xs text-slate-500 dark:text-slate-400">{i.best_page.title || "No title"} · relevance {fmtNum(i.best_page.score, 2)}</div>
+        <div className="text-xs text-slate-500 dark:text-slate-400">{i.best_page.title || "Kein Title"} · Relevanz {fmtNum(i.best_page.score, 2)}</div>
       </div>
-    ) : <span className="text-slate-400">No page reaches the relevance threshold</span> },
-    { key: "competing", header: "Competing pages", tooltip: "Other pages whose relevance is within 85% of the best page", render: (i) => (i.competing_pages ?? []).length ? (
+    ) : <span className="text-slate-400">Keine Seite erreicht die Relevanzschwelle</span> },
+    { key: "competing", header: "Konkurrierende Seiten", tooltip: "Andere Seiten mit mindestens 85 % der Relevanz der besten Seite", render: (i) => (i.competing_pages ?? []).length ? (
       <ul className="max-w-md space-y-1">
         {i.competing_pages.map((c: any) => (
           <li key={c.url}><Url href={c.url} label={shortUrl(c.url, site.url)} /> <span className="text-xs text-slate-500 dark:text-slate-400">({fmtNum(c.score, 2)})</span></li>
@@ -444,24 +444,24 @@ function MappingTab() {
     <div className="space-y-4">
       <Notice>
         <span className="mr-1.5"><DataBadge kind="estimated" /></span>
-        This is an on-page relevance estimate: each saved keyword is scored against the title, H1, URL, meta description and body text of the indexable pages in your latest crawl. It shows which page targets a keyword most strongly, not which page ranks for it. For measured cannibalisation, see <Link to="/search-console" className="font-medium underline">Search Console insights</Link>.
+        Onpage-Relevanzschätzung: Jedes gespeicherte Keyword wird mit Title, H1, URL, Meta-Description und Text der indexierbaren Seiten des letzten Crawls abgeglichen. Das zeigt, welche Seite ein Keyword am stärksten bedient, nicht welche dafür rankt. Gemessene Kannibalisierung siehe <Link to="/search-console" className="font-medium underline">Search-Console-Auswertungen</Link>.
       </Notice>
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Stat label="Mapped" value={fmtInt(summary.mapped ?? 0)} tone="good" hint="One clear best page" />
-        <Stat label="Cannibalisation risk" value={fmtInt(summary["cannibalisation risk"] ?? 0)} tone={summary["cannibalisation risk"] ? "warn" : undefined} hint="Several pages compete" />
-        <Stat label="No matching page" value={fmtInt(summary["no matching page"] ?? 0)} hint="Content gap candidates" />
-        <Stat label="Pages considered" value={fmtInt(data.pages_considered)} hint="Indexable pages in the latest crawl" />
+        <Stat label="Zugeordnet" value={fmtInt(summary.mapped ?? 0)} tone="good" hint="Eine klar beste Seite" />
+        <Stat label="Kannibalisierungsrisiko" value={fmtInt(summary["cannibalisation risk"] ?? 0)} tone={summary["cannibalisation risk"] ? "warn" : undefined} hint="Mehrere Seiten konkurrieren" />
+        <Stat label="Keine passende Seite" value={fmtInt(summary["no matching page"] ?? 0)} hint="Kandidaten für Inhaltslücken" />
+        <Stat label="Berücksichtigte Seiten" value={fmtInt(data.pages_considered)} hint="Indexierbare Seiten im letzten Crawl" />
       </div>
-      <Card padded={false} title="Keyword to page mapping" description="Up to 500 saved keywords are mapped."
-        actions={<Select className="w-auto" value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }} aria-label="Filter by status">
-          <option value="">All statuses</option>
-          <option value="mapped">Mapped</option>
-          <option value="cannibalisation risk">Cannibalisation risk</option>
-          <option value="no matching page">No matching page</option>
+      <Card padded={false} title="Zuordnung Keyword zu Seite" description="Bis zu 500 gespeicherte Keywords werden zugeordnet."
+        actions={<Select className="w-auto" value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }} aria-label="Nach Status filtern">
+          <option value="">Alle Status</option>
+          <option value="mapped">Zugeordnet</option>
+          <option value="cannibalisation risk">Kannibalisierungsrisiko</option>
+          <option value="no matching page">Keine passende Seite</option>
         </Select>}>
         <DataTable columns={columns} rows={pageRows} rowKey={(i) => i.keyword}
-          empty={<EmptyState title={items.length ? "No keywords with this status" : "No saved keywords to map"}
-            description={items.length ? "Choose another status." : "Save keywords from the Research tab or add them under Saved keywords first."} />} />
+          empty={<EmptyState title={items.length ? "Keine Keywords mit diesem Status" : "Keine gespeicherten Keywords zum Zuordnen"}
+            description={items.length ? "Anderen Status wählen." : "Zuerst Keywords aus der Recherche speichern oder unter Gespeicherte Keywords anlegen."} />} />
         {visible.length > 0 && <Pagination page={page} perPage={PER_PAGE} total={visible.length} onPage={setPage} />}
       </Card>
     </div>
@@ -479,27 +479,27 @@ function ClusterTab() {
 
   return (
     <div className="space-y-4">
-      <Card title="Cluster a keyword list" description="Group any list of keywords by shared terms. Nothing is fetched from the web.">
+      <Card title="Keyword-Liste clustern" description="Beliebige Keyword-Liste nach gemeinsamen Begriffen gruppieren. Es wird nichts aus dem Netz geladen.">
         <div className="grid gap-4 lg:grid-cols-3">
-          <Field label="Keywords, one per line" className="lg:col-span-2" hint={`${keywords.length} unique keyword${keywords.length === 1 ? "" : "s"} (max 3,000)`}>
-            <Textarea rows={9} value={text} onChange={(e) => setText(e.target.value)} placeholder={"best running shoes\nrunning shoes for flat feet\ntrail running shoes women"} />
+          <Field label="Keywords, eines pro Zeile" className="lg:col-span-2" hint={`${keywords.length} eindeutige ${keywords.length === 1 ? "Keyword" : "Keywords"} (max. 3.000)`}>
+            <Textarea rows={9} value={text} onChange={(e) => setText(e.target.value)} placeholder={"küche planen\nküche planen kosten\nküche planen online"} />
           </Field>
           <div className="space-y-4">
-            <Field label="Seed to ignore (optional)" hint="Words from the seed are ignored so clusters reflect the modifiers.">
-              <Input maxLength={120} value={seed} onChange={(e) => setSeed(e.target.value)} placeholder="running shoes" />
+            <Field label="Ausgangsbegriff ignorieren (optional)" hint="Wörter des Ausgangsbegriffs werden ignoriert, damit die Cluster die Zusätze zeigen.">
+              <Input maxLength={120} value={seed} onChange={(e) => setSeed(e.target.value)} placeholder="küche planen" />
             </Field>
-            <Field label={`Similarity threshold: ${threshold.toFixed(2)}`} hint="Lower merges more keywords into fewer, broader clusters. Higher keeps clusters tight.">
+            <Field label={`Ähnlichkeitsschwelle: ${threshold.toFixed(2)}`} hint="Niedriger fasst mehr Keywords zu weniger, breiteren Clustern zusammen. Höher hält Cluster eng.">
               <input type="range" min={0.1} max={1} step={0.05} value={threshold} onChange={(e) => setThreshold(Number(e.target.value))}
-                className="w-full accent-brand-600" aria-label="Similarity threshold" />
+                className="w-full accent-brand-600" aria-label="Ähnlichkeitsschwelle" />
             </Field>
-            <Button variant="primary" icon={<Layers className="h-4 w-4" />} loading={cluster.isPending} disabled={!keywords.length || keywords.length > 3000} onClick={() => cluster.mutate()}>Cluster keywords</Button>
+            <Button variant="primary" icon={<Layers className="h-4 w-4" />} loading={cluster.isPending} disabled={!keywords.length || keywords.length > 3000} onClick={() => cluster.mutate()}>Keywords clustern</Button>
           </div>
         </div>
       </Card>
       {cluster.error && <ErrorBox error={cluster.error} onRetry={() => cluster.mutate()} />}
-      {cluster.isPending && <Card><Spinner label="Clustering…" /></Card>}
+      {cluster.isPending && <Card><Spinner label="Clustere…" /></Card>}
       {cluster.data && !cluster.isPending && (
-        <Card title={`${clusters.length} cluster${clusters.length === 1 ? "" : "s"}`}
+        <Card title={`${clusters.length} Cluster`}
           description={<span className="inline-flex flex-wrap items-center gap-1.5">Method: {cluster.data.method}. Dominant intent is a rule-based estimate. <DataBadge kind="estimated" /></span>}
           actions={<Button size="sm" icon={<Download className="h-3.5 w-3.5" />} disabled={!clusters.length}
             onClick={() => downloadCsv("keyword-clusters.csv", ["cluster", "cluster size", "dominant intent (estimate)", "keyword"],
@@ -515,13 +515,13 @@ export default function Keywords() {
   const [tab, setTab] = useState<Tab>("research");
   return (
     <div>
-      <PageHeader title="Keyword research"
-        description="Discover keyword ideas from live autocomplete data, group them into clusters, and map them to your pages. Demand figures appear only when measured by Search Console or imported by you." />
+      <PageHeader title="Keyword-Recherche"
+        description="Keyword-Ideen aus Live-Autocomplete finden, in Cluster gruppieren und deinen Seiten zuordnen. Nachfragezahlen erscheinen nur, wenn die Search Console sie misst oder du sie importierst." />
       <Tabs<Tab> value={tab} onChange={setTab} tabs={[
-        { id: "research", label: "Research" },
-        { id: "saved", label: "Saved keywords" },
-        { id: "mapping", label: "Page mapping & cannibalisation" },
-        { id: "cluster", label: "Cluster tool" },
+        { id: "research", label: "Recherche" },
+        { id: "saved", label: "Gespeicherte Keywords" },
+        { id: "mapping", label: "Seitenzuordnung & Kannibalisierung" },
+        { id: "cluster", label: "Cluster-Werkzeug" },
       ]} />
       {tab === "research" && <ResearchTab />}
       {tab === "saved" && <SavedTab />}

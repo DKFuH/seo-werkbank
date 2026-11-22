@@ -19,12 +19,12 @@ from ..models import Alert, Competitor, Crawl, GscRow, Keyword, Monitor, Page, S
 
 log = logging.getLogger("seo.monitor")
 KINDS = {
-    "uptime": "Page availability (HTTP status of key URLs)",
-    "audit": "Recurring technical audit (crawl, compare with the previous one, includes broken links)",
-    "sitemap": "Sitemap change detection (URLs added or removed)",
-    "metadata": "Metadata change detection (title, description, canonical, robots, H1)",
-    "competitor": "Competitor monitoring (home-page metadata and sitemap changes)",
-    "gsc": "Keyword tracking via Search Console (position changes of saved keywords)",
+    "uptime": "Erreichbarkeit (HTTP-Status wichtiger URLs)",
+    "audit": "Wiederkehrendes technisches Audit (Crawl, Vergleich mit dem vorherigen, inkl. defekter Links)",
+    "sitemap": "Sitemap-Änderungen (neue oder entfallene URLs)",
+    "metadata": "Metadaten-Änderungen (Title, Description, Canonical, Robots, H1)",
+    "competitor": "Wettbewerber beobachten (Metadaten der Startseite und Sitemap-Änderungen)",
+    "gsc": "Keyword-Tracking über die Search Console (Positionsänderungen gespeicherter Keywords)",
 }
 DEFAULT_INTERVAL = {"uptime": 1, "audit": 168, "sitemap": 24, "metadata": 24, "competitor": 24, "gsc": 24}
 
@@ -88,7 +88,7 @@ async def run_monitor(monitor_id: int, ctx: JobContext | None = None) -> dict:
                             alerts.append({"severity": "critical", "title": "Page is down", "message": f"{url} answered {res.status or res.error}",
                                            "data": {"url": url, "status": res.status, "error": res.error}})
                     elif not was_ok:
-                        alerts.append({"severity": "low", "title": "Page recovered", "message": f"{url} is reachable again (HTTP {res.status})", "data": {"url": url}})
+                        alerts.append({"severity": "low", "title": "Seite wieder erreichbar", "message": f"{url} ist wieder erreichbar (HTTP {res.status})", "data": {"url": url}})
                     state[url] = {"ok": ok, "status": res.status, "response_ms": res.elapsed_ms, "checked": utcnow().isoformat()}
             elif kind == "metadata":
                 urls = cfg.get("urls")
@@ -108,7 +108,7 @@ async def run_monitor(monitor_id: int, ctx: JobContext | None = None) -> dict:
                     old = set(state.get("urls", []))
                     added, removed = sorted(set(urls) - old), sorted(old - set(urls))
                     if added or removed:
-                        alerts.append({"severity": "medium" if removed else "low", "title": f"Sitemap changed: {len(added)} added, {len(removed)} removed",
+                        alerts.append({"severity": "medium" if removed else "low", "title": f"Sitemap geändert: {len(added)} neu, {len(removed)} entfallen",
                                        "message": "\n".join([f"+ {u}" for u in added[:20]] + [f"- {u}" for u in removed[:20]]),
                                        "data": {"added": added[:500], "removed": removed[:500]}})
                 state = {"urls": urls[:50_000], "count": len(urls)}
@@ -119,10 +119,10 @@ async def run_monitor(monitor_id: int, ctx: JobContext | None = None) -> dict:
                     sm = await _sitemap_urls(fetcher, url)
                     old = state.get(key)
                     if old:
-                        alerts += _diff_meta(f"Competitor {name}", url, old.get("meta", {}), snap)
+                        alerts += _diff_meta(f"Wettbewerber {name}", url, old.get("meta", {}), snap)
                         added = sorted(set(sm) - set(old.get("sitemap", [])))
                         if added and old.get("sitemap"):
-                            alerts.append({"severity": "low", "title": f"Competitor {name} published {len(added)} new URL(s)",
+                            alerts.append({"severity": "low", "title": f"Wettbewerber {name} hat {len(added)} neue URL(s) veröffentlicht",
                                            "message": "\n".join(added[:25]), "data": {"competitor": name, "added": added[:500]}})
                     state[key] = {"meta": snap, "sitemap": sm[:20_000]}
     elif kind == "audit":
@@ -140,8 +140,8 @@ async def run_monitor(monitor_id: int, ctx: JobContext | None = None) -> dict:
             stats, score = dict(crawl.stats or {}), crawl.score
         if prev_score is not None and score is not None:
             if prev_score - score >= 3:
-                alerts.append({"severity": "high", "title": f"SEO score dropped from {prev_score} to {score}",
-                               "message": "The latest scheduled audit scored lower than the previous one.", "data": {"crawl_id": crawl_id}})
+                alerts.append({"severity": "high", "title": f"SEO-Score gefallen von {prev_score} auf {score}",
+                               "message": "Das letzte geplante Audit hat schlechter abgeschnitten als das vorherige.", "data": {"crawl_id": crawl_id}})
             before, now = prev_stats.get("issues_by_rule", {}), stats.get("issues_by_rule", {})
             from ..audit.rules import RULES
             new_rules = [r for r in now if r not in before and RULES[r].severity in ("critical", "high")]
@@ -150,7 +150,7 @@ async def run_monitor(monitor_id: int, ctx: JobContext | None = None) -> dict:
                                "message": "\n".join(f"{RULES[r].title}: {now[r]} URL(s)" for r in new_rules), "data": {"crawl_id": crawl_id, "rules": new_rules}})
             b_old, b_new = (prev_stats.get("links") or {}).get("broken_internal", 0), (stats.get("links") or {}).get("broken_internal", 0)
             if b_new > b_old:
-                alerts.append({"severity": "high", "title": f"Broken internal links increased from {b_old} to {b_new}", "message": "", "data": {"crawl_id": crawl_id}})
+                alerts.append({"severity": "high", "title": f"Defekte interne Links gestiegen von {b_old} auf {b_new}", "message": "", "data": {"crawl_id": crawl_id}})
         state = {"last_crawl_id": crawl_id, "score": score}
     elif kind == "gsc":
         from ..integrations import gsc
@@ -160,7 +160,7 @@ async def run_monitor(monitor_id: int, ctx: JobContext | None = None) -> dict:
                     await gsc.sync(db, owner_id, site_id, gsc_prop, days=int(cfg.get("days", 30)))
                 except gsc.GscError as exc:
                     status = "problem"
-                    alerts.append({"severity": "medium", "title": "Search Console sync failed", "message": str(exc), "data": {}})
+                    alerts.append({"severity": "medium", "title": "Search-Console-Synchronisierung fehlgeschlagen", "message": str(exc), "data": {}})
             hi = db.scalar(select(func.max(GscRow.day)).where(GscRow.site_id == site_id, GscRow.dataset == "query_page"))
             tracked = [k.lower() for k in db.scalars(select(Keyword.keyword).where(Keyword.site_id == site_id))]
             if hi and tracked:
@@ -177,12 +177,12 @@ async def run_monitor(monitor_id: int, ctx: JobContext | None = None) -> dict:
                         worse = pos > old_p[kw]
                         alerts.append({"severity": "high" if worse else "low",
                                        "title": f"“{kw}” {'dropped' if worse else 'improved'} from position {old_p[kw]:.1f} to {pos:.1f}",
-                                       "message": "Average position over the last 7 days of Search Console data versus the 7 days before (measured).",
+                                       "message": "Ø Position der letzten 7 Tage Search-Console-Daten gegenüber den 7 Tagen davor (gemessen).",
                                        "data": {"keyword": kw, "before": round(old_p[kw], 1), "after": round(pos, 1)}})
                 state = {"positions": {k: round(v, 1) for k, v in now_p.items()}, "as_of": hi.isoformat()}
             elif not hi:
                 status = "no data"
-                state = {"note": "No Search Console data yet. Connect Search Console or import a CSV."}
+                state = {"note": "Noch keine Search-Console-Daten. Search Console verbinden oder CSV importieren."}
 
     with session_scope() as db:
         mon = db.get(Monitor, monitor_id)
@@ -204,7 +204,7 @@ class MonitorBusyError(RuntimeError):
 
 def start_monitor_job(monitor_id: int) -> int:
     if monitor_id in _active_monitors:
-        raise MonitorBusyError("This monitor is already running")
+        raise MonitorBusyError("Dieser Monitor läuft bereits")
     with session_scope() as db:
         mon = db.get(Monitor, monitor_id)
         site = db.get(Site, mon.site_id)

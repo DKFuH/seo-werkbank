@@ -48,8 +48,8 @@ export default function Sitemaps() {
   const generate = useMutation({ mutationFn: () => api.download(`/crawls/${crawlId}/sitemap.xml`, undefined, "sitemap.xml") });
 
   const header = (
-    <PageHeader title="Sitemaps & robots.txt" description="Checks that XML sitemaps list exactly the pages you want indexed, and that robots.txt points search engines to them."
-      actions={crawlId ? <Button variant="primary" icon={<Download className="h-4 w-4" />} loading={generate.isPending} onClick={() => generate.mutate()}>Generate sitemap.xml</Button> : undefined} />
+    <PageHeader title="Sitemaps & robots.txt" description="Prüft, ob die XML-Sitemaps genau die Seiten enthalten, die indexiert werden sollen, und ob robots.txt Suchmaschinen darauf hinweist."
+      actions={crawlId ? <Button variant="primary" icon={<Download className="h-4 w-4" />} loading={generate.isPending} onClick={() => generate.mutate()}>sitemap.xml erzeugen</Button> : undefined} />
   );
   if (!crawlId) return <>{header}<NeedsCrawl hasSite={!!site} running={!!site?.active_crawl} /></>;
   if (q.isLoading) return <>{header}<Spinner /></>;
@@ -69,12 +69,12 @@ export default function Sitemaps() {
 
   const fileColumns: Column<any>[] = [
     { key: "url", header: "Sitemap", render: (f) => <div className="max-w-md"><Url href={f.url} /></div> },
-    { key: "status", header: "Status", render: (f) => <StatusCode code={f.status} error="not fetched" /> },
-    { key: "kind", header: "Type", render: (f) => <Badge tone={f.kind === "unknown" ? "amber" : "gray"}>{f.kind === "index" ? "sitemap index" : f.kind}</Badge> },
+    { key: "status", header: "Status", render: (f) => <StatusCode code={f.status} error="nicht abgerufen" /> },
+    { key: "kind", header: "Typ", render: (f) => <Badge tone={f.kind === "unknown" ? "amber" : "gray"}>{f.kind === "index" ? "Sitemap-Index" : titleCase(f.kind)}</Badge> },
     { key: "urls", header: "URLs", align: "right", render: (f) => fmtInt(f.url_count) },
-    { key: "source", header: "Found via", render: (f) => f.source ?? "–" },
-    { key: "errors", header: "Errors", render: (f) => <MessageList items={f.errors ?? []} tone="red" /> },
-    { key: "warnings", header: "Warnings", render: (f) => <MessageList items={f.warnings ?? []} tone="amber" /> },
+    { key: "source", header: "Gefunden über", render: (f) => f.source ?? "–" },
+    { key: "errors", header: "Fehler", render: (f) => <MessageList items={f.errors ?? []} tone="red" /> },
+    { key: "warnings", header: "Warnungen", render: (f) => <MessageList items={f.warnings ?? []} tone="amber" /> },
   ];
 
   return (
@@ -83,37 +83,37 @@ export default function Sitemaps() {
       {generate.error ? <div className="mb-4"><ErrorBox error={generate.error} /></div> : null}
 
       <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
-        <Stat label="Sitemap files" value={fmtInt(files.length)} tone={files.length ? undefined : "warn"} />
-        <Stat label="URLs listed" value={fmtInt(d.url_count)} hint={`${fmtInt(d.urls_crawled)} of them crawled`} />
-        <Stat label="With lastmod" value={fmtInt(d.with_lastmod)} hint={d.url_count ? fmtPct(d.with_lastmod / d.url_count, 0) + " of listed URLs" : undefined} />
-        <Stat label="Indexable pages" value={fmtInt(d.indexable_pages)} tooltip="Indexable pages found by the crawl" />
-        <Stat label="Non-indexable in sitemap" value={fmtInt(nonIndexable.length)} tone={nonIndexable.length ? "bad" : "good"} tooltip="Redirects, errors, noindex or canonicalised URLs that should not be listed" />
-        <Stat label="Indexable missing" value={fmtInt(missing.length)} tone={missing.length ? "warn" : "good"} tooltip="Indexable pages not listed in any sitemap" />
+        <Stat label="Sitemap-Dateien" value={fmtInt(files.length)} tone={files.length ? undefined : "warn"} />
+        <Stat label="Gelistete URLs" value={fmtInt(d.url_count)} hint={`davon ${fmtInt(d.urls_crawled)} gecrawlt`} />
+        <Stat label="Mit lastmod" value={fmtInt(d.with_lastmod)} hint={d.url_count ? fmtPct(d.with_lastmod / d.url_count, 0) + " der gelisteten URLs" : undefined} />
+        <Stat label="Indexierbare Seiten" value={fmtInt(d.indexable_pages)} tooltip="Vom Crawl gefundene indexierbare Seiten" />
+        <Stat label="Nicht indexierbar in Sitemap" value={fmtInt(nonIndexable.length)} tone={nonIndexable.length ? "bad" : "good"} tooltip="Weiterleitungen, Fehler, noindex- oder kanonisierte URLs, die nicht gelistet sein sollten" />
+        <Stat label="Indexierbar, fehlt" value={fmtInt(missing.length)} tone={missing.length ? "warn" : "good"} tooltip="Indexierbare Seiten, die in keiner Sitemap stehen" />
       </div>
 
       <div className="mb-4 grid gap-4 lg:grid-cols-2">
         <Card title="robots.txt">
           {!robots ? (
-            <EmptyState title="robots.txt was not checked" description="The crawl did not record a robots.txt result for this site." />
+            <EmptyState title="robots.txt nicht geprüft" description="Der Crawl hat für diese Website kein robots.txt-Ergebnis erfasst." />
           ) : (
             <KeyValue items={[
-              ["Status", <span className="flex flex-wrap items-center gap-2"><StatusCode code={robots.status} />{robots.present ? <Badge tone="green">present</Badge> : <Badge tone="amber">missing</Badge>}
-                {robots.blocks_start && <Badge tone="red" title="The start URL is disallowed for the crawler's user agent">blocks start URL</Badge>}</span>],
-              ["Sitemap lines", robots.sitemaps?.length ? (
+              ["Status", <span className="flex flex-wrap items-center gap-2"><StatusCode code={robots.status} />{robots.present ? <Badge tone="green">vorhanden</Badge> : <Badge tone="amber">fehlt</Badge>}
+                {robots.blocks_start && <Badge tone="red" title="Die Start-URL ist für den User-Agent des Crawlers gesperrt">sperrt Start-URL</Badge>}</span>],
+              ["Sitemap-Zeilen", robots.sitemaps?.length ? (
                 <ul className="space-y-1">{robots.sitemaps.map((s: string) => <li key={s}><Url href={s} /></li>)}</ul>
-              ) : <span className="text-amber-700 dark:text-amber-300">None. Add a “Sitemap: https://…” line so crawlers can find your sitemap.</span>],
-              ["Syntax errors", robots.errors?.length ? (
+              ) : <span className="text-amber-700 dark:text-amber-300">Keine. Eine Zeile „Sitemap: https://…“ ergänzen, damit Crawler die Sitemap finden.</span>],
+              ["Syntaxfehler", robots.errors?.length ? (
                 <ul className="list-disc space-y-1 pl-4 text-red-700 dark:text-red-300">{robots.errors.map((e: string, i: number) => <li key={i}>{e}</li>)}</ul>
-              ) : <Badge tone="green">none</Badge>],
-              ["Crawl delay", robots.crawl_delay === null || robots.crawl_delay === undefined ? "Not set" : `${robots.crawl_delay} s`],
+              ) : <Badge tone="green">keine</Badge>],
+              ["Crawl-delay", robots.crawl_delay === null || robots.crawl_delay === undefined ? "nicht gesetzt" : `${robots.crawl_delay} s`],
             ]} />
           )}
         </Card>
-        <Card title="lastmod by year" description="How recently the listed URLs claim to have been modified">
+        <Card title="lastmod nach Jahr" description="Wie aktuell die gelisteten URLs laut Angabe geändert wurden">
           {years.length === 0 ? (
-            <EmptyState title="No lastmod values" description="None of the listed URLs carry a <lastmod> date. Accurate lastmod values help search engines prioritise recrawling." />
+            <EmptyState title="Keine lastmod-Werte" description="Keine gelistete URL hat ein <lastmod>-Datum. Korrekte lastmod-Werte helfen Suchmaschinen beim Priorisieren des Recrawls." />
           ) : (
-            <div className="h-56" role="img" aria-label="Sitemap URLs by lastmod year">
+            <div className="h-56" role="img" aria-label="Sitemap-URLs nach lastmod-Jahr">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={years} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#94a3b833" vertical={false} />
@@ -128,57 +128,57 @@ export default function Sitemaps() {
         </Card>
       </div>
 
-      <Card padded={false} title="Sitemap files" className="mb-4">
+      <Card padded={false} title="Sitemap-Dateien" className="mb-4">
         <DataTable columns={fileColumns} rows={files} rowKey={(f, i) => `${f.url}-${i}`}
-          empty={<EmptyState title="No sitemap found" description="No sitemap was discovered through robots.txt or the common /sitemap.xml locations. Use “Generate sitemap.xml” to create one from this crawl." />} />
+          empty={<EmptyState title="Keine Sitemap gefunden" description="Weder über robots.txt noch unter den üblichen /sitemap.xml-Pfaden gefunden. Mit „sitemap.xml erzeugen“ aus diesem Crawl eine anlegen." />} />
       </Card>
 
       <Tabs<TabId> value={tab} onChange={setTab} tabs={[
-        { id: "nonindexable", label: "Non-indexable URLs in sitemap", count: nonIndexable.length },
-        { id: "missing", label: "Indexable pages missing from sitemap", count: missing.length },
-        { id: "canonical", label: "Canonical mismatches", count: mismatch.length },
-        { id: "notcrawled", label: "Listed but not crawled", count: notCrawled.length },
+        { id: "nonindexable", label: "Nicht indexierbare URLs in der Sitemap", count: nonIndexable.length },
+        { id: "missing", label: "Indexierbare Seiten fehlen in der Sitemap", count: missing.length },
+        { id: "canonical", label: "Canonical-Abweichungen", count: mismatch.length },
+        { id: "notcrawled", label: "Gelistet, aber nicht gecrawlt", count: notCrawled.length },
       ]} />
       <Card padded={false} className="mb-4">
         {tab === "nonindexable" && (
           <Paged rows={nonIndexable} rowKey={(r) => r.page_id} onRowClick={open}
-            empty={{ title: "Sitemap is clean", description: "Every crawled URL listed in the sitemap is indexable." }}
+            empty={{ title: "Sitemap ist sauber", description: "Jede gecrawlte URL aus der Sitemap ist indexierbar." }}
             columns={[
               { key: "url", header: "URL", render: urlCell },
               { key: "status", header: "Status", render: (r) => <StatusCode code={r.status_code} /> },
-              { key: "reason", header: "Why it is not indexable", render: (r) => (r.reason ? titleCase(String(r.reason)) : "–") },
+              { key: "reason", header: "Warum nicht indexierbar", render: (r) => (r.reason ? titleCase(String(r.reason)) : "–") },
             ]} />
         )}
         {tab === "missing" && (
           <Paged rows={missing} rowKey={(r) => r.page_id} onRowClick={open}
-            empty={{ title: "Nothing missing", description: "Every indexable page found by the crawl is listed in a sitemap." }}
+            empty={{ title: "Nichts fehlt", description: "Jede indexierbare Seite aus dem Crawl steht in einer Sitemap." }}
             columns={[
               { key: "url", header: "URL", render: urlCell },
-              { key: "inlinks", header: "Inlinks", align: "right", render: (r) => fmtInt(r.inlinks) },
+              { key: "inlinks", header: "Eingehend", align: "right", render: (r) => fmtInt(r.inlinks) },
             ]} />
         )}
         {tab === "canonical" && (
           <Paged rows={mismatch} rowKey={(r) => r.page_id} onRowClick={open}
-            empty={{ title: "No canonical mismatches", description: "Every listed URL is its own canonical." }}
+            empty={{ title: "Keine Canonical-Abweichungen", description: "Jede gelistete URL ist ihr eigenes Canonical." }}
             columns={[
-              { key: "url", header: "URL in sitemap", render: urlCell },
-              { key: "canonical", header: "Declared canonical", render: (r) => <div className="max-w-xl"><Url href={r.canonical} label={shortUrl(r.canonical, base)} /></div> },
+              { key: "url", header: "URL in der Sitemap", render: urlCell },
+              { key: "canonical", header: "Angegebenes Canonical", render: (r) => <div className="max-w-xl"><Url href={r.canonical} label={shortUrl(r.canonical, base)} /></div> },
             ]} />
         )}
         {tab === "notcrawled" && (
           <Paged rows={notCrawled.map((url) => ({ url }))} rowKey={(r, i) => `${r.url}-${i}`}
-            empty={{ title: "All listed URLs were crawled", description: "The crawl visited every URL found in the sitemaps." }}
-            columns={[{ key: "url", header: "URL (up to 200 shown)", render: urlCell }]} />
+            empty={{ title: "Alle gelisteten URLs gecrawlt", description: "Der Crawl hat jede URL aus den Sitemaps besucht." }}
+            columns={[{ key: "url", header: "URL (bis zu 200)", render: urlCell }]} />
         )}
       </Card>
       {tab === "notcrawled" && notCrawled.length > 0 && (
-        <div className="mb-4"><Notice tone="warn">These URLs were not visited, usually because the crawl's URL limit was reached or robots.txt disallows them. Raise the limit on the Crawler page to cover them.</Notice></div>
+        <div className="mb-4"><Notice tone="warn">Diese URLs wurden nicht besucht, meist wegen des URL-Limits oder einer Sperre in robots.txt. Auf der Crawler-Seite das Limit erhöhen.</Notice></div>
       )}
 
       <div className="space-y-3">
         <Notice>
-          <strong>Generate sitemap.xml</strong> downloads a sitemap built from this crawl. It contains only indexable, canonical pages that answered 200. Redirects, errors, noindex pages and
-          canonicalised duplicates are left out. Sites with more than 50,000 URLs are split into parts; the download is the first part.
+          <strong>sitemap.xml erzeugen</strong> lädt eine aus diesem Crawl gebaute Sitemap herunter. Sie enthält nur indexierbare, kanonische Seiten mit Status 200. Weiterleitungen, Fehler, noindex-Seiten und
+          kanonisierte Duplikate bleiben draußen. Websites mit mehr als 50.000 URLs werden aufgeteilt; der Download ist der erste Teil.
         </Notice>
         {d.indexing_note && <Notice>{d.indexing_note}</Notice>}
       </div>

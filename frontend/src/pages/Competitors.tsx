@@ -15,40 +15,40 @@ function Chip({ children, title }: { children: ReactNode; title?: string }) {
 }
 
 const METRICS: { key: string; label: string; help?: string; get: (p: any) => ReactNode }[] = [
-  { key: "score", label: "Technical health score", help: "Audit score of the crawl (0-100)", get: (p) => (p.score === null || p.score === undefined ? "–" : Math.round(p.score)) },
-  { key: "urls_crawled", label: "URLs crawled", help: "Limited by each crawl's URL cap", get: (p) => <>{fmtInt(p.urls_crawled)}{p.limit_reached && <span className="ml-1 text-xs text-amber-600 dark:text-amber-400" title="The crawl stopped at its URL limit">cap</span>}</> },
-  { key: "indexable_pages", label: "Indexable pages", get: (p) => fmtInt(p.indexable_pages) },
-  { key: "sitemap_urls", label: "Sitemap URLs", get: (p) => fmtInt(p.sitemap_urls) },
-  { key: "avg_word_count", label: "Avg word count", get: (p) => fmtInt(p.avg_word_count) },
-  { key: "avg_title_length", label: "Avg title length", get: (p) => fmtInt(p.avg_title_length) },
-  { key: "avg_description_length", label: "Avg description length", get: (p) => fmtInt(p.avg_description_length) },
-  { key: "pages_missing_description", label: "Pages missing description", get: (p) => fmtInt(p.pages_missing_description) },
-  { key: "avg_internal_links_out", label: "Avg internal links out", get: (p) => fmtNum(p.avg_internal_links_out) },
-  { key: "avg_h2_per_page", label: "Avg H2 per page", get: (p) => fmtNum(p.avg_h2_per_page) },
-  { key: "avg_response_ms", label: "Avg response time", get: (p) => fmtMs(p.avg_response_ms) },
-  { key: "critical", label: "Critical issues", get: (p) => fmtInt(p.issues_by_severity?.critical ?? 0) },
-  { key: "high", label: "High issues", get: (p) => fmtInt(p.issues_by_severity?.high ?? 0) },
-  { key: "crawled_at", label: "Crawled", get: (p) => fmtDate(p.crawled_at) },
+  { key: "score", label: "Technischer Score", help: "Audit-Score des Crawls (0–100)", get: (p) => (p.score === null || p.score === undefined ? "–" : Math.round(p.score)) },
+  { key: "urls_crawled", label: "Gecrawlte URLs", help: "Begrenzt durch das URL-Limit des Crawls", get: (p) => <>{fmtInt(p.urls_crawled)}{p.limit_reached && <span className="ml-1 text-xs text-amber-600 dark:text-amber-400" title="Der Crawl hat am URL-Limit gestoppt">Limit</span>}</> },
+  { key: "indexable_pages", label: "Indexierbare Seiten", get: (p) => fmtInt(p.indexable_pages) },
+  { key: "sitemap_urls", label: "Sitemap-URLs", get: (p) => fmtInt(p.sitemap_urls) },
+  { key: "avg_word_count", label: "Ø Wortzahl", get: (p) => fmtInt(p.avg_word_count) },
+  { key: "avg_title_length", label: "Ø Title-Länge", get: (p) => fmtInt(p.avg_title_length) },
+  { key: "avg_description_length", label: "Ø Description-Länge", get: (p) => fmtInt(p.avg_description_length) },
+  { key: "pages_missing_description", label: "Seiten ohne Description", get: (p) => fmtInt(p.pages_missing_description) },
+  { key: "avg_internal_links_out", label: "Ø interne ausgehende Links", get: (p) => fmtNum(p.avg_internal_links_out) },
+  { key: "avg_h2_per_page", label: "Ø H2 pro Seite", get: (p) => fmtNum(p.avg_h2_per_page) },
+  { key: "avg_response_ms", label: "Ø Antwortzeit", get: (p) => fmtMs(p.avg_response_ms) },
+  { key: "critical", label: "Kritische Befunde", get: (p) => fmtInt(p.issues_by_severity?.critical ?? 0) },
+  { key: "high", label: "Hohe Befunde", get: (p) => fmtInt(p.issues_by_severity?.high ?? 0) },
+  { key: "crawled_at", label: "Gecrawlt", get: (p) => fmtDate(p.crawled_at) },
 ];
 
 const CHART_METRICS: [string, string][] = [
-  ["score", "Health score"], ["avg_title_length", "Avg title length"], ["avg_description_length", "Avg description length"],
-  ["avg_internal_links_out", "Avg internal links"], ["avg_h2_per_page", "Avg H2 / page"],
+  ["score", "Score"], ["avg_title_length", "Ø Title-Länge"], ["avg_description_length", "Ø Description-Länge"],
+  ["avg_internal_links_out", "Ø interne Links"], ["avg_h2_per_page", "Ø H2 / Seite"],
 ];
 
 function AiPanel({ siteId }: { siteId: number }) {
   const run = useMutation({ mutationFn: (task: string) => api.post("/ai/run", { task, site_id: siteId }) });
   return (
-    <Card title="AI analysis" description="Generated from the comparison data on this page by the AI provider you configured."
+    <Card title="KI-Analyse" description="Vom eingerichteten KI-Anbieter aus den Vergleichsdaten dieser Seite erstellt."
       actions={<>
-        <Button size="sm" icon={<Sparkles className="h-3.5 w-3.5" />} loading={run.isPending && run.variables === "content_gaps"} disabled={run.isPending} onClick={() => run.mutate("content_gaps")}>Content gap analysis</Button>
-        <Button size="sm" icon={<Sparkles className="h-3.5 w-3.5" />} loading={run.isPending && run.variables === "competitor_analysis"} disabled={run.isPending} onClick={() => run.mutate("competitor_analysis")}>Competitor summary</Button>
+        <Button size="sm" icon={<Sparkles className="h-3.5 w-3.5" />} loading={run.isPending && run.variables === "content_gaps"} disabled={run.isPending} onClick={() => run.mutate("content_gaps")}>Inhaltslücken-Analyse</Button>
+        <Button size="sm" icon={<Sparkles className="h-3.5 w-3.5" />} loading={run.isPending && run.variables === "competitor_analysis"} disabled={run.isPending} onClick={() => run.mutate("competitor_analysis")}>Wettbewerber-Zusammenfassung</Button>
       </>}>
-      {run.isPending ? <Spinner label="Generating…" /> : run.error ? (
+      {run.isPending ? <Spinner label="Wird erstellt…" /> : run.error ? (
         <div className="space-y-2">
           <ErrorBox error={run.error} />
           {run.error instanceof ApiError && run.error.status === 400 && (
-            <p className="text-xs text-slate-500 dark:text-slate-400">AI features are optional and need a provider. <Link to="/settings" className="font-medium text-brand-700 hover:underline dark:text-brand-300">Configure it in Settings</Link>.</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">KI-Funktionen sind optional und brauchen einen Anbieter. <Link to="/settings" className="font-medium text-brand-700 hover:underline dark:text-brand-300">In den Einstellungen einrichten</Link>.</p>
           )}
         </div>
       ) : run.data ? (
@@ -56,7 +56,7 @@ function AiPanel({ siteId }: { siteId: number }) {
           <div className="prose-ai whitespace-pre-wrap text-sm text-slate-700 dark:text-slate-300">{run.data.output}</div>
           <p className="border-t border-slate-100 pt-2 text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400">{run.data.provider}{run.data.model ? ` · ${run.data.model}` : ""}. {run.data.grounding}</p>
         </div>
-      ) : <p className="text-sm text-slate-500 dark:text-slate-400">Ask for a written summary of topical gaps or of how the crawled competitors compare.</p>}
+      ) : <p className="text-sm text-slate-500 dark:text-slate-400">Schriftliche Zusammenfassung der Themenlücken oder des Wettbewerbervergleichs anfordern.</p>}
     </Card>
   );
 }
@@ -67,7 +67,7 @@ function CompetitorRow({ siteId, comp, onChanged }: { siteId: number; comp: any;
   const [failure, setFailure] = useState<string | null>(null);
   const job = useJob(jobId, (j: Job) => {
     setJobId(null);
-    setFailure(j.status === "failed" ? j.error ?? "The crawl failed." : j.status === "cancelled" ? "The crawl was cancelled." : null);
+    setFailure(j.status === "failed" ? j.error ?? "Der Crawl ist fehlgeschlagen." : j.status === "cancelled" ? "Der Crawl wurde abgebrochen." : null);
     onChanged();
   });
   const crawl = useMutation({
@@ -84,23 +84,23 @@ function CompetitorRow({ siteId, comp, onChanged }: { siteId: number; comp: any;
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-sm font-medium text-slate-900 dark:text-slate-100">{comp.name}</span>
-            {running ? <Badge tone="blue">crawl running</Badge> : comp.profile ? <Badge tone="green">crawled {fmtDate(comp.profile.crawled_at)}</Badge> : <Badge>not crawled</Badge>}
+            {running ? <Badge tone="blue">Crawl läuft</Badge> : comp.profile ? <Badge tone="green">gecrawlt {fmtDate(comp.profile.crawled_at)}</Badge> : <Badge>nicht gecrawlt</Badge>}
           </div>
           <Url href={comp.url} className="text-xs" />
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <label className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
             Max URLs
-            <Input type="number" min={1} max={5000} value={maxUrls} onChange={(e) => setMaxUrls(Number(e.target.value))} className="h-8 w-20" aria-label={`Max URLs for ${comp.name}`} />
+            <Input type="number" min={1} max={5000} value={maxUrls} onChange={(e) => setMaxUrls(Number(e.target.value))} className="h-8 w-20" aria-label={`Max. URLs für ${comp.name}`} />
           </label>
-          <Button size="sm" icon={<Play className="h-3.5 w-3.5" />} loading={crawl.isPending} disabled={running || !validMax} onClick={() => crawl.mutate()}>{comp.profile ? "Re-crawl" : "Crawl"}</Button>
-          <Button size="sm" variant="ghost" aria-label={`Delete ${comp.name}`} loading={remove.isPending}
-            onClick={() => { if (window.confirm(`Delete competitor "${comp.name}" and its crawl data?`)) remove.mutate(); }}>
+          <Button size="sm" icon={<Play className="h-3.5 w-3.5" />} loading={crawl.isPending} disabled={running || !validMax} onClick={() => crawl.mutate()}>{comp.profile ? "Neu crawlen" : "Crawlen"}</Button>
+          <Button size="sm" variant="ghost" aria-label={`${comp.name} löschen`} loading={remove.isPending}
+            onClick={() => { if (window.confirm(`Wettbewerber „${comp.name}“ samt Crawldaten löschen?`)) remove.mutate(); }}>
             <Trash2 className="h-4 w-4 text-red-600 dark:text-red-400" />
           </Button>
         </div>
       </div>
-      {running && <ProgressBar value={job?.progress ?? 0} label={job?.message ?? "Crawling politely (reduced concurrency)…"} />}
+      {running && <ProgressBar value={job?.progress ?? 0} label={job?.message ?? "Crawlt schonend (reduzierte Parallelität)…"} />}
       {(crawl.error || remove.error || failure) && <ErrorBox error={crawl.error ?? remove.error ?? failure} />}
     </li>
   );
@@ -113,52 +113,52 @@ function OverlapCard({ comp, siteUrl }: { comp: any; siteUrl: string }) {
   if (!ov) return null;
   const gaps: any[] = ov.gaps ?? [];
   const oppColumns: Column<any>[] = [
-    { key: "page", header: "Competitor page", render: (o) => (
+    { key: "page", header: "Wettbewerberseite", render: (o) => (
       <div className="max-w-md"><div className="text-slate-900 dark:text-slate-100">{o.title}</div><Url href={o.url} label={shortUrl(o.url, comp.url)} className="text-xs" /></div>
     ) },
-    { key: "topics", header: "Topics you lack", render: (o) => <span className="flex max-w-sm flex-wrap gap-1">{(o.topics_you_lack ?? []).map((t: string) => <Chip key={t}>{t}</Chip>)}</span> },
-    { key: "pr", header: "Internal PageRank", align: "right", tooltip: "Importance of the page within the competitor's own internal link graph, computed from our crawl",
+    { key: "topics", header: "Dir fehlende Themen", render: (o) => <span className="flex max-w-sm flex-wrap gap-1">{(o.topics_you_lack ?? []).map((t: string) => <Chip key={t}>{t}</Chip>)}</span> },
+    { key: "pr", header: "Interner PageRank", align: "right", tooltip: "Gewicht der Seite im internen Linkgraphen des Wettbewerbers, aus unserem Crawl berechnet",
       render: (o) => (o.internal_pagerank === null || o.internal_pagerank === undefined ? "–" : fmtNum(o.internal_pagerank, 4)) },
   ];
   return (
     <Card padded={false} title={<span className="inline-flex flex-wrap items-center gap-2">Topical overlap with {comp.name} <DataBadge kind="measured" /></span>} description={<Url href={comp.url} />}>
       <div className="space-y-4 p-4">
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          <Stat label="Shared terms" value={fmtInt(ov.shared_terms)} />
-          <Stat label="Overlap share" value={fmtPct(ov.overlap_share)} tooltip="Shared terms divided by all distinct terms on both sites" />
-          <Stat label="Gap terms" value={fmtInt(gaps.length)} hint="They cover, you do not" />
-          <Stat label="Your unique terms" value={fmtInt((ov.your_unique_terms ?? []).length)} hint="You cover, they do not" />
+          <Stat label="Gemeinsame Begriffe" value={fmtInt(ov.shared_terms)} />
+          <Stat label="Überschneidung" value={fmtPct(ov.overlap_share)} tooltip="Gemeinsame Begriffe geteilt durch alle unterschiedlichen Begriffe beider Websites" />
+          <Stat label="Lückenbegriffe" value={fmtInt(gaps.length)} hint="Bei ihnen, nicht bei dir" />
+          <Stat label="Deine eigenen Begriffe" value={fmtInt((ov.your_unique_terms ?? []).length)} hint="Bei dir, nicht bei ihnen" />
         </div>
         <Notice>{ov.method}</Notice>
         <div>
-          <div className="mb-1.5 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Gaps: terms on 2+ of their pages, absent from your titles and H1s</div>
+          <div className="mb-1.5 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Lücken: Begriffe auf 2+ ihrer Seiten, die in deinen Titles und H1 fehlen</div>
           {gaps.length ? (
             <div className="flex flex-wrap gap-1">
-              {(allGaps ? gaps : gaps.slice(0, 30)).map((g) => <Chip key={g.term} title={`${g.competitor_pages} competitor pages`}>{g.term} <span className="font-semibold tabular-nums">{g.competitor_pages}</span></Chip>)}
-              {gaps.length > 30 && <button className="text-xs font-medium text-brand-700 hover:underline dark:text-brand-300" onClick={() => setAllGaps((a) => !a)}>{allGaps ? "Show fewer" : `+${gaps.length - 30} more`}</button>}
+              {(allGaps ? gaps : gaps.slice(0, 30)).map((g) => <Chip key={g.term} title={`${g.competitor_pages} Wettbewerberseiten`}>{g.term} <span className="font-semibold tabular-nums">{g.competitor_pages}</span></Chip>)}
+              {gaps.length > 30 && <button className="text-xs font-medium text-brand-700 hover:underline dark:text-brand-300" onClick={() => setAllGaps((a) => !a)}>{allGaps ? "Weniger anzeigen" : `+${gaps.length - 30} weitere`}</button>}
             </div>
-          ) : <span className="text-sm text-slate-500 dark:text-slate-400">No gap terms found.</span>}
+          ) : <span className="text-sm text-slate-500 dark:text-slate-400">Keine Lückenbegriffe gefunden.</span>}
         </div>
         <div className="grid gap-4 md:grid-cols-2">
           <div>
-            <div className="mb-1.5 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Your unique terms</div>
-            {(ov.your_unique_terms ?? []).length ? <div className="flex flex-wrap gap-1">{ov.your_unique_terms.map((g: any) => <Chip key={g.term} title={`${g.your_pages} of your pages`}>{g.term} <span className="font-semibold tabular-nums">{g.your_pages}</span></Chip>)}</div>
-              : <span className="text-sm text-slate-500 dark:text-slate-400">None.</span>}
+            <div className="mb-1.5 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Deine eigenen Begriffe</div>
+            {(ov.your_unique_terms ?? []).length ? <div className="flex flex-wrap gap-1">{ov.your_unique_terms.map((g: any) => <Chip key={g.term} title={`${g.your_pages} deiner Seiten`}>{g.term} <span className="font-semibold tabular-nums">{g.your_pages}</span></Chip>)}</div>
+              : <span className="text-sm text-slate-500 dark:text-slate-400">Keine.</span>}
           </div>
           <div>
-            <div className="mb-1.5 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Top shared terms</div>
+            <div className="mb-1.5 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Häufigste gemeinsame Begriffe</div>
             {(ov.top_shared ?? []).length ? <div className="flex flex-wrap gap-1">{ov.top_shared.map((t: string) => <Chip key={t}>{t}</Chip>)}</div>
-              : <span className="text-sm text-slate-500 dark:text-slate-400">None.</span>}
+              : <span className="text-sm text-slate-500 dark:text-slate-400">Keine.</span>}
           </div>
         </div>
       </div>
       <div className="border-t border-slate-100 dark:border-slate-800">
         <div className="px-4 py-3">
-          <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Content opportunities</h3>
+          <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Inhaltschancen</h3>
           <p className="text-xs text-slate-500 dark:text-slate-400">Their most internally linked pages covering topics missing from your titles and H1s ({shortUrl(siteUrl)}).</p>
         </div>
         <DataTable dense columns={oppColumns} rows={opps} rowKey={(o) => o.url}
-          empty={<EmptyState title="No content opportunities" description="No competitor page covers a two-word topic that is missing from your site." />} />
+          empty={<EmptyState title="Keine Inhaltschancen" description="Keine Wettbewerberseite behandelt ein Zwei-Wort-Thema, das bei dir fehlt." />} />
       </div>
     </Card>
   );
@@ -215,9 +215,9 @@ export default function Competitors() {
 
   return (
     <div>
-      <PageHeader title="Competitors"
-        description="Crawl competitor sites with the same crawler used for your own site and compare what is measurable: structure, content depth, metadata and topical coverage."
-        actions={<Button icon={<FileDown className="h-4 w-4" />} loading={pdfBusy} disabled={!data || (!own && !profiled.length)} onClick={downloadPdf}>Download PDF</Button>} />
+      <PageHeader title="Wettbewerber"
+        description="Wettbewerber mit demselben Crawler wie die eigene Website crawlen und Messbares vergleichen: Struktur, Inhaltstiefe, Metadaten und Themenabdeckung."
+        actions={<Button icon={<FileDown className="h-4 w-4" />} loading={pdfBusy} disabled={!data || (!own && !profiled.length)} onClick={downloadPdf}>PDF herunterladen</Button>} />
 
       <div className="space-y-4">
         {pdfError && <ErrorBox error={pdfError} />}
@@ -229,43 +229,43 @@ export default function Competitors() {
 
             {!own && (
               <Card>
-                <EmptyState title="Crawl your own site first"
-                  description={`Comparisons, topical overlap and content opportunities need a completed crawl of ${site.name}. You can already add competitors and crawl them below.`}
-                  action={<Link to="/crawler" className="text-sm font-medium text-brand-700 hover:underline dark:text-brand-300">Go to Crawler</Link>} />
+                <EmptyState title="Zuerst die eigene Website crawlen"
+                  description={`Vergleiche, Themenüberschneidung und Inhaltschancen brauchen einen abgeschlossenen Crawl von ${site.name}. Wettbewerber kannst du unten schon anlegen und crawlen.`}
+                  action={<Link to="/crawler" className="text-sm font-medium text-brand-700 hover:underline dark:text-brand-300">Zum Crawler</Link>} />
               </Card>
             )}
 
-            <Card padded={false} title={`Competitors (${competitors.length} / 10)`} description="Competitor crawls skip external-link and image checks and run with reduced concurrency.">
+            <Card padded={false} title={`Wettbewerber (${competitors.length} / 10)`} description="Wettbewerber-Crawls überspringen externe Links und Bildprüfungen und laufen mit reduzierter Parallelität.">
               <form onSubmit={submit} className="flex flex-col gap-2 border-b border-slate-100 p-4 sm:flex-row sm:items-end dark:border-slate-800">
                 <Field label="Name (optional)" className="sm:w-56">
-                  <Input maxLength={255} value={name} onChange={(e) => setName(e.target.value)} placeholder="Defaults to the domain" />
+                  <Input maxLength={255} value={name} onChange={(e) => setName(e.target.value)} placeholder="Standard: die Domain" />
                 </Field>
-                <Field label="Competitor URL" className="flex-1">
-                  <Input required minLength={3} maxLength={2048} value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://competitor.example" />
+                <Field label="Wettbewerber-URL" className="flex-1">
+                  <Input required minLength={3} maxLength={2048} value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://wettbewerber.de" />
                 </Field>
-                <Button type="submit" variant="primary" icon={<Plus className="h-4 w-4" />} loading={add.isPending} disabled={!url.trim() || competitors.length >= 10}>Add competitor</Button>
+                <Button type="submit" variant="primary" icon={<Plus className="h-4 w-4" />} loading={add.isPending} disabled={!url.trim() || competitors.length >= 10}>Wettbewerber hinzufügen</Button>
               </form>
               {add.error && <div className="p-4 pb-0"><ErrorBox error={add.error} /></div>}
               {competitors.length ? (
                 <ul className="divide-y divide-slate-100 dark:divide-slate-800">
                   {competitors.map((c) => <CompetitorRow key={c.id} siteId={site.id} comp={c} onChanged={refresh} />)}
                 </ul>
-              ) : <EmptyState icon={<Users className="h-6 w-6" />} title="No competitors yet" description="Add the URL of a site you compete with, then crawl it to build its profile." />}
+              ) : <EmptyState icon={<Users className="h-6 w-6" />} title="Noch keine Wettbewerber" description="URL eines Wettbewerbers hinzufügen und crawlen, um sein Profil aufzubauen." />}
             </Card>
 
             {columnsData.length > 0 && (
-              <Card padded={false} title={<span className="inline-flex items-center gap-2">Comparison <DataBadge kind="measured" /></span>}
-                description="Every value is measured by this toolkit's crawler on the indexable pages it reached.">
+              <Card padded={false} title={<span className="inline-flex items-center gap-2">Vergleich <DataBadge kind="measured" /></span>}
+                description="Jeder Wert wird vom Crawler dieses Tools auf den erreichten indexierbaren Seiten gemessen.">
                 <div className="overflow-x-auto">
                   <table className="w-full min-w-max border-collapse text-left text-sm">
                     <thead>
                       <tr className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500 dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-400">
-                        <th className="px-3 py-2 font-medium">Metric</th>
+                        <th className="px-3 py-2 font-medium">Kennzahl</th>
                         {columnsData.map((c, i) => (
                           <th key={i} className="px-3 py-2 text-right font-medium">
                             <span className="inline-flex items-center gap-1.5">
                               <span className="h-2 w-2 rounded-full" style={{ background: chartColors[i % chartColors.length] }} />
-                              {c.name}{c.own && <Badge tone="blue">you</Badge>}
+                              {c.name}{c.own && <Badge tone="blue">du</Badge>}
                             </span>
                           </th>
                         ))}
@@ -287,7 +287,7 @@ export default function Competitors() {
             )}
 
             {columnsData.length > 1 && (
-              <Card title="Side by side" description="Health score, metadata lengths (characters) and per-page averages">
+              <Card title="Im direkten Vergleich" description="Score, Metadatenlängen (Zeichen) und Durchschnittswerte je Seite">
                 <ResponsiveContainer width="100%" height={300}>
                   <BarChart data={chartData} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#94a3b833" vertical={false} />
@@ -303,7 +303,7 @@ export default function Competitors() {
 
             {own && profiled.map((c) => <OverlapCard key={c.id} comp={c} siteUrl={site.url} />)}
             {own && competitors.length > 0 && !profiled.length && (
-              <Card><EmptyState title="No competitor has been crawled yet" description="Press Crawl next to a competitor. Overlap and content opportunities appear when its crawl completes." /></Card>
+              <Card><EmptyState title="Noch kein Wettbewerber gecrawlt" description="Neben einem Wettbewerber auf Crawlen klicken. Überschneidung und Inhaltschancen erscheinen nach Abschluss." /></Card>
             )}
 
             {(own || profiled.length > 0) && <AiPanel siteId={site.id} />}

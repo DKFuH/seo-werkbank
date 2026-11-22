@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from ..models import Setting
 
-SECRET_FIELDS = {"api_key", "client_secret", "access_token", "refresh_token", "tokens"}
+SECRET_FIELDS = {"api_key", "client_secret", "access_token", "refresh_token", "tokens", "token_auth"}
 MASK = "********"
 
 DEFAULTS: dict[str, dict] = {
@@ -17,8 +17,9 @@ DEFAULTS: dict[str, dict] = {
     "pagespeed": {"api_key": ""},
     "ai": {"provider": "none", "base_url": "http://localhost:11434", "model": "llama3.1", "api_key": ""},
     "gsc": {"client_id": "", "client_secret": ""},
+    "matomo": {"url": "", "token_auth": ""},
 }
-_SECRET_KEYS = {"serp": {"google_cse_key", "brave_key"}, "pagespeed": {"api_key"}, "ai": {"api_key"}, "gsc": {"client_secret"}}
+_SECRET_KEYS = {"serp": {"google_cse_key", "brave_key"}, "pagespeed": {"api_key"}, "ai": {"api_key"}, "gsc": {"client_secret"}, "matomo": {"token_auth"}}
 
 
 def get_setting(db: Session, key: str) -> dict:

@@ -11,18 +11,18 @@ import { api } from "../lib/api";
 import { useSite } from "../lib/context";
 import { fmtBytes, fmtDateTime, fmtMs, scoreColor, shortUrl, titleCase } from "../lib/format";
 
-const CATEGORIES: [string, string][] = [["performance", "Performance"], ["accessibility", "Accessibility"], ["best-practices", "Best practices"], ["seo", "SEO"]];
+const CATEGORIES: [string, string][] = [["performance", "Performance"], ["accessibility", "Barrierefreiheit"], ["best-practices", "Best Practices"], ["seo", "SEO"]];
 const FIELD_ORDER = ["LCP", "INP", "CLS", "FCP", "TTFB"];
 const METRIC_NAME: Record<string, string> = {
   LCP: "Largest Contentful Paint", INP: "Interaction to Next Paint", CLS: "Cumulative Layout Shift", FCP: "First Contentful Paint",
-  TTFB: "Time to First Byte", TBT: "Total Blocking Time", "Speed Index": "Speed Index", TTI: "Time to Interactive", "TTFB (document)": "Server response time",
+  TTFB: "Time to First Byte", TBT: "Total Blocking Time", "Speed Index": "Speed Index", TTI: "Time to Interactive", "TTFB (document)": "Serverantwortzeit",
 };
 const TOPIC_ORDER = ["images", "javascript", "css", "render-blocking", "caching", "server", "layout", "other"];
 const TOPIC_LABEL: Record<string, string> = {
-  images: "Images", javascript: "JavaScript", css: "CSS", "render-blocking": "Render-blocking resources", caching: "Caching & compression",
-  server: "Server & network", layout: "Layout stability & page weight", other: "Other",
+  images: "Bilder", javascript: "JavaScript", css: "CSS", "render-blocking": "Renderblockierende Ressourcen", caching: "Caching & Komprimierung",
+  server: "Server & Netzwerk", layout: "Layoutstabilität & Seitengewicht", other: "Sonstiges",
 };
-const SOURCE_LABEL: Record<string, string> = { psi_api: "PageSpeed Insights API", local_lighthouse: "Local Lighthouse" };
+const SOURCE_LABEL: Record<string, string> = { psi_api: "PageSpeed Insights API", local_lighthouse: "Lokales Lighthouse" };
 const tooltipStyle = { background: "#0f172a", border: "none", borderRadius: 8, color: "#f8fafc", fontSize: 12 } as const;
 const axisTick = { fontSize: 12, fill: "#94a3b8" } as const;
 
@@ -55,21 +55,21 @@ function FieldData({ result }: { result: any }) {
   const labels = FIELD_ORDER.filter((l) => data[l]);
   const cwvPass = ["LCP", "INP", "CLS"].every((l) => data[l]?.rating === "good");
   return (
-    <Card title="Core Web Vitals: field data" description="75th percentile of real Chrome users over the last 28 days (Chrome UX Report)"
+    <Card title="Core Web Vitals: Felddaten" description="75. Perzentil echter Chrome-Nutzer der letzten 28 Tage (Chrome UX Report)"
       actions={hasPage || hasOrigin ? <DataBadge kind="measured" /> : <DataBadge kind="unavailable" />}>
       {!hasPage && !hasOrigin ? (
-        <EmptyState icon={<Gauge className="h-6 w-6" />} title="No field data for this page"
+        <EmptyState icon={<Gauge className="h-6 w-6" />} title="Keine Felddaten für diese Seite"
           description={result.source === "local_lighthouse"
-            ? "Local Lighthouse runs produce lab data only. Run the test through the PageSpeed Insights API to see real-user Core Web Vitals."
-            : "The Chrome UX Report only covers pages and origins with enough real-user traffic. This URL has not reached that threshold, so only lab data is shown below. Lab data is a simulation, not what your visitors experienced."} />
+            ? "Lokales Lighthouse liefert nur Labordaten. Für echte Core Web Vitals den Test über die PageSpeed-Insights-API laufen lassen."
+            : "Der Chrome UX Report erfasst nur Seiten und Domains mit genug echtem Traffic. Diese URL liegt darunter, daher folgen nur Labordaten. Labordaten sind eine Simulation, nicht das Erlebnis deiner Besucher."} />
       ) : (
         <div className="space-y-3">
-          {!hasPage && <Notice tone="warn">This URL has too little traffic for page-level field data. The values below are for the whole origin (all pages of the site).</Notice>}
+          {!hasPage && <Notice tone="warn">Diese URL hat zu wenig Traffic für Felddaten auf Seitenebene. Die Werte unten gelten für die ganze Domain (alle Seiten).</Notice>}
           <div className="flex flex-wrap items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
             {["LCP", "INP", "CLS"].every((l) => data[l]) ? (
-              cwvPass ? <><CheckCircle2 className="h-4 w-4 text-emerald-600" /> Core Web Vitals assessment: <strong>passed</strong></>
-                : <><XCircle className="h-4 w-4 text-red-600" /> Core Web Vitals assessment: <strong>failed</strong></>
-            ) : <span className="text-slate-500 dark:text-slate-400">Not all three Core Web Vitals (LCP, INP, CLS) are available, so no pass/fail assessment is shown.</span>}
+              cwvPass ? <><CheckCircle2 className="h-4 w-4 text-emerald-600" /> Core-Web-Vitals-Bewertung: <strong>bestanden</strong></>
+                : <><XCircle className="h-4 w-4 text-red-600" /> Core-Web-Vitals-Bewertung: <strong>nicht bestanden</strong></>
+            ) : <span className="text-slate-500 dark:text-slate-400">Nicht alle drei Core Web Vitals (LCP, INP, CLS) liegen vor, daher keine Bewertung.</span>}
             {hasPage && result.field_overall && <Badge tone={result.field_overall === "fast" ? "green" : result.field_overall === "average" ? "amber" : "red"}>overall: {result.field_overall}</Badge>}
           </div>
           <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5">
@@ -84,7 +84,7 @@ function FieldData({ result }: { result: any }) {
 function Recommendations({ recs }: { recs: any[] }) {
   const topics = TOPIC_ORDER.filter((t) => recs.some((r) => (TOPIC_ORDER.includes(r.topic) ? r.topic : "other") === t));
   const [open, setOpen] = useState<string | null>(null);
-  if (!recs.length) return <EmptyState title="No performance recommendations" description="Lighthouse found no audits scoring below 90 for this page." />;
+  if (!recs.length) return <EmptyState title="Keine Performance-Empfehlungen" description="Lighthouse hat für diese Seite keine Prüfung unter 90 gefunden." />;
   return (
     <div className="space-y-5">
       {topics.map((topic) => {
@@ -109,8 +109,8 @@ function Recommendations({ recs }: { recs: any[] }) {
                         <p className="mt-1 text-xs leading-relaxed text-slate-600 dark:text-slate-400">{plain(r.description)}</p>
                       </div>
                       <div className="flex flex-wrap items-center gap-1">
-                        {r.savings_ms ? <Badge tone="orange" title="Estimated load-time saving">save ~{fmtMs(r.savings_ms)}</Badge> : null}
-                        {r.savings_bytes ? <Badge tone="orange" title="Estimated transfer-size saving">save ~{fmtBytes(r.savings_bytes)}</Badge> : null}
+                        {r.savings_ms ? <Badge tone="orange" title="Geschätzte Ladezeit-Ersparnis">spart ~{fmtMs(r.savings_ms)}</Badge> : null}
+                        {r.savings_bytes ? <Badge tone="orange" title="Geschätzte Ersparnis an Übertragungsgröße">spart ~{fmtBytes(r.savings_bytes)}</Badge> : null}
                         {!r.savings_ms && !r.savings_bytes && r.display ? <Badge>{r.display}</Badge> : null}
                       </div>
                     </div>
@@ -123,7 +123,7 @@ function Recommendations({ recs }: { recs: any[] }) {
                       )}
                       {(r.items ?? []).length > 0 && (
                         <button className="font-medium text-brand-700 hover:underline dark:text-brand-300" aria-expanded={expanded} onClick={() => setOpen(expanded ? null : r.id)}>
-                          {expanded ? "Hide" : "Show"} {r.items.length} affected item{r.items.length === 1 ? "" : "s"}
+                          {r.items.length} {r.items.length === 1 ? "betroffenes Element" : "betroffene Elemente"} {expanded ? "ausblenden" : "anzeigen"}
                         </button>
                       )}
                     </div>
@@ -133,7 +133,7 @@ function Recommendations({ recs }: { recs: any[] }) {
                           <li key={i} className="flex flex-wrap items-start justify-between gap-2">
                             <code className="min-w-0 flex-1 break-all text-slate-700 dark:text-slate-300">{it.item}</code>
                             <span className="shrink-0 tabular-nums text-slate-500 dark:text-slate-400">
-                              {[it.wasted_ms ? `−${fmtMs(it.wasted_ms)}` : null, it.wasted_bytes ? `−${fmtBytes(it.wasted_bytes)}` : null, it.total_bytes ? `${fmtBytes(it.total_bytes)} total` : null].filter(Boolean).join(" · ")}
+                              {[it.wasted_ms ? `−${fmtMs(it.wasted_ms)}` : null, it.wasted_bytes ? `−${fmtBytes(it.wasted_bytes)}` : null, it.total_bytes ? `${fmtBytes(it.total_bytes)} gesamt` : null].filter(Boolean).join(" · ")}
                             </span>
                           </li>
                         ))}
@@ -157,7 +157,7 @@ function CategoryIssues({ issues }: { issues: Record<string, any[]> }) {
   const active = cats.some(([id]) => id === tab) ? tab : cats[0][0];
   const list = issues[active] ?? [];
   return (
-    <Card title="Failed audits by category" description="Pass/fail checks outside the performance category">
+    <Card title="Nicht bestandene Prüfungen nach Kategorie" description="Bestanden/nicht bestanden außerhalb der Performance-Kategorie">
       <Tabs value={active} onChange={setTab} tabs={cats.map(([id, label]) => ({ id, label, count: issues[id].length }))} />
       {list.length === 0 ? <Notice tone="success">No failed {titleCase(active).toLowerCase()} audits.</Notice> : (
         <ul className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -177,7 +177,7 @@ function Result({ result }: { result: any }) {
   const lab: Record<string, any> = result.lab ?? {};
   return (
     <div className="space-y-4">
-      <Card title="Lighthouse scores"
+      <Card title="Lighthouse-Scores"
         description={<><Url href={result.final_url ?? result.url} /> · {titleCase(result.strategy ?? "")} · {SOURCE_LABEL[result.source] ?? result.source} · {fmtDateTime(result.created_at)}{result.lighthouse_version ? ` · Lighthouse ${result.lighthouse_version}` : ""}</>}>
         {result.runtime_error && <div className="mb-4"><Notice tone="warn">Lighthouse reported a problem while loading the page: {result.runtime_error}</Notice></div>}
         <div className="grid grid-cols-2 justify-items-center gap-4 sm:grid-cols-4">
@@ -190,14 +190,14 @@ function Result({ result }: { result: any }) {
         </div>
       </Card>
       <FieldData result={result} />
-      <Card title="Lab metrics" description="Measured in one simulated page load. Useful for debugging, not a substitute for field data." actions={<DataBadge kind="measured" />}>
-        {Object.keys(lab).length === 0 ? <EmptyState title="No lab metrics" description="The Lighthouse run returned no metric values." /> : (
+      <Card title="Labormesswerte" description="Aus einem simulierten Seitenaufruf. Hilfreich zur Fehlersuche, kein Ersatz für Felddaten." actions={<DataBadge kind="measured" />}>
+        {Object.keys(lab).length === 0 ? <EmptyState title="Keine Labormesswerte" description="Der Lighthouse-Lauf lieferte keine Messwerte." /> : (
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-7">
             {Object.entries(lab).map(([label, m]) => <MetricTile key={label} label={label} value={m.display ?? metricValue(label, m.value)} rating={m.rating} />)}
           </div>
         )}
       </Card>
-      <Card title="Recommendations" description="Performance audits scoring below 90, largest estimated savings first" actions={<DataBadge kind="estimated" />}>
+      <Card title="Empfehlungen" description="Performance-Prüfungen unter 90, größte geschätzte Ersparnis zuerst" actions={<DataBadge kind="estimated" />}>
         <Recommendations recs={result.recommendations ?? []} />
       </Card>
       <CategoryIssues issues={result.category_issues ?? {}} />
@@ -251,44 +251,44 @@ export default function PageSpeed() {
   const strategies = Array.from(new Set(rows.map((r) => r.strategy as string)));
   const scoreCell = (v: number | null | undefined) => (v === null || v === undefined ? <span className="text-slate-400">–</span> : <span className="font-medium tabular-nums" style={{ color: scoreColor(v) }}>{v}</span>);
   const columns: Column<any>[] = [
-    { key: "when", header: "Tested", render: (r) => <span className={r.id === selectedId ? "font-semibold text-brand-700 dark:text-brand-300" : ""}>{fmtDateTime(r.created_at)}</span> },
+    { key: "when", header: "Getestet", render: (r) => <span className={r.id === selectedId ? "font-semibold text-brand-700 dark:text-brand-300" : ""}>{fmtDateTime(r.created_at)}</span> },
     { key: "url", header: "URL", render: (r) => <span className="block max-w-xs truncate" title={r.url}>{shortUrl(r.url, site?.url)}</span> },
-    { key: "strategy", header: "Device", render: (r) => <Badge>{r.strategy}</Badge> },
-    { key: "source", header: "Source", render: (r) => SOURCE_LABEL[r.source] ?? r.source },
+    { key: "strategy", header: "Gerät", render: (r) => <Badge>{r.strategy === "mobile" ? "Mobil" : titleCase(r.strategy)}</Badge> },
+    { key: "source", header: "Quelle", render: (r) => SOURCE_LABEL[r.source] ?? r.source },
     { key: "perf", header: "Perf.", align: "right", render: (r) => scoreCell(r.scores?.performance) },
     { key: "a11y", header: "A11y", align: "right", render: (r) => scoreCell(r.scores?.accessibility) },
-    { key: "bp", header: "Best pr.", align: "right", render: (r) => scoreCell(r.scores?.["best-practices"]) },
+    { key: "bp", header: "Best Pr.", align: "right", render: (r) => scoreCell(r.scores?.["best-practices"]) },
     { key: "seo", header: "SEO", align: "right", render: (r) => scoreCell(r.scores?.seo) },
-    { key: "lcp", header: "LCP (lab)", align: "right", render: (r) => metricValue("LCP", r.lab?.LCP?.value) },
-    { key: "cls", header: "CLS (lab)", align: "right", render: (r) => metricValue("CLS", r.lab?.CLS?.value) },
+    { key: "lcp", header: "LCP (Labor)", align: "right", render: (r) => metricValue("LCP", r.lab?.LCP?.value) },
+    { key: "cls", header: "CLS (Labor)", align: "right", render: (r) => metricValue("CLS", r.lab?.CLS?.value) },
   ];
 
   return (
     <>
-      <PageHeader title="PageSpeed" description="Lighthouse scores, real-user Core Web Vitals and prioritised performance recommendations for any URL." />
+      <PageHeader title="PageSpeed" description="Lighthouse-Scores, Core Web Vitals echter Nutzer und priorisierte Performance-Empfehlungen für beliebige URLs." />
 
       <div className="mb-4 grid gap-4 lg:grid-cols-3">
-        <Card title="Run a test" className="lg:col-span-2">
+        <Card title="Test starten" className="lg:col-span-2">
           <form onSubmit={submit} className="space-y-4">
             <div className="grid gap-3 sm:grid-cols-4">
               <Field label="URL" className="sm:col-span-4">
-                <Input type="url" required value={effectiveUrl} onChange={(e) => setUrl(e.target.value)} placeholder="https://example.com/" disabled={run.isPending} />
+                <Input type="url" required value={effectiveUrl} onChange={(e) => setUrl(e.target.value)} placeholder="https://example.de/" disabled={run.isPending} />
               </Field>
-              <Field label="Device" className="sm:col-span-1">
+              <Field label="Gerät" className="sm:col-span-1">
                 <Select value={strategy} onChange={(e) => setStrategy(e.target.value as "mobile" | "desktop")} disabled={run.isPending}>
-                  <option value="mobile">Mobile</option>
+                  <option value="mobile">Mobil</option>
                   <option value="desktop">Desktop</option>
                 </Select>
               </Field>
-              <Field label="Source" className="sm:col-span-3" hint={!localAvailable && status.data ? "Local Lighthouse is not installed on the server." : undefined}>
+              <Field label="Quelle" className="sm:col-span-3" hint={!localAvailable && status.data ? "Lokales Lighthouse ist auf dem Server nicht installiert." : undefined}>
                 <Select value={source} onChange={(e) => setSource(e.target.value as "psi" | "local")} disabled={run.isPending}>
-                  <option value="psi">PageSpeed Insights API (lab + field data, public URLs only)</option>
-                  <option value="local" disabled={!localAvailable}>Local Lighthouse (lab data only){localAvailable ? "" : " (unavailable)"}</option>
+                  <option value="psi">PageSpeed-Insights-API (Labor- und Felddaten, nur öffentliche URLs)</option>
+                  <option value="local" disabled={!localAvailable}>Lokales Lighthouse (nur Labordaten){localAvailable ? "" : " (nicht verfügbar)"}</option>
                 </Select>
               </Field>
             </div>
             <div className="flex flex-wrap items-center gap-3">
-              <Button type="submit" variant="primary" loading={run.isPending} icon={<Gauge className="h-4 w-4" />}>{run.isPending ? "Testing…" : "Run test"}</Button>
+              <Button type="submit" variant="primary" loading={run.isPending} icon={<Gauge className="h-4 w-4" />}>{run.isPending ? "Teste…" : "Test starten"}</Button>
               {run.isPending && (
                 <span className="inline-flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300" role="status">
                   <Loader2 className="h-4 w-4 animate-spin" /> Lighthouse is loading and measuring the page. This usually takes 15 to 60 seconds ({elapsed} s).
@@ -298,21 +298,21 @@ export default function PageSpeed() {
             {run.error ? <ErrorBox error={run.error} onRetry={() => run.mutate()} /> : null}
           </form>
         </Card>
-        <Card title="Data sources">
+        <Card title="Datenquellen">
           {status.isLoading ? <Spinner /> : status.error ? <ErrorBox error={status.error} onRetry={() => status.refetch()} /> : (
             <div className="space-y-3 text-sm">
               <div className="flex items-center justify-between gap-2">
-                <span className="text-slate-700 dark:text-slate-300">PageSpeed Insights API key</span>
-                {status.data.psi_key_configured ? <Badge tone="green">configured</Badge> : <Badge tone="amber">not set</Badge>}
+                <span className="text-slate-700 dark:text-slate-300">PageSpeed-Insights-API-Schlüssel</span>
+                {status.data.psi_key_configured ? <Badge tone="green">eingerichtet</Badge> : <Badge tone="amber">nicht gesetzt</Badge>}
               </div>
               <div className="flex items-center justify-between gap-2">
-                <span className="text-slate-700 dark:text-slate-300">Local Lighthouse CLI</span>
-                {localAvailable ? <Badge tone="green">available</Badge> : <Badge>not installed</Badge>}
+                <span className="text-slate-700 dark:text-slate-300">Lokales Lighthouse-CLI</span>
+                {localAvailable ? <Badge tone="green">verfügbar</Badge> : <Badge>nicht installiert</Badge>}
               </div>
               <ul className="list-disc space-y-1 pl-4 text-xs text-slate-500 dark:text-slate-400">
                 {(status.data.notes ?? []).map((n: string, i: number) => <li key={i}>{n}</li>)}
               </ul>
-              {!status.data.psi_key_configured && <Link to="/settings" className="text-xs font-medium text-brand-700 hover:underline dark:text-brand-300">Add an API key in Settings</Link>}
+              {!status.data.psi_key_configured && <Link to="/settings" className="text-xs font-medium text-brand-700 hover:underline dark:text-brand-300">API-Schlüssel in den Einstellungen hinterlegen</Link>}
             </div>
           )}
         </Card>
@@ -320,21 +320,21 @@ export default function PageSpeed() {
 
       <div className="mb-4 scroll-mt-4" ref={resultRef}>
         {run.isPending ? (
-          <Card><Spinner label={`Running Lighthouse on ${shortUrl(effectiveUrl)}… ${elapsed} s`} /></Card>
+          <Card><Spinner label={`Lighthouse läuft für ${shortUrl(effectiveUrl)}… ${elapsed} s`} /></Card>
         ) : selectedId === null ? (
-          <Card><EmptyState icon={<Gauge className="h-6 w-6" />} title="No result selected" description="Run a test above, or pick an earlier run from the history below." /></Card>
-        ) : detail.isLoading ? <Card><Spinner label="Loading result…" /></Card>
+          <Card><EmptyState icon={<Gauge className="h-6 w-6" />} title="Kein Ergebnis ausgewählt" description="Oben einen Test starten oder unten einen früheren Lauf wählen." /></Card>
+        ) : detail.isLoading ? <Card><Spinner label="Ergebnis wird geladen…" /></Card>
           : detail.error ? <ErrorBox error={detail.error} onRetry={() => detail.refetch()} />
           : detail.data ? <Result result={detail.data} /> : null}
       </div>
 
-      <Card padded={false} title="History" description={site ? `Earlier runs for ${site.name}. Click a row to open it.` : "Your earlier runs. Click a row to open it."}>
+      <Card padded={false} title="Verlauf" description={site ? `Frühere Läufe für ${site.name}. Zeile anklicken zum Öffnen.` : "Deine früheren Läufe. Zeile anklicken zum Öffnen."}>
         {history.isLoading ? <Spinner /> : history.error ? <div className="p-4"><ErrorBox error={history.error} onRetry={() => history.refetch()} /></div> : (
           <>
             {chart.length > 1 && (
               <div className="border-b border-slate-100 p-4 dark:border-slate-800">
-                <div className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Performance score over time</div>
-                <div className="h-56" role="img" aria-label="Performance score over time">
+                <div className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Performance-Score im Verlauf</div>
+                <div className="h-56" role="img" aria-label="Performance-Score im Verlauf">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={chart} margin={{ top: 8, right: 16, bottom: 0, left: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#94a3b833" vertical={false} />
@@ -352,7 +352,7 @@ export default function PageSpeed() {
               </div>
             )}
             <DataTable columns={columns} rows={rows} rowKey={(r) => r.id} dense onRowClick={(r) => { setSelectedId(r.id); resultRef.current?.scrollIntoView?.({ behavior: "smooth", block: "start" }); }}
-              empty={<EmptyState title="No runs yet" description="Results of every test you run are kept here so you can track changes over time." />} />
+              empty={<EmptyState title="Noch keine Läufe" description="Jedes Testergebnis wird hier gespeichert, damit du Veränderungen verfolgen kannst." />} />
           </>
         )}
       </Card>

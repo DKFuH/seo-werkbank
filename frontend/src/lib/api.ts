@@ -29,7 +29,7 @@ function detailToMessage(detail: unknown): string {
       .map((d: any) => `${(d.loc ?? []).filter((x: any) => x !== "body").join(".")}: ${d.msg}`.replace(/^: /, ""))
       .join("; ");
   }
-  return "Request failed";
+  return "Anfrage fehlgeschlagen";
 }
 
 type Query = Record<string, string | number | boolean | null | undefined>;
@@ -59,7 +59,7 @@ async function request<T>(method: string, path: string, body?: unknown, query?: 
   try {
     res = await fetch(withQuery(`/api${path}`, query), { method, headers, body: payload });
   } catch {
-    throw new ApiError(0, "Cannot reach the server. Is the backend running?");
+    throw new ApiError(0, "Server nicht erreichbar. Läuft das Backend?");
   }
   if (res.status === 401 && token && !path.startsWith("/auth/login")) {
     tokenStore.clear();
@@ -118,5 +118,5 @@ export const api = {
 };
 
 export function errorMessage(e: unknown): string {
-  return e instanceof Error ? e.message : "Something went wrong";
+  return e instanceof Error ? e.message : "Etwas ist schiefgelaufen";
 }

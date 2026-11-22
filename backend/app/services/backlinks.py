@@ -23,10 +23,13 @@ from ..models import Backlink, Crawl, Page, Site, utcnow
 
 _COLS = {
     "source": ("source url", "source_url", "linking page", "linking pages", "referring page", "referring page url", "url from",
-               "from", "source", "page url", "url", "link from"),
-    "site": ("site", "linking site", "top linking sites", "referring domain", "domain"),
-    "target": ("target url", "target_url", "target page", "url to", "to", "link url", "target", "destination"),
-    "anchor": ("anchor", "anchor text", "link text", "link anchor"),
+               "from", "source", "page url", "url", "link from",
+               "verweisende seite", "verweisende seiten", "verlinkende seite", "verlinkende seiten", "quell-url", "quellseite", "quelle"),
+    "site": ("site", "linking site", "top linking sites", "referring domain", "domain",
+             "website", "verlinkende website", "verlinkende websites", "top-websites mit verlinkung", "verweisende domain"),
+    "target": ("target url", "target_url", "target page", "url to", "to", "link url", "target", "destination",
+               "ziel-url", "zielseite", "verlinkte seite", "ziel"),
+    "anchor": ("anchor", "anchor text", "link text", "link anchor", "ankertext", "linktext"),
     "nofollow": ("nofollow", "rel", "link type", "type", "follow"),
 }
 
@@ -51,7 +54,7 @@ def import_csv(db: Session, site: Site, raw: bytes, origin: str = "import") -> d
     reader = csv.reader(io.StringIO(text), dialect)
     header = next(reader, None)
     if not header:
-        raise ValueError("The CSV file is empty.")
+        raise ValueError("Die CSV-Datei ist leer.")
     idx: dict[str, int] = {}
     for i, name in enumerate(header):
         n = name.strip().lower()
@@ -132,9 +135,9 @@ def summary(db: Session, site: Site) -> dict:
         "broken_targets": broken,
         "opportunities": (
             [{"type": "reclaim", "url": b["url"], "backlinks": b["backlinks"],
-              "action": "This linked page is broken in your latest crawl. 301-redirect it to a relevant live page to recover the links."} for b in broken[:50]]
+              "action": "Die verlinkte Seite ist im letzten Crawl defekt. Per 301 auf eine passende erreichbare Seite weiterleiten, um die Links zurückzugewinnen."} for b in broken[:50]]
         ),
-        "coverage_note": "Only links present in imported datasets are shown. This is not a complete picture of the web's links to your site.",
+        "coverage_note": "Gezeigt werden nur Links aus importierten Datensätzen. Das ist kein vollständiges Bild aller Links auf deine Website.",
         "crawl_used_for_targets": crawl.id if crawl else None,
     }
 
@@ -169,7 +172,7 @@ async def verify_backlinks(site_id: int, ctx: JobContext | None = None, limit: i
                 results[bid] = out
                 done += 1
                 if ctx:
-                    ctx.update(done / max(len(rows), 1), f"Verified {done} of {len(rows)} linking pages")
+                    ctx.update(done / max(len(rows), 1), f"{done} von {len(rows)} verweisenden Seiten geprüft")
 
         await asyncio.gather(*(one(*r) for r in rows))
     counts = Counter()

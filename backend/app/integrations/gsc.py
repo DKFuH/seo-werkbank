@@ -61,10 +61,10 @@ def consume_state(state: str, user_id: int) -> None:
     try:
         payload = decode_payload(state, purpose="gsc_oauth")
     except HTTPException as exc:  # not a 401: that would sign the person out of the app for a bad link
-        raise GscForbidden("This Google authorisation link is not valid. Start the connection again.") from exc
+        raise GscForbidden("Dieser Google-Autorisierungslink ist ungültig. Verbindung neu starten.") from exc
     entry = _pending.pop(str(payload.get("nonce", "")), None)
     if entry is None or entry[1] < time.time() or entry[0] != user_id or int(payload["sub"]) != user_id:
-        raise GscForbidden("This Google authorisation was not started by your account, or it has expired. Start the connection again.")
+        raise GscForbidden("Diese Google-Autorisierung stammt nicht von deinem Konto oder ist abgelaufen. Verbindung neu starten.")
 
 
 def redirect_uri() -> str:
@@ -74,7 +74,7 @@ def redirect_uri() -> str:
 def auth_url(db: Session, state: str) -> str:
     cfg = get_setting(db, "gsc")
     if not cfg.get("client_id") or not cfg.get("client_secret"):
-        raise GscError("Add a Google OAuth client ID and secret in Settings first.")
+        raise GscError("Zuerst Google-OAuth-Client-ID und -Secret in den Einstellungen hinterlegen.")
     return AUTH_URL + "?" + urlencode({
         "client_id": cfg["client_id"], "redirect_uri": redirect_uri(), "response_type": "code", "scope": SCOPE,
         "access_type": "offline", "prompt": "consent", "state": state})
@@ -86,7 +86,7 @@ async def exchange_code(db: Session, user_id: int, code: str) -> None:
         r = await client.post(TOKEN_URL, data={"code": code, "client_id": cfg["client_id"], "client_secret": cfg["client_secret"],
                                                "redirect_uri": redirect_uri(), "grant_type": "authorization_code"})
     if r.status_code != 200:
-        raise GscError(f"Google rejected the authorisation code: {r.text[:200]}")
+        raise GscError(f"Google hat den Autorisierungscode abgelehnt: {r.text[:200]}")
     tok = r.json()
     tok["expires_at"] = time.time() + tok.get("expires_in", 3600) - 60
     set_private(db, f"gsc_tokens:{user_id}", tok)
@@ -95,17 +95,17 @@ async def exchange_code(db: Session, user_id: int, code: str) -> None:
 async def _access_token(db: Session, user_id: int) -> str:
     tok = get_private(db, f"gsc_tokens:{user_id}")
     if not tok:
-        raise GscError("Search Console is not connected for this account.")
+        raise GscError("Die Search Console ist für dieses Konto nicht verbunden.")
     if tok.get("expires_at", 0) > time.time():
         return tok["access_token"]
     if not tok.get("refresh_token"):
-        raise GscError("Search Console session expired. Reconnect in Settings.")
+        raise GscError("Die Search-Console-Sitzung ist abgelaufen. In den Einstellungen neu verbinden.")
     cfg = get_setting(db, "gsc")
     async with httpx.AsyncClient(timeout=30) as client:
         r = await client.post(TOKEN_URL, data={"client_id": cfg["client_id"], "client_secret": cfg["client_secret"],
                                                "refresh_token": tok["refresh_token"], "grant_type": "refresh_token"})
     if r.status_code != 200:
-        raise GscError("Could not refresh the Search Console token. Reconnect in Settings.")
+        raise GscError("Search-Console-Token konnte nicht erneuert werden. In den Einstellungen neu verbinden.")
     new = r.json()
     tok.update(access_token=new["access_token"], expires_at=time.time() + new.get("expires_in", 3600) - 60)
     set_private(db, f"gsc_tokens:{user_id}", tok)
@@ -126,7 +126,7 @@ async def list_properties(db: Session, user_id: int) -> list[dict]:
     async with httpx.AsyncClient(timeout=30) as client:
         r = await client.get(f"{API}/sites", headers={"Authorization": f"Bearer {token}"})
     if r.status_code != 200:
-        raise GscError(f"Search Console API error {r.status_code}: {r.text[:200]}")
+        raise GscError(f"Fehler der Search-Console-API {r.status_code}: {r.text[:200]}")
     return [{"property": s["siteUrl"], "permission": s.get("permissionLevel")} for s in r.json().get("siteEntry", [])]
 
 
@@ -137,7 +137,7 @@ async def _query(client: httpx.AsyncClient, token: str, prop: str, body: dict) -
         r = await client.post(f"{API}/sites/{quote(prop, safe='')}/searchAnalytics/query",
                               headers={"Authorization": f"Bearer {token}"}, json={**body, "rowLimit": 25000, "startRow": start})
         if r.status_code != 200:
-            raise GscError(f"Search Console API error {r.status_code}: {r.text[:200]}")
+            raise GscError(f"Fehler der Search-Console-API {r.status_code}: {r.text[:200]}")
         batch = r.json().get("rows", [])
         rows.extend(batch)
         if len(batch) < 25000 or len(rows) >= 200_000:
@@ -181,19 +181,48 @@ async def sync(db: Session, user_id: int, site_id: int, prop: str, days: int = 9
 
 # --------------------------------------------------------------------------- CSV import
 _ALIASES = {
-    "query": ("query", "top queries", "queries", "keyword", "search term"),
-    "page": ("page", "top pages", "pages", "url", "landing page"),
-    "country": ("country",), "device": ("device",), "appearance": ("search appearance",),
-    "day": ("date", "day"), "clicks": ("clicks",), "impressions": ("impressions",), "position": ("position", "avg position", "average position"),
+    "query": ("query", "top queries", "queries", "keyword", "search term",
+              "häufigste suchanfragen", "suchanfragen", "suchanfrage", "top-suchanfragen"),
+    "page": ("page", "top pages", "pages", "url", "landing page",
+             "top-seiten", "häufigste seiten", "seiten", "seite"),
+    "country": ("country", "land", "länder"), "device": ("device", "gerät", "geräte"),
+    "appearance": ("search appearance", "darstellung in der suche", "suchdarstellung"),
+    "day": ("date", "day", "datum", "tag"), "clicks": ("clicks", "klicks"), "impressions": ("impressions", "impressionen"),
+    "position": ("position", "avg position", "average position", "durchschnittliche position", "ø position"),
 }
+# German Search Console exports name the columns in German and write numbers as 1.234 and 8,47.
+_GERMAN_HEADERS = {"häufigste suchanfragen", "suchanfragen", "suchanfrage", "top-suchanfragen", "top-seiten", "häufigste seiten",
+                   "seiten", "seite", "land", "länder", "gerät", "geräte", "darstellung in der suche", "suchdarstellung",
+                   "datum", "tag", "klicks", "impressionen", "durchschnittliche position", "ø position"}
+_DEVICES = {"mobilgerät": "mobile", "mobilgeräte": "mobile", "computer": "desktop", "desktop": "desktop", "tablet": "tablet"}
 
 
-def _num(v: str) -> float:
-    v = (v or "").replace(",", "").replace("%", "").strip()
+def parse_number(v: str, german: bool = False, strict: bool = False) -> float:
+    """Parse 1,234.5 (English) or 1.234,5 (German) exports. ``strict`` raises ValueError instead of returning 0."""
+    v = (v or "").replace("%", "").replace(" ", "").replace(" ", "").strip()
+    if german or ("," in v and "." not in v and len(v.rsplit(",", 1)[1]) != 3):
+        v = v.replace(".", "").replace(",", ".")  # 1.234,5 -> 1234.5 ; 8,47 -> 8.47
+    else:
+        v = v.replace(",", "")  # 1,234.5 -> 1234.5
     try:
         return float(v)
     except ValueError:
+        if strict:
+            raise
         return 0.0
+
+
+_num = parse_number
+
+
+def _day(v: str):
+    v = (v or "").strip()
+    for fmt, size in (("%Y-%m-%d", 10), ("%d.%m.%Y", 10), ("%d.%m.%y", 8)):
+        try:
+            return datetime.strptime(v[:size], fmt).date()
+        except ValueError:
+            continue
+    return None
 
 
 def import_csv(db: Session, site_id: int, raw: bytes, replace: bool = False) -> dict:
@@ -207,7 +236,7 @@ def import_csv(db: Session, site_id: int, raw: bytes, replace: bool = False) -> 
     reader = csv.reader(io.StringIO(text), dialect)
     header = next(reader, None)
     if not header:
-        raise GscError("The CSV file is empty.")
+        raise GscError("Die CSV-Datei ist leer.")
     cols = {}
     for i, name in enumerate(header):
         n = name.strip().lower()
@@ -215,10 +244,11 @@ def import_csv(db: Session, site_id: int, raw: bytes, replace: bool = False) -> 
             if n in aliases and field not in cols:
                 cols[field] = i
     if "clicks" not in cols or "impressions" not in cols:
-        raise GscError("CSV must contain 'Clicks' and 'Impressions' columns.")
+        raise GscError("Die CSV braucht die Spalten 'Klicks' und 'Impressionen' (bzw. 'Clicks' und 'Impressions').")
+    german = any(name.strip().lower() in _GERMAN_HEADERS for name in header)
     dims = [d for d in ("query", "page", "country", "device", "appearance", "day") if d in cols]
     if not dims:
-        raise GscError("CSV needs at least one dimension column (Query, Page, Country, Device or Date).")
+        raise GscError("Die CSV braucht mindestens eine Dimensionsspalte (Suchanfrage, Seite, Land, Gerät oder Datum).")
     dataset = ("query_page" if ("query" in cols or "page" in cols) else "country" if "country" in cols
                else "device" if "device" in cols else "appearance" if "appearance" in cols else "query_page")
     if replace:
@@ -231,15 +261,15 @@ def import_csv(db: Session, site_id: int, raw: bytes, replace: bool = False) -> 
             return row[cols[f]].strip() if f in cols else None
         day = None
         if get("day"):
-            try:
-                day = datetime.strptime(get("day")[:10], "%Y-%m-%d").date()
-            except ValueError:
+            day = _day(get("day"))
+            if day is None:
                 continue
+        device = (get("device") or "").lower()
         payload.append({"site_id": site_id, "dataset": dataset, "source": "csv", "day": day, "query": (get("query") or None),
                         "page": get("page") or None, "country": (get("country") or "").lower()[:8] or None,
-                        "device": (get("device") or "").lower()[:12] or None, "appearance": get("appearance") or None,
-                        "clicks": _num(get("clicks")), "impressions": _num(get("impressions")),
-                        "position": _num(get("position")) if "position" in cols else None})
+                        "device": _DEVICES.get(device, device)[:12] or None, "appearance": get("appearance") or None,
+                        "clicks": _num(get("clicks"), german), "impressions": _num(get("impressions"), german),
+                        "position": _num(get("position"), german) if "position" in cols else None})
     for i in range(0, len(payload), 5000):
         db.execute(insert(GscRow), payload[i : i + 5000])
     db.commit()
@@ -306,7 +336,7 @@ def performance(db: Session, site_id: int, start: date | None = None, end: date 
         "countries": _agg(db, site_id, "country", GscRow.country, start, end, 100),
         "devices": _agg(db, site_id, "device", GscRow.device, start, end, 10),
         "appearance": _agg(db, site_id, "appearance", GscRow.appearance, None, None, 50),
-        "note": "Query rows omit anonymised queries, so query totals can be lower than property totals in Search Console.",
+        "note": "Anonymisierte Suchanfragen fehlen in den Zeilen, daher können die Summen unter den Property-Summen der Search Console liegen.",
     }
 
 
@@ -331,7 +361,7 @@ def insights(db: Session, site_id: int, days: int = 28) -> dict:
             upside = q["impressions"] * expected_ctr(target) - q["clicks"]
             if upside > 1:
                 opportunities.append({**q, "type": "striking distance", "estimated_extra_clicks": round(upside),
-                                      "basis": f"Estimate if the query reached position {target} (generic CTR curve)"})
+                                      "basis": f"Schätzung, falls die Suchanfrage Position {target} erreicht (allgemeine CTR-Kurve)"})
         elif q["position"] < 4 and q["ctr"] < expected_ctr(q["position"]) * 0.5 and q["impressions"] >= 100:
             opportunities.append({**q, "type": "low CTR for position", "estimated_extra_clicks": round(q["impressions"] * expected_ctr(q["position"]) - q["clicks"]),
                                   "basis": "CTR is under half the generic curve for this position; review title and description"})

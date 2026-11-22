@@ -87,8 +87,8 @@ def compare(db: Session, site: Site) -> dict:
                     "top_shared": sorted(shared, key=lambda t: -(their[t] + own_terms[t]))[:30],
                     "gaps": [{"term": t, "competitor_pages": df} for t, df in gaps[:60]],
                     "your_unique_terms": [{"term": t, "your_pages": df} for t, df in unique[:30]],
-                    "method": "Terms from page titles and H1 headings of crawled indexable pages (measured). "
-                              "Shows topical overlap, not ranking keywords.",
+                    "method": "Begriffe aus Titles und H1 der gecrawlten indexierbaren Seiten (gemessen). "
+                              "Zeigt thematische Überschneidung, keine Ranking-Keywords.",
                 }
                 prof["content_opportunities"] = opportunities
             entry["profile"] = prof
@@ -99,8 +99,8 @@ def compare(db: Session, site: Site) -> dict:
         "site": {"id": site.id, "name": site.name, "url": site.url, "profile": own},
         "competitors": out_comp,
         "notes": [
-            "All figures come from this toolkit's own crawls and are limited by each crawl's URL cap.",
-            "Indexed-page counts are not verifiable without search-engine data; sitemap size and indexable crawled pages are shown instead.",
-            "Ranking keywords, traffic and backlink totals of competitors are not available without proprietary datasets.",
+            "Alle Zahlen stammen aus eigenen Crawls dieses Tools und sind durch deren URL-Limit begrenzt.",
+            "Indexierte Seiten lassen sich ohne Suchmaschinendaten nicht prüfen; stattdessen Sitemap-Größe und indexierbare gecrawlte Seiten.",
+            "Ranking-Keywords, Traffic und Backlink-Summen der Wettbewerber gibt es nur mit kommerziellen Datensätzen.",
         ],
     }

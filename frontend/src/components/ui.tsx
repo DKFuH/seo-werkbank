@@ -3,7 +3,7 @@ import clsx from "clsx";
 import { AlertTriangle, ChevronLeft, ChevronRight, Download, HelpCircle, Inbox, Loader2, Search, X } from "lucide-react";
 import { type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes, useEffect, useRef, useState } from "react";
 import { api, errorMessage } from "../lib/api";
-import { scoreColor, type Severity } from "../lib/format";
+import { LABELS, scoreColor, type Severity } from "../lib/format";
 
 /* ------------------------------------------------------------------ layout primitives */
 export function PageHeader({ title, description, actions }: { title: string; description?: ReactNode; actions?: ReactNode }) {
@@ -111,7 +111,7 @@ export function Checkbox({ label, checked, onChange, hint }: { label: string; ch
   );
 }
 
-export function SearchInput({ value, onChange, placeholder = "Search…" }: { value: string; onChange: (v: string) => void; placeholder?: string }) {
+export function SearchInput({ value, onChange, placeholder = "Suchen…" }: { value: string; onChange: (v: string) => void; placeholder?: string }) {
   const [local, setLocal] = useState(value);
   useEffect(() => setLocal(value), [value]);
   useEffect(() => {
@@ -144,11 +144,11 @@ export function Badge({ tone = "gray", children, title }: { tone?: keyof typeof 
 
 export function SeverityBadge({ severity }: { severity: Severity | string }) {
   const tone = { critical: "red", high: "orange", medium: "amber", low: "gray" }[severity] ?? "gray";
-  return <Badge tone={tone}>{severity}</Badge>;
+  return <Badge tone={tone}>{LABELS[severity] ?? severity}</Badge>;
 }
 
 export function StatusCode({ code, error }: { code: number | null | undefined; error?: string | null }) {
-  if (code === null || code === undefined) return <Badge tone="red" title={error ?? undefined}>{error ? "error" : "–"}</Badge>;
+  if (code === null || code === undefined) return <Badge tone="red" title={error ?? undefined}>{error ? "Fehler" : "–"}</Badge>;
   const tone = code < 300 ? "green" : code < 400 ? "blue" : code < 500 ? "orange" : "red";
   return <Badge tone={tone}>{code}</Badge>;
 }
@@ -156,12 +156,12 @@ export function StatusCode({ code, error }: { code: number | null | undefined; e
 /** Makes the provenance of a number explicit: measured data, an estimate, imported by the user, or unavailable. */
 export function DataBadge({ kind }: { kind: "measured" | "estimated" | "imported" | "unavailable" }) {
   const map = {
-    measured: ["green", "Measured directly by this toolkit or by Google Search Console"],
-    estimated: ["amber", "An estimate derived from heuristics. Treat as directional, not exact"],
-    imported: ["blue", "Taken from a file you imported"],
-    unavailable: ["gray", "No legitimate free data source exists, so no value is shown"],
+    measured: ["green", "Direkt von diesem Tool oder der Google Search Console gemessen"],
+    estimated: ["amber", "Schätzung aus Heuristiken – als Richtung verstehen, nicht als exakten Wert"],
+    imported: ["blue", "Aus einer von dir importierten Datei"],
+    unavailable: ["gray", "Es gibt keine legitime kostenlose Datenquelle, daher wird kein Wert angezeigt"],
   } as const;
-  return <Badge tone={map[kind][0]} title={map[kind][1]}>{kind}</Badge>;
+  return <Badge tone={map[kind][0]} title={map[kind][1]}>{LABELS[kind] ?? kind}</Badge>;
 }
 
 export function Tooltip({ text }: { text: string }) {
@@ -176,7 +176,7 @@ export function Tooltip({ text }: { text: string }) {
 }
 
 /* ------------------------------------------------------------------ states */
-export function Spinner({ label = "Loading…" }: { label?: string }) {
+export function Spinner({ label = "Wird geladen…" }: { label?: string }) {
   return (
     <div className="flex items-center justify-center gap-2 py-12 text-sm text-slate-500 dark:text-slate-400" role="status">
       <Loader2 className="h-4 w-4 animate-spin" /> {label}
@@ -189,7 +189,7 @@ export function ErrorBox({ error, onRetry }: { error: unknown; onRetry?: () => v
     <div role="alert" className="flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
       <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
       <div className="min-w-0 flex-1 break-words">{typeof error === "string" ? error : errorMessage(error)}</div>
-      {onRetry && <Button size="sm" onClick={onRetry}>Retry</Button>}
+      {onRetry && <Button size="sm" onClick={onRetry}>Erneut versuchen</Button>}
     </div>
   );
 }
@@ -228,7 +228,7 @@ export function ProgressBar({ value, label }: { value: number; label?: string })
   );
 }
 
-export function ScoreRing({ score, size = 96, label = "score" }: { score: number | null | undefined; size?: number; label?: string }) {
+export function ScoreRing({ score, size = 96, label = "Score" }: { score: number | null | undefined; size?: number; label?: string }) {
   const r = (size - 10) / 2;
   const c = 2 * Math.PI * r;
   const pct = score === null || score === undefined ? 0 : Math.max(0, Math.min(100, score)) / 100;
@@ -276,7 +276,7 @@ export function Modal({ open, onClose, title, children, wide, footer }: { open: 
       <div role="dialog" aria-modal="true" aria-label={title} className={clsx("w-full rounded-xl border border-slate-200 bg-white shadow-xl dark:border-slate-700 dark:bg-slate-900", wide ? "max-w-4xl" : "max-w-lg")}>
         <header className="flex items-center justify-between border-b border-slate-100 px-4 py-3 dark:border-slate-800">
           <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{title}</h2>
-          <button onClick={onClose} aria-label="Close" className="rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800"><X className="h-4 w-4" /></button>
+          <button onClick={onClose} aria-label="Schließen" className="rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800"><X className="h-4 w-4" /></button>
         </header>
         <div className="max-h-[75vh] overflow-y-auto p-4">{children}</div>
         {footer && <footer className="flex justify-end gap-2 border-t border-slate-100 px-4 py-3 dark:border-slate-800">{footer}</footer>}
@@ -300,7 +300,7 @@ export function DataTable<T>({ columns, rows, rowKey, onRowClick, sort, order, o
   columns: Column<T>[]; rows: T[]; rowKey: (row: T, index: number) => string | number; onRowClick?: (row: T) => void;
   sort?: string; order?: "asc" | "desc"; onSort?: (key: string) => void; empty?: ReactNode; dense?: boolean;
 }) {
-  if (!rows.length) return <>{empty ?? <EmptyState title="Nothing to show" description="No rows match the current filters." />}</>;
+  if (!rows.length) return <>{empty ?? <EmptyState title="Nichts anzuzeigen" description="Keine Zeilen passen zu den aktuellen Filtern." />}</>;
   return (
     <div className="overflow-x-auto">
       <table className="w-full min-w-max border-collapse text-left text-sm">
@@ -339,14 +339,14 @@ export function DataTable<T>({ columns, rows, rowKey, onRowClick, sort, order, o
 
 export function Pagination({ page, perPage, total, onPage }: { page: number; perPage: number; total: number; onPage: (p: number) => void }) {
   const pages = Math.max(1, Math.ceil(total / perPage));
-  if (total <= perPage) return <div className="px-3 py-2 text-xs text-slate-500 dark:text-slate-400">{total.toLocaleString()} row{total === 1 ? "" : "s"}</div>;
+  if (total <= perPage) return <div className="px-3 py-2 text-xs text-slate-500 dark:text-slate-400">{total.toLocaleString("de-DE")} {total === 1 ? "Zeile" : "Zeilen"}</div>;
   return (
     <div className="flex items-center justify-between gap-3 px-3 py-2 text-xs text-slate-500 dark:text-slate-400">
-      <span>{((page - 1) * perPage + 1).toLocaleString()}–{Math.min(page * perPage, total).toLocaleString()} of {total.toLocaleString()}</span>
+      <span>{((page - 1) * perPage + 1).toLocaleString("de-DE")}–{Math.min(page * perPage, total).toLocaleString("de-DE")} von {total.toLocaleString("de-DE")}</span>
       <div className="flex items-center gap-1">
-        <Button size="sm" variant="ghost" disabled={page <= 1} onClick={() => onPage(page - 1)} aria-label="Previous page"><ChevronLeft className="h-4 w-4" /></Button>
-        <span className="tabular-nums">Page {page} / {pages}</span>
-        <Button size="sm" variant="ghost" disabled={page >= pages} onClick={() => onPage(page + 1)} aria-label="Next page"><ChevronRight className="h-4 w-4" /></Button>
+        <Button size="sm" variant="ghost" disabled={page <= 1} onClick={() => onPage(page - 1)} aria-label="Vorherige Seite"><ChevronLeft className="h-4 w-4" /></Button>
+        <span className="tabular-nums">Seite {page} / {pages}</span>
+        <Button size="sm" variant="ghost" disabled={page >= pages} onClick={() => onPage(page + 1)} aria-label="Nächste Seite"><ChevronRight className="h-4 w-4" /></Button>
       </div>
     </div>
   );
@@ -367,7 +367,7 @@ export function Url({ href, label, className }: { href: string; label?: string; 
 }
 
 /** Export button with a format menu. `formats` maps a label to the download request. */
-export function ExportMenu({ formats, label = "Export" }: { formats: { label: string; path: string; query?: Record<string, any> }[]; label?: string }) {
+export function ExportMenu({ formats, label = "Exportieren" }: { formats: { label: string; path: string; query?: Record<string, any> }[]; label?: string }) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -417,7 +417,7 @@ export function KeyValue({ items }: { items: [ReactNode, ReactNode][] }) {
   );
 }
 
-export function FileButton({ onFile, label = "Import CSV", accept = ".csv,.tsv,.txt", loading }: { onFile: (f: File) => void; label?: string; accept?: string; loading?: boolean }) {
+export function FileButton({ onFile, label = "CSV importieren", accept = ".csv,.tsv,.txt", loading }: { onFile: (f: File) => void; label?: string; accept?: string; loading?: boolean }) {
   const ref = useRef<HTMLInputElement>(null);
   return (
     <>
@@ -432,10 +432,10 @@ export function NeedsCrawl({ hasSite, running }: { hasSite: boolean; running?: b
   return (
     <Card>
       <EmptyState
-        title={!hasSite ? "Add a website first" : running ? "Crawl in progress" : "No completed crawl yet"}
-        description={!hasSite ? "Add a site under Websites, then run a crawl to populate this view."
-          : running ? "This view fills in automatically when the running crawl finishes." : "Start a crawl from the Crawler page to populate this view."}
-        action={<a href={hasSite ? "/crawler" : "/sites"} className="text-sm font-medium text-brand-700 hover:underline dark:text-brand-300">{hasSite ? "Go to Crawler" : "Go to Websites"}</a>}
+        title={!hasSite ? "Zuerst eine Website anlegen" : running ? "Crawl läuft" : "Noch kein abgeschlossener Crawl"}
+        description={!hasSite ? "Unter Websites eine Website anlegen und dann crawlen, um diese Ansicht zu füllen."
+          : running ? "Die Ansicht füllt sich automatisch, sobald der laufende Crawl fertig ist." : "Auf der Seite Crawler einen Crawl starten, um diese Ansicht zu füllen."}
+        action={<a href={hasSite ? "/crawler" : "/sites"} className="text-sm font-medium text-brand-700 hover:underline dark:text-brand-300">{hasSite ? "Zum Crawler" : "Zu den Websites"}</a>}
       />
     </Card>
   );

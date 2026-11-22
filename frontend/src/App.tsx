@@ -20,6 +20,9 @@ const Local = lazy(() => import("./pages/Local"));
 const Keywords = lazy(() => import("./pages/Keywords"));
 const Serp = lazy(() => import("./pages/Serp"));
 const Content = lazy(() => import("./pages/Content"));
+const WdfIdf = lazy(() => import("./pages/WdfIdf"));
+const Geo = lazy(() => import("./pages/Geo"));
+const Matomo = lazy(() => import("./pages/Matomo"));
 const Competitors = lazy(() => import("./pages/Competitors"));
 const Backlinks = lazy(() => import("./pages/Backlinks"));
 const SearchConsole = lazy(() => import("./pages/SearchConsole"));
@@ -51,6 +54,9 @@ export default function App() {
             <Route path="/keywords" element={<Keywords />} />
             <Route path="/serp" element={<Serp />} />
             <Route path="/content" element={<Content />} />
+            <Route path="/wdf-idf" element={<WdfIdf />} />
+            <Route path="/geo" element={<Geo />} />
+            <Route path="/matomo" element={<Matomo />} />
             <Route path="/competitors" element={<Competitors />} />
             <Route path="/backlinks" element={<Backlinks />} />
             <Route path="/search-console" element={<SearchConsole />} />

@@ -11,10 +11,10 @@ import { fmtInt, fmtPct, titleCase } from "../lib/format";
 const INTENT_TONE: Record<string, string> = { transactional: "green", commercial: "purple", navigational: "blue", local: "orange", informational: "gray" };
 const COMPONENT_MAX: Record<string, number> = { authority_domains: 40, homepage_results: 15, optimised_titles: 25, content_depth: 20 };
 const COMPONENT_HELP: Record<string, string> = {
-  authority_domains: "Share of top results on very large or .gov/.edu domains",
-  homepage_results: "Share of top results that are homepages",
-  optimised_titles: "Share of result titles containing every keyword term",
-  content_depth: "Average word count of the fetched ranking pages (caps at 2,500 words)",
+  authority_domains: "Anteil der Top-Ergebnisse auf sehr großen oder .gov/.edu-Domains",
+  homepage_results: "Anteil der Top-Ergebnisse, die Startseiten sind",
+  optimised_titles: "Anteil der Ergebnis-Titles mit allen Keyword-Wörtern",
+  content_depth: "Durchschnittliche Wortzahl der geladenen Seiten (Deckel bei 2.500 Wörtern)",
 };
 
 function Chip({ children, title }: { children: ReactNode; title?: string }) {
@@ -26,22 +26,22 @@ function parseLines(text: string): string[] {
 }
 
 const termColumns: Column<any>[] = [
-  { key: "term", header: "Term", render: (t) => <span className="font-medium text-slate-900 dark:text-slate-100">{t.term}</span> },
-  { key: "documents", header: "Pages", align: "right", tooltip: "Number of analysed ranking pages using the term", render: (t) => t.documents },
-  { key: "share", header: "Share", align: "right", render: (t) => fmtPct(t.share, 0) },
-  { key: "avg", header: "Avg uses", align: "right", tooltip: "Average occurrences on the pages that use it", render: (t) => t.avg_count },
+  { key: "term", header: "Begriff", render: (t) => <span className="font-medium text-slate-900 dark:text-slate-100">{t.term}</span> },
+  { key: "documents", header: "Seiten", align: "right", tooltip: "Anzahl der analysierten Seiten, die den Begriff nutzen", render: (t) => t.documents },
+  { key: "share", header: "Anteil", align: "right", render: (t) => fmtPct(t.share, 0) },
+  { key: "avg", header: "Ø Nennungen", align: "right", tooltip: "Durchschnittliche Häufigkeit auf den Seiten, die ihn nutzen", render: (t) => t.avg_count },
 ];
 
 function AiBrief({ keyword, serp }: { keyword: string; serp: any }) {
   const run = useMutation({ mutationFn: () => api.post("/ai/run", { task: "content_brief", keyword, serp }) });
   return (
-    <Card title="AI content brief" description="Generated only from the analysis on this page by the AI provider you configured."
-      actions={<Button size="sm" variant="primary" icon={<Sparkles className="h-3.5 w-3.5" />} loading={run.isPending} onClick={() => run.mutate()}>Generate content brief with AI</Button>}>
-      {run.isPending ? <Spinner label="Writing the brief…" /> : run.error ? (
+    <Card title="KI-Content-Briefing" description="Vom eingerichteten KI-Anbieter ausschließlich aus der Analyse dieser Seite erstellt."
+      actions={<Button size="sm" variant="primary" icon={<Sparkles className="h-3.5 w-3.5" />} loading={run.isPending} onClick={() => run.mutate()}>Briefing mit KI erstellen</Button>}>
+      {run.isPending ? <Spinner label="Briefing wird geschrieben…" /> : run.error ? (
         <div className="space-y-2">
           <ErrorBox error={run.error} onRetry={() => run.mutate()} />
           {run.error instanceof ApiError && run.error.status === 400 && (
-            <p className="text-xs text-slate-500 dark:text-slate-400">AI features are optional and need a provider (Ollama or an OpenAI-compatible endpoint). <Link to="/settings" className="font-medium text-brand-700 hover:underline dark:text-brand-300">Configure it in Settings</Link>.</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">KI-Funktionen sind optional und brauchen einen Anbieter (Ollama oder einen OpenAI-kompatiblen Endpunkt). <Link to="/settings" className="font-medium text-brand-700 hover:underline dark:text-brand-300">In den Einstellungen einrichten</Link>.</p>
           )}
         </div>
       ) : run.data ? (
@@ -52,7 +52,7 @@ function AiBrief({ keyword, serp }: { keyword: string; serp: any }) {
           </p>
         </div>
       ) : (
-        <p className="text-sm text-slate-500 dark:text-slate-400">Turns the heading topics, common terms, questions and ranking-page stats above into an outline for a new page.</p>
+        <p className="text-sm text-slate-500 dark:text-slate-400">Macht aus Überschriften-Themen, häufigen Begriffen, Fragen und Seitenstatistik oben eine Gliederung für eine neue Seite.</p>
       )}
     </Card>
   );
@@ -61,14 +61,14 @@ function AiBrief({ keyword, serp }: { keyword: string; serp: any }) {
 function Difficulty({ d }: { d: any }) {
   if (!d || d.score === null || d.score === undefined) {
     return (
-      <Card title={<span className="inline-flex items-center gap-2">Difficulty <DataBadge kind="unavailable" /></span>}>
-        <p className="text-sm text-slate-500 dark:text-slate-400">{d?.reason ?? "No SERP data"}. No difficulty value is shown rather than guessing one.</p>
+      <Card title={<span className="inline-flex items-center gap-2">Schwierigkeit <DataBadge kind="unavailable" /></span>}>
+        <p className="text-sm text-slate-500 dark:text-slate-400">{d?.reason ?? "Keine SERP-Daten"}. Lieber kein Wert als ein geratener.</p>
       </Card>
     );
   }
   const inputs = d.inputs ?? {};
   return (
-    <Card title={<span className="inline-flex items-center gap-2">Difficulty estimate <DataBadge kind="estimated" /></span>}>
+    <Card title={<span className="inline-flex items-center gap-2">Geschätzte Schwierigkeit <DataBadge kind="estimated" /></span>}>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
         <div className="flex shrink-0 flex-col items-center gap-1.5">
           <ScoreRing score={d.score} label="of 100" />
@@ -117,20 +117,20 @@ export default function Serp() {
 
   const resultColumns: Column<any>[] = [
     { key: "pos", header: "#", align: "right", width: "40px", render: (x) => x.position },
-    { key: "page", header: "Result", render: (x) => (
+    { key: "page", header: "Ergebnis", render: (x) => (
       <div className="max-w-md">
-        <div className="font-medium text-slate-900 dark:text-slate-100">{x.title || <span className="font-normal text-slate-400">No title available</span>}</div>
+        <div className="font-medium text-slate-900 dark:text-slate-100">{x.title || <span className="font-normal text-slate-400">Kein Title vorhanden</span>}</div>
         <Url href={x.url} className="text-xs" />
         <div className="mt-1 flex flex-wrap gap-1">
-          {x.is_homepage && <Badge tone="blue">homepage</Badge>}
+          {x.is_homepage && <Badge tone="blue">Startseite</Badge>}
           {x.error && <Badge tone="red" title={x.error}>fetch failed: {x.error}</Badge>}
         </div>
       </div>
     ) },
-    { key: "words", header: "Words", align: "right", render: (x) => fmtInt(x.word_count) },
-    { key: "tl", header: "Title length", align: "right", render: (x) => (x.title ? x.title_length : "–") },
+    { key: "words", header: "Wörter", align: "right", render: (x) => fmtInt(x.word_count) },
+    { key: "tl", header: "Title-Länge", align: "right", render: (x) => (x.title ? x.title_length : "–") },
     { key: "h2", header: "H2s", align: "right", render: (x) => (x.fetched ? x.h2_count : "–") },
-    { key: "schema", header: "Schema types", render: (x) => (x.schema_types ?? []).length
+    { key: "schema", header: "Schema-Typen", render: (x) => (x.schema_types ?? []).length
       ? <span className="flex max-w-xs flex-wrap gap-1">{x.schema_types.map((t: string) => <Chip key={t}>{t}</Chip>)}</span> : <span className="text-slate-400">–</span> },
   ];
 
@@ -141,50 +141,50 @@ export default function Serp() {
 
   return (
     <div>
-      <PageHeader title="SERP analysis"
-        description="See what the pages ranking for a keyword have in common: length, headings, terms, questions and structured data. Result pages are fetched and measured by this toolkit; search engines are never scraped." />
+      <PageHeader title="SERP-Analyse"
+        description="Was die rankenden Seiten eines Keywords gemeinsam haben: Länge, Überschriften, Begriffe, Fragen und strukturierte Daten. Die Seiten werden von diesem Tool geladen und gemessen; Suchmaschinen werden nie gescrapt." />
 
       <div className="space-y-4">
-        {providers.isLoading ? <Card><Spinner label="Checking SERP provider…" /></Card> : providers.error ? <ErrorBox error={providers.error} onRetry={() => providers.refetch()} /> : hasProvider ? (
-          <Notice tone="success">SERP provider: <span className="font-medium">{providers.data.providers?.[configured!] ?? configured}</span>. Leave the manual URL box empty to query it, or paste URLs to override.</Notice>
+        {providers.isLoading ? <Card><Spinner label="SERP-Anbieter wird geprüft…" /></Card> : providers.error ? <ErrorBox error={providers.error} onRetry={() => providers.refetch()} /> : hasProvider ? (
+          <Notice tone="success">SERP-Anbieter: <span className="font-medium">{providers.data.providers?.[configured!] ?? configured}</span>. URL-Feld leer lassen, um ihn abzufragen, oder URLs einfügen, um ihn zu übergehen.</Notice>
         ) : (
           <Notice tone="warn">
-            No SERP provider is configured, so paste the ranking URLs manually below. To fetch results automatically, add SearXNG, Google Programmable Search or Brave Search in <Link to="/settings" className="font-medium underline">Settings</Link>.
+            Kein SERP-Anbieter eingerichtet, daher die rankenden URLs unten von Hand einfügen. Für automatische Ergebnisse SearXNG, Google Programmable Search oder Brave Search in den <Link to="/settings" className="font-medium underline">Einstellungen</Link> ergänzen.
           </Notice>
         )}
 
-        <Card title="Analyse a keyword">
+        <Card title="Keyword analysieren">
           <form onSubmit={submit} className="space-y-4">
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-12">
               <Field label="Keyword" className="sm:col-span-2 lg:col-span-5">
-                <Input required maxLength={200} value={keyword} onChange={(e) => setKeyword(e.target.value)} placeholder="e.g. how to descale a kettle" />
+                <Input required maxLength={200} value={keyword} onChange={(e) => setKeyword(e.target.value)} placeholder="z. B. küche planen" />
               </Field>
-              <Field label="Country" hint="2-letter code" className="lg:col-span-2">
+              <Field label="Land" hint="2-stelliger Code" className="lg:col-span-2">
                 <Input required pattern="[A-Za-z]{2}" maxLength={2} value={country} onChange={(e) => setCountry(e.target.value)} />
               </Field>
-              <Field label="Language" hint="2-letter code" className="lg:col-span-2">
+              <Field label="Sprache" hint="2-stelliger Code" className="lg:col-span-2">
                 <Input required pattern="[A-Za-z]{2}" maxLength={2} value={lang} onChange={(e) => setLang(e.target.value)} />
               </Field>
-              <Field label="My URL (optional)" hint="Adds a content-gap comparison" className="sm:col-span-2 lg:col-span-3">
-                <Input type="url" maxLength={2048} value={myUrl} onChange={(e) => setMyUrl(e.target.value)} placeholder="https://example.com/page" />
+              <Field label="Meine URL (optional)" hint="Ergänzt einen Inhaltslücken-Vergleich" className="sm:col-span-2 lg:col-span-3">
+                <Input type="url" maxLength={2048} value={myUrl} onChange={(e) => setMyUrl(e.target.value)} placeholder="https://example.de/…" />
               </Field>
             </div>
-            <Field label={hasProvider ? "Result URLs (optional, overrides the provider)" : "Result URLs, one per line, in ranking order"}
-              hint={`${urls.length} / 20 URLs. Positions follow the order you enter.`}>
-              <Textarea rows={5} value={urlText} onChange={(e) => setUrlText(e.target.value)} placeholder={"https://first-result.example/page\nhttps://second-result.example/guide"} className="font-mono text-xs" />
+            <Field label={hasProvider ? "Ergebnis-URLs (optional, übergeht den Anbieter)" : "Ergebnis-URLs, eine pro Zeile, in Ranking-Reihenfolge"}
+              hint={`${urls.length} / 20 URLs. Die Positionen folgen deiner Reihenfolge.`}>
+              <Textarea rows={5} value={urlText} onChange={(e) => setUrlText(e.target.value)} placeholder={"https://erstes-ergebnis.de/seite\nhttps://zweites-ergebnis.de/ratgeber"} className="font-mono text-xs" />
             </Field>
             <div className="flex flex-wrap items-center gap-3">
-              <Button type="submit" variant="primary" icon={<Search className="h-4 w-4" />} loading={analyze.isPending} disabled={!canSubmit}>Analyse SERP</Button>
-              {urls.length > 20 && <span className="text-xs text-red-600 dark:text-red-400">At most 20 URLs.</span>}
-              {!hasProvider && !urls.length && !providers.isLoading && <span className="text-xs text-slate-500 dark:text-slate-400">Paste at least one result URL.</span>}
+              <Button type="submit" variant="primary" icon={<Search className="h-4 w-4" />} loading={analyze.isPending} disabled={!canSubmit}>SERP analysieren</Button>
+              {urls.length > 20 && <span className="text-xs text-red-600 dark:text-red-400">Höchstens 20 URLs.</span>}
+              {!hasProvider && !urls.length && !providers.isLoading && <span className="text-xs text-slate-500 dark:text-slate-400">Mindestens eine Ergebnis-URL einfügen.</span>}
             </div>
           </form>
         </Card>
 
-        {analyze.isPending && <Card><Spinner label="Fetching and analysing the ranking pages…" /></Card>}
+        {analyze.isPending && <Card><Spinner label="Rankende Seiten werden geladen und analysiert…" /></Card>}
         {analyze.error && <ErrorBox error={analyze.error} onRetry={() => analyze.mutate()} />}
         {!r && !analyze.isPending && !analyze.error && (
-          <Card><EmptyState icon={<Search className="h-6 w-6" />} title="No analysis yet" description="Enter a keyword to analyse the pages that rank for it." /></Card>
+          <Card><EmptyState icon={<Search className="h-6 w-6" />} title="Noch keine Analyse" description="Keyword eingeben, um die rankenden Seiten zu analysieren." /></Card>
         )}
 
         {r && !analyze.isPending && (
@@ -192,7 +192,7 @@ export default function Serp() {
             {r.source && <Notice><span className="font-medium">Source: {r.source.provider}.</span> {r.source.note}</Notice>}
 
             <div className="grid gap-4 lg:grid-cols-2">
-              <Card title="Search intent & SERP features">
+              <Card title="Suchintention & SERP-Features">
                 <div className="space-y-4 text-sm">
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
@@ -205,15 +205,15 @@ export default function Serp() {
                     )}
                   </div>
                   <div>
-                    <div className="mb-1.5 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">SERP features reported</div>
+                    <div className="mb-1.5 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Gemeldete SERP-Features</div>
                     {(r.features ?? []).length ? <div className="flex flex-wrap gap-1">{r.features.map((f: string) => <Badge key={f} tone="purple">{f}</Badge>)}</div>
-                      : <span className="text-slate-500 dark:text-slate-400">None reported</span>}
+                      : <span className="text-slate-500 dark:text-slate-400">Keine gemeldet</span>}
                     <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">{r.feature_note}</p>
                   </div>
                   <div>
-                    <div className="mb-1.5 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Result types</div>
-                    {resultTypes.length ? <div className="flex flex-wrap gap-1">{resultTypes.map(([k, v]) => <Chip key={k} title="Classified from URL paths">{k} <span className="font-semibold tabular-nums">{v}</span></Chip>)}</div>
-                      : <span className="text-slate-500 dark:text-slate-400">No results</span>}
+                    <div className="mb-1.5 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Ergebnistypen</div>
+                    {resultTypes.length ? <div className="flex flex-wrap gap-1">{resultTypes.map(([k, v]) => <Chip key={k} title="Aus URL-Pfaden abgeleitet">{k} <span className="font-semibold tabular-nums">{v}</span></Chip>)}</div>
+                      : <span className="text-slate-500 dark:text-slate-400">Keine Ergebnisse</span>}
                   </div>
                 </div>
               </Card>
@@ -221,78 +221,78 @@ export default function Serp() {
             </div>
 
             <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-              <Stat label="Pages analysed" value={fmtInt(summary.pages_analysed)} hint={<span className="inline-flex items-center gap-1">fetched by this toolkit <DataBadge kind="measured" /></span>} />
-              <Stat label="Avg word count" value={fmtInt(summary.avg_word_count)} />
-              <Stat label="Median word count" value={fmtInt(summary.median_word_count)} />
-              <Stat label="Avg title length" value={summary.avg_title_length ? `${summary.avg_title_length} chars` : "–"} />
+              <Stat label="Analysierte Seiten" value={fmtInt(summary.pages_analysed)} hint={<span className="inline-flex items-center gap-1">von diesem Tool geladen <DataBadge kind="measured" /></span>} />
+              <Stat label="Ø Wortzahl" value={fmtInt(summary.avg_word_count)} />
+              <Stat label="Median Wortzahl" value={fmtInt(summary.median_word_count)} />
+              <Stat label="Ø Title-Länge" value={summary.avg_title_length ? `${summary.avg_title_length} Zeichen` : "–"} />
             </div>
 
             {gaps ? (
-              <Card title="Content gaps for your page" description={<Url href={myUrl.trim()} />}>
+              <Card title="Inhaltslücken deiner Seite" description={<Url href={myUrl.trim()} />}>
                 <div className="grid gap-5 md:grid-cols-2">
                   <div>
-                    <div className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Word count vs competitors</div>
+                    <div className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Wortzahl im Vergleich</div>
                     <div className="text-sm text-slate-700 dark:text-slate-300">
-                      Your page: <span className="font-semibold tabular-nums">{fmtInt(gaps.word_count)}</span> words · competitor median: <span className="font-semibold tabular-nums">{fmtInt(gaps.median_competitor_words)}</span>
+                      Deine Seite: <span className="font-semibold tabular-nums">{fmtInt(gaps.word_count)}</span> Wörter · Median Wettbewerb: <span className="font-semibold tabular-nums">{fmtInt(gaps.median_competitor_words)}</span>
                       {gaps.word_count !== null && gaps.median_competitor_words ? (
                         <Badge tone={gaps.word_count >= gaps.median_competitor_words * 0.8 ? "green" : "amber"}>
-                          {Math.round((gaps.word_count / gaps.median_competitor_words) * 100)}% of median
+                          {Math.round((gaps.word_count / gaps.median_competitor_words) * 100)}% des Medians
                         </Badge>
                       ) : null}
                     </div>
-                    <div className="mb-1 mt-4 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Schema types used by 2+ competitors that you lack</div>
+                    <div className="mb-1 mt-4 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Schema-Typen, die 2+ Wettbewerber nutzen und dir fehlen</div>
                     {(gaps.missing_schema_types ?? []).length ? <div className="flex flex-wrap gap-1">{gaps.missing_schema_types.map((t: string) => <Badge key={t} tone="amber">{t}</Badge>)}</div>
-                      : <span className="text-sm text-slate-500 dark:text-slate-400">None</span>}
+                      : <span className="text-sm text-slate-500 dark:text-slate-400">Keine</span>}
                   </div>
                   <div>
-                    <div className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Terms used by 40%+ of competitors, missing on your page</div>
+                    <div className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Begriffe bei 40 %+ der Wettbewerber, die deiner Seite fehlen</div>
                     {(gaps.missing_terms ?? []).length ? <div className="flex flex-wrap gap-1">{gaps.missing_terms.map((t: any) => <Chip key={t.term} title={`${t.documents} pages`}>{t.term} <span className="text-slate-400">{fmtPct(t.share, 0)}</span></Chip>)}</div>
-                      : <span className="text-sm text-slate-500 dark:text-slate-400">None</span>}
-                    <div className="mb-1 mt-4 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Heading topics missing from your headings</div>
+                      : <span className="text-sm text-slate-500 dark:text-slate-400">Keine</span>}
+                    <div className="mb-1 mt-4 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Überschriften-Themen, die bei dir fehlen</div>
                     {(gaps.missing_heading_topics ?? []).length ? <div className="flex flex-wrap gap-1">{gaps.missing_heading_topics.map((t: any) => <Chip key={t.term} title={`${t.documents} pages`}>{t.term} <span className="text-slate-400">{fmtPct(t.share, 0)}</span></Chip>)}</div>
-                      : <span className="text-sm text-slate-500 dark:text-slate-400">None</span>}
+                      : <span className="text-sm text-slate-500 dark:text-slate-400">Keine</span>}
                   </div>
                 </div>
               </Card>
             ) : myUrl.trim() ? (
-              <Notice tone="warn">Your URL could not be fetched as an HTML page, so no content-gap comparison is available.</Notice>
+              <Notice tone="warn">Deine URL ließ sich nicht als HTML-Seite laden, daher kein Lückenvergleich.</Notice>
             ) : null}
 
-            <Card padded={false} title={`Results (${(r.results ?? []).length})`} description="Word count, headings and schema are measured from each fetched page.">
+            <Card padded={false} title={`Ergebnisse (${(r.results ?? []).length})`} description="Wortzahl, Überschriften und Schema werden je geladener Seite gemessen.">
               <DataTable columns={resultColumns} rows={r.results ?? []} rowKey={(x) => `${x.position}-${x.url}`}
-                empty={<EmptyState title="No results" description="The provider returned no results for this keyword." />} />
+                empty={<EmptyState title="Keine Ergebnisse" description="Der Anbieter lieferte für dieses Keyword nichts." />} />
             </Card>
 
             <div className="grid gap-4 lg:grid-cols-2">
-              <Card padded={false} title="Heading topics" description="Terms that recur in the H2/H3 headings of ranking pages">
+              <Card padded={false} title="Überschriften-Themen" description="Begriffe, die in den H2/H3 rankender Seiten wiederkehren">
                 <DataTable dense columns={termColumns} rows={r.heading_topics ?? []} rowKey={(t) => t.term}
-                  empty={<EmptyState title="No recurring heading topics" description="Not enough pages could be fetched to find shared topics." />} />
+                  empty={<EmptyState title="Keine wiederkehrenden Themen" description="Zu wenige Seiten geladen, um gemeinsame Themen zu finden." />} />
               </Card>
-              <Card padded={false} title="Common terms" description="Terms that recur in the body text of ranking pages">
+              <Card padded={false} title="Häufige Begriffe" description="Begriffe, die im Text rankender Seiten wiederkehren">
                 <div className="max-h-[28rem] overflow-y-auto">
                   <DataTable dense columns={termColumns} rows={r.common_terms ?? []} rowKey={(t) => t.term}
-                    empty={<EmptyState title="No recurring terms" description="Not enough pages could be fetched to find shared terms." />} />
+                    empty={<EmptyState title="Keine wiederkehrenden Begriffe" description="Zu wenige Seiten geladen, um gemeinsame Begriffe zu finden." />} />
                 </div>
               </Card>
             </div>
 
             <div className="grid gap-4 lg:grid-cols-2">
-              <Card title="Questions answered by ranking pages" description="Headings phrased as questions">
+              <Card title="Fragen der rankenden Seiten" description="Überschriften in Frageform">
                 {(r.questions ?? []).length ? (
                   <ul className="list-disc space-y-1 pl-5 text-sm text-slate-700 dark:text-slate-300">{r.questions.map((q: string) => <li key={q}>{q}</li>)}</ul>
-                ) : <p className="text-sm text-slate-500 dark:text-slate-400">No question headings found on the analysed pages.</p>}
+                ) : <p className="text-sm text-slate-500 dark:text-slate-400">Auf den analysierten Seiten gibt es keine Frage-Überschriften.</p>}
               </Card>
-              <Card title="Titles & structured data">
+              <Card title="Titles & strukturierte Daten">
                 <div className="space-y-4">
                   <div>
-                    <div className="mb-1.5 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Terms shared by result titles</div>
+                    <div className="mb-1.5 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Gemeinsame Begriffe in den Titles</div>
                     {(summary.common_title_terms ?? []).length ? <div className="flex flex-wrap gap-1">{summary.common_title_terms.map((t: any) => <Chip key={t.term}>{t.term} <span className="font-semibold tabular-nums">{t.results}</span></Chip>)}</div>
-                      : <span className="text-sm text-slate-500 dark:text-slate-400">No shared title terms</span>}
+                      : <span className="text-sm text-slate-500 dark:text-slate-400">Keine gemeinsamen Begriffe</span>}
                   </div>
                   <div>
-                    <div className="mb-1.5 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Schema types on ranking pages</div>
+                    <div className="mb-1.5 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Schema-Typen der rankenden Seiten</div>
                     {schemaCounts.length ? <div className="flex flex-wrap gap-1">{schemaCounts.map(([t, c]) => <Chip key={t}>{t} <span className="font-semibold tabular-nums">{c}</span></Chip>)}</div>
-                      : <span className="text-sm text-slate-500 dark:text-slate-400">No structured data found</span>}
+                      : <span className="text-sm text-slate-500 dark:text-slate-400">Keine strukturierten Daten gefunden</span>}
                   </div>
                 </div>
               </Card>
