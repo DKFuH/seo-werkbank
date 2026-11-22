@@ -14,7 +14,20 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
-from .api import ai_visibility, auth, competitor_radar, content_proposals, content_refresh, crawls, evidence, integrations, rank_tracking, sites, tools, workflow
+from .api import (
+    ai_visibility,
+    auth,
+    competitor_radar,
+    content_proposals,
+    content_refresh,
+    crawls,
+    evidence,
+    integrations,
+    rank_tracking,
+    sites,
+    tools,
+    workflow,
+)
 from .config import APP_NAME, APP_VERSION, get_settings
 from .jobs import JobLimitError, jobs, mark_interrupted_jobs
 from .security.limits import BodyLimitMiddleware
