@@ -55,11 +55,11 @@ def list_observations(site_id: int, platform: Platform | None = None,
 @router.post("/sites/{site_id}/ai-visibility/observations", status_code=201)
 def create_observation(site_id: int, body: ObservationIn, user: User = Depends(current_user),
                        db: Session = Depends(get_db)) -> dict:
-    from ..models import utcnow
+    from ..models import naive_utc, utcnow
 
     site = get_site_for(db, user, site_id)
     payload = body.model_dump(exclude={"observed_at"})
-    observed_at = body.observed_at.replace(tzinfo=None) if body.observed_at else utcnow()
+    observed_at = naive_utc(body.observed_at) if body.observed_at else utcnow()
     if observed_at > utcnow():
         raise HTTPException(422, "Zukünftiges Beobachtungsdatum nicht zulässig")
     observation = AiVisibilityObservation(site_id=site.id, observed_at=observed_at, **payload)

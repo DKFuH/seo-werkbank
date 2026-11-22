@@ -16,7 +16,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ..db import get_db
-from ..models import Link, Page, SeoResearchRecord, User, utcnow
+from ..models import Link, Page, SeoResearchRecord, User, naive_utc, utcnow
 from ..security.auth import current_user, get_site_for
 from ..text import content_tokens, stem
 from .deps import latest_crawl
@@ -112,7 +112,7 @@ def list_records(site_id: int, kind: Kinds | None = None, limit: int = Query(200
 def create_record(site_id: int, body: RecordIn, user: User = Depends(current_user),
                   db: Session = Depends(get_db)) -> dict:
     site = get_site_for(db, user, site_id)
-    when = body.observed_at.replace(tzinfo=None) if body.observed_at else utcnow()
+    when = naive_utc(body.observed_at) if body.observed_at else utcnow()
     if when > utcnow():
         raise HTTPException(422, "Future observations not accepted")
     record = SeoResearchRecord(site_id=site.id, kind=body.kind, title=body.title,

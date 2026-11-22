@@ -15,7 +15,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ..db import get_db
-from ..models import RankObservation, RankTarget, User, utcnow
+from ..models import RankObservation, RankTarget, User, naive_utc, utcnow
 from ..security.auth import current_user, get_site_for
 from ..serp import analyzer as serp
 from ..services.settings_store import get_setting
@@ -41,6 +41,15 @@ class ObservationIn(BaseModel):
     serp_features: list[str] = Field(default_factory=list, max_length=30)
     observed_at: datetime | None = None
     notes: str = Field("", max_length=1000)
+
+
+def _bare_host(url: str | None) -> str:
+    """Hostname without a leading ``www.``, so www and non-www results both count as the site."""
+    try:
+        host = (urlsplit(url or "").hostname or "").lower()
+    except ValueError:
+        return ""
+    return host.removeprefix("www.")
 
 
 def _target(db: Session, site_id: int, target_id: int) -> RankTarget:
@@ -107,7 +116,7 @@ def add_observation(site_id: int, target_id: int, body: ObservationIn,
                     user: User = Depends(current_user), db: Session = Depends(get_db)) -> dict:
     site = get_site_for(db, user, site_id)
     target = _target(db, site.id, target_id)
-    when = body.observed_at.replace(tzinfo=None) if body.observed_at else utcnow()
+    when = naive_utc(body.observed_at) if body.observed_at else utcnow()
     if when > utcnow():
         raise HTTPException(422, "Future observation not allowed")
     if body.position is not None and body.position > body.search_depth:
@@ -137,9 +146,9 @@ async def capture_rank(site_id: int, target_id: int, user: User = Depends(curren
                                    lang=target.language, num=10)
     except serp.SerpError as exc:
         raise HTTPException(502, "SERP provider did not return usable results") from exc
-    host = urlsplit(site.url).hostname or ""
-    matching = [r for r in result["results"] if urlsplit(r["url"]).hostname == host or
-                (urlsplit(r["url"]).hostname or "").endswith("." + host)]
+    host = _bare_host(site.url)
+    matching = [r for r in result["results"] if host and (_bare_host(r["url"]) == host or
+                (urlsplit(r["url"]).hostname or "").lower().endswith("." + host))]
     found = matching[0] if matching else None
     obj = RankObservation(target_id=target.id, observed_at=utcnow(), provider=result["provider"],
                           position=found["position"] if found else None,

@@ -14,6 +14,11 @@ def utcnow() -> datetime:
     return datetime.now(UTC).replace(tzinfo=None)
 
 
+def naive_utc(value: datetime) -> datetime:
+    """Store user-supplied timestamps as naive UTC, converting any explicit offset first."""
+    return value.astimezone(UTC).replace(tzinfo=None) if value.tzinfo else value
+
+
 class User(Base):
     __tablename__ = "users"
     id: Mapped[int] = mapped_column(primary_key=True)

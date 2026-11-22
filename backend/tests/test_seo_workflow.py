@@ -68,3 +68,23 @@ def test_workflow_snapshot_uses_paired_dated_data_only(client, auth, fixture_sit
     assert len(client.get(path, headers=auth).json()) == 1
     assert client.post(path, headers=auth, json={"label": "followup"}).status_code == 201
     assert len(client.get(path, headers=auth).json()) == 2
+
+
+def test_snapshot_window_ends_at_latest_site_day_not_page_day(client, auth, fixture_site):
+    base = fixture_site.url + "/"
+    site = client.post("/api/sites", headers=auth, json={"name": "Stale page snapshot", "url": base}).json()
+    sid = site["id"]
+    work = client.post(f"/api/sites/{sid}/seo-work", headers=auth, json={
+        "kind": "content", "title": "Stale page", "target_url": base, "status": "draft"}).json()
+    with session_scope() as db:
+        db.add_all([
+            GscRow(site_id=sid, dataset="query_page", source="api", day=date(2026, 9, 1), page=base,
+                   query="old query", clicks=5, impressions=50, position=6),
+            # Newer data exists for another URL of the same site; the page itself had no impressions since.
+            GscRow(site_id=sid, dataset="query_page", source="api", day=date(2026, 11, 21), page=base + "other",
+                   query="other query", clicks=1, impressions=10, position=3),
+        ])
+    path = f"/api/sites/{sid}/seo-work/{work['id']}/snapshots"
+    # The 28-day window ends 2026-11-21, so the September row is outside it: no silent reuse of old data.
+    r = client.post(path, headers=auth, json={"label": "followup", "days": 28})
+    assert r.status_code == 422, r.text
