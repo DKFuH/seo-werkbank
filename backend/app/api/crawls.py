@@ -558,3 +558,28 @@ def audit_report(crawl_id: int, user: User = Depends(current_user), db: Session 
     pdf = audit_pdf(site.name, site.url, {"id": crawl.id, "finished_at": crawl.finished_at.strftime("%Y-%m-%d %H:%M") if crawl.finished_at else None,
                                           "score": crawl.score, "stats": crawl.stats}, groups)
     return download(pdf, f"seo-audit-{site.domain}-crawl{crawl.id}.pdf", "application/pdf")
+
+
+@router.get("/crawls/{crawl_id}/link-opportunities/context")
+def contextual_link_opportunities(crawl_id: int, limit: int = Query(50, ge=1, le=200),
+                                  user: User = Depends(current_user), db: Session = Depends(get_db)) -> dict:
+    """Use existing lexical link suggestions and show an actual, short source-text passage."""
+    from ..services.link_context import link_context
+
+    crawl = get_crawl_for(db, user, crawl_id)
+    # The existing opportunity engine enforces indexability and excludes existing links.
+    base = link_opportunities(crawl_id, limit=500, user=user, db=db)
+    items = base["items"]
+    urls = {s["source_url"] for s in items}
+    texts = dict(db.execute(select(Page.url, Page.text).where(
+        Page.crawl_id == crawl.id, Page.url.in_(urls)))) if urls else {}
+    candidates = []
+    for item in items:
+        context = link_context(texts.get(item["source_url"]) or "", item["matched_terms"])
+        if context:
+            candidates.append({**item, **context})
+    return {"items": candidates[:limit], "total": len(candidates),
+            "inspected": len(items), "truncated": base["total"] > len(items),
+            "method": "Nur Linkchancen aus dem bestehenden Crawl, deren relevante Wörter gemeinsam in einer "
+                      "kurzen, tatsächlich gecrawlten Textpassage vorkommen. "
+                      "Anker und Linkziel sind redaktionell zu prüfen. Keine automatische Linksetzung."}
