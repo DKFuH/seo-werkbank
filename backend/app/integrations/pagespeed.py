@@ -162,7 +162,7 @@ async def run_local_lighthouse(url: str, strategy: str = "mobile", timeout_s: in
     parts = urlsplit(url)
     await resolve_and_check(parts.hostname or "", parts.port or (443 if parts.scheme == "https" else 80), s.allow_private_networks)
     # Chrome refuses to start as root without --no-sandbox (containers); everywhere else keep its sandbox on.
-    flags = "--headless=new" + (" --no-sandbox" if hasattr(os, "geteuid") and os.geteuid() == 0 else "")
+    flags = "--headless=new" + (" --no-sandbox" if not s.render_sandbox or (hasattr(os, "geteuid") and os.geteuid() == 0) else "")
     args = [exe, url, "--output=json", "--quiet", f"--chrome-flags={flags}",
             "--only-categories=performance,accessibility,best-practices,seo"]
     if strategy == "desktop":
