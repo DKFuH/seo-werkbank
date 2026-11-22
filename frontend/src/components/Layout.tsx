@@ -40,6 +40,7 @@ export const NAV: { section: string; items: { to: string; label: string; icon: R
     { to: "/rank-tracking", label: "Ranktracker", icon: <LineChart className="h-4 w-4" /> },
     { to: "/research", label: "SEO-Research", icon: <FileText className="h-4 w-4" /> },
     { to: "/research-quality", label: "Qualität & CRO", icon: <FileSearch className="h-4 w-4" /> },
+    { to: "/research-monitoring", label: "SEO-Verlauf & GEO", icon: <Activity className="h-4 w-4" /> },
     { to: "/wdf-idf", label: "WDF*IDF", icon: <Sigma className="h-4 w-4" /> },
     { to: "/geo", label: "GEO-Check", icon: <Bot className="h-4 w-4" /> },
     { to: "/competitors", label: "Wettbewerber", icon: <Swords className="h-4 w-4" /> },
