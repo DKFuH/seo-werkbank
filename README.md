@@ -8,6 +8,17 @@ SEO-Werkbank ist eine Weiterentwicklung von [OpenSEOSuite](https://github.com/Su
 (MIT-Lizenz, © The OpenSEOSuite contributors). Die ursprüngliche Dokumentation liegt unter
 [docs/UPSTREAM_README.md](docs/UPSTREAM_README.md); Architektur, Sicherheit und Installation gelten unverändert.
 
+## Bedienung: Benutzerhandbuch und Schnellstart
+
+**Neu hier?** Beginne mit dem [Schnellstart für Anwender](docs/SCHNELLSTART.md):
+Installation, erste Website, Crawl, Google Search Console und Content-Maßnahme.
+
+Das ausführliche **[Benutzerhandbuch](docs/BENUTZERHANDBUCH.md)** erklärt Schritt für Schritt
+**wo du klickst, welche Daten benötigt werden, was das Ergebnis bedeutet und wie die
+Funktionen zusammenarbeiten** – einschließlich Admin-Einstellungen, Importen,
+Crawling, Keyword-Recherche, KI-Sichtbarkeit, Content-Freigabe, Matomo, Monitoring,
+Exporten und Fehlerbehebung.
+
 ## Was gegenüber OpenSEOSuite dazugekommen ist
 
 - **Deutsche Oberfläche**: alle Seiten, die 95 Audit-Regeln, Hinweise und Fehlermeldungen; deutsche Zahlen- und
