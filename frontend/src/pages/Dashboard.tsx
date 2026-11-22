@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import {
   Bar, BarChart, CartesianGrid, Cell, Legend, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip as ChartTooltip, XAxis, YAxis,
 } from "recharts";
+import AreaCards from "../components/AreaCards";
 import { Badge, Button, Card, chartColors, EmptyState, ErrorBox, PageHeader, ProgressBar, ScoreRing, SeverityBadge, Spinner, Stat } from "../components/ui";
 import { api } from "../lib/api";
 import { type Site, useSite } from "../lib/context";
@@ -14,6 +15,15 @@ const axisTick = { fontSize: 11, fill: "#94a3b8" };
 const STATUS_CLASS_COLOR: Record<string, string> = { "2xx": "#16a34a", "3xx": "#3866f5", "4xx": "#ea580c", "5xx": "#dc2626", error: "#991b1b", blocked: "#64748b" };
 const JOB_TONE: Record<string, string> = { completed: "green", running: "blue", queued: "gray", failed: "red", cancelled: "amber" };
 const linkClass = "text-sm font-medium text-brand-700 hover:underline dark:text-brand-300";
+
+function SectionTitle({ title, description }: { title: string; description?: string }) {
+  return (
+    <div className="mb-3">
+      <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{title}</h2>
+      {description && <p className="text-xs text-slate-500 dark:text-slate-400">{description}</p>}
+    </div>
+  );
+}
 
 function SiteCard({ s, selected, onSelect }: { s: Site; selected: boolean; onSelect: () => void }) {
   const sev = s.last_crawl?.issues_by_severity;
@@ -159,17 +169,26 @@ export default function Dashboard() {
 
   return (
     <>
-      <PageHeader title="Dashboard" description="Überblick über alle Websites, die du beobachtest."
+      <PageHeader title={site ? site.name : "Dashboard"}
+        description={site ? <>{site.domain} · Technik, Google-Suche, KI-Erwähnungen und offene Maßnahmen auf einen Blick</> : "Überblick über alle Websites, die du beobachtest."}
         actions={<Button icon={<Plus className="h-4 w-4" />} onClick={() => navigate("/sites")}>Websites verwalten</Button>} />
-      <div className="space-y-6">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {sites.map((s) => <SiteCard key={s.id} s={s} selected={site?.id === s.id} onSelect={() => setSiteId(s.id)} />)}
-        </div>
+      <div className="space-y-8">
+        {site && <AreaCards site={site} />}
 
-        {site && (
+        {/* Without any crawl the technical card already says so; no second empty block. */}
+        {site && (site.last_crawl || site.active_crawl) && (
           <section>
-            <h2 className="mb-3 text-sm font-semibold text-slate-900 dark:text-slate-100">{site.name} <span className="font-normal text-slate-500 dark:text-slate-400">· {site.domain}</span></h2>
+            <SectionTitle title="Technischer Zustand" description="Score, Statuscodes und Befunde aus den Crawls" />
             <Overview site={site} />
+          </section>
+        )}
+
+        {sites.length > 1 && (
+          <section>
+            <SectionTitle title="Alle Websites" description="Zum Wechseln eine Website auswählen" />
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              {sites.map((s) => <SiteCard key={s.id} s={s} selected={site?.id === s.id} onSelect={() => setSiteId(s.id)} />)}
+            </div>
           </section>
         )}
 

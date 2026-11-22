@@ -5,6 +5,15 @@ uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased] - SEO-Werkbank
 
+### Changed
+- **Navigation** grouped by the question a user brings: Analyse, Sichtbarkeit, Content, Conversion, Maßnahmen (plus Übersicht and
+  System). Groups collapse; the group of the open page is always expanded and highlighted, other open groups are remembered per
+  browser. All 36 screens stay reachable.
+- **Dashboard** starts with four area cards for the selected site: technical SEO (last crawl), Google search (GSC clicks and
+  impressions with change vs. the previous period), AI mentions (manual samples, own-URL citations) and open SEO work items.
+  Each card shows only values its API returns and labels their source; without data it links to the setup. The technical charts
+  follow below, the site list only appears with more than one site.
+
 ### Added
 Evidence-first planning and review modules. All of them store manually entered or imported records, scope every route to the
 signed-in user's site, and label their results as observations rather than measured rankings or causal effects.

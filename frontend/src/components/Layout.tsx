@@ -3,6 +3,8 @@ import clsx from "clsx";
 import {
   Activity, Bell, FileSearch, FileText, Gauge, Globe2, Languages, LayoutDashboard, Link2, LogOut, MapPin, Menu, Moon, Network,
   PenLine, Search, Settings, Share2, ListTree, Sun, Swords, Braces, Bug, KeyRound, LineChart, X, Sigma, Bot, BarChart3,
+  ChevronRight, ClipboardList, Eye, FilePen, History, Microscope, Radar, RefreshCw, ShieldCheck, Target, TrendingUp, BadgeEuro,
+  MapPinned, MessageSquareQuote, Sparkles, Lightbulb,
 } from "lucide-react";
 import { type ReactNode, useEffect, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
@@ -11,52 +13,136 @@ import { useAuth, useSite, useTheme } from "../lib/context";
 import { scoreColor } from "../lib/format";
 import { Select } from "./ui";
 
-export const NAV: { section: string; items: { to: string; label: string; icon: ReactNode }[] }[] = [
-  { section: "Übersicht", items: [
-    { to: "/", label: "Dashboard", icon: <LayoutDashboard className="h-4 w-4" /> },
-    { to: "/sites", label: "Websites", icon: <Globe2 className="h-4 w-4" /> },
+export interface NavGroup {
+  section: string;
+  /** One line under the section name, so a group says what question it answers. */
+  hint?: string;
+  /** Always-open groups have no toggle. */
+  fixed?: boolean;
+  items: { to: string; label: string; icon: ReactNode }[];
+}
+
+const i = (Icon: typeof Bug) => <Icon className="h-4 w-4" />;
+
+/**
+ * Grouped by the question a user brings, not by when a feature was built:
+ * Analyse (is the site technically sound?), Sichtbarkeit (where are we found?), Content (what do we write?),
+ * Conversion (does it pay off?), Maßnahmen (what do we do next?).
+ */
+export const NAV: NavGroup[] = [
+  { section: "Übersicht", fixed: true, items: [
+    { to: "/", label: "Dashboard", icon: i(LayoutDashboard) },
+    { to: "/sites", label: "Websites", icon: i(Globe2) },
   ] },
-  { section: "Technisches SEO", items: [
-    { to: "/audit", label: "Website-Audit", icon: <Bug className="h-4 w-4" /> },
-    { to: "/crawler", label: "Crawler", icon: <FileSearch className="h-4 w-4" /> },
-    { to: "/internal-links", label: "Interne Verlinkung", icon: <Network className="h-4 w-4" /> },
-    { to: "/sitemaps", label: "Sitemaps & Indexierung", icon: <ListTree className="h-4 w-4" /> },
-    { to: "/schema", label: "Strukturierte Daten", icon: <Braces className="h-4 w-4" /> },
-    { to: "/pagespeed", label: "PageSpeed", icon: <Gauge className="h-4 w-4" /> },
-    { to: "/international", label: "Internationales SEO", icon: <Languages className="h-4 w-4" /> },
-    { to: "/local", label: "Lokales SEO", icon: <MapPin className="h-4 w-4" /> },
+  { section: "Analyse", hint: "Technischer Zustand", items: [
+    { to: "/audit", label: "Website-Audit", icon: i(Bug) },
+    { to: "/crawler", label: "Crawler", icon: i(FileSearch) },
+    { to: "/internal-links", label: "Interne Verlinkung", icon: i(Network) },
+    { to: "/sitemaps", label: "Sitemaps & Indexierung", icon: i(ListTree) },
+    { to: "/schema", label: "Strukturierte Daten", icon: i(Braces) },
+    { to: "/pagespeed", label: "PageSpeed", icon: i(Gauge) },
+    { to: "/international", label: "Internationales SEO", icon: i(Languages) },
+    { to: "/local", label: "Lokales SEO", icon: i(MapPin) },
   ] },
-  { section: "Recherche & Inhalte", items: [
-    { to: "/keywords", label: "Keyword-Recherche", icon: <KeyRound className="h-4 w-4" /> },
-    { to: "/serp", label: "SERP-Analyse", icon: <Search className="h-4 w-4" /> },
-    { to: "/content", label: "Content-Optimierung", icon: <PenLine className="h-4 w-4" /> },
-    { to: "/content-refresh", label: "Content-Refresh", icon: <PenLine className="h-4 w-4" /> },
-    { to: "/opportunity-value", label: "Wirtschaftliche SEO-Chancen", icon: <LineChart className="h-4 w-4" /> },
-    { to: "/seo-work", label: "SEO-Maßnahmen", icon: <FileText className="h-4 w-4" /> },
-    { to: "/ai-visibility", label: "KI-Erwähnungen", icon: <Bot className="h-4 w-4" /> },
-    { to: "/competitor-radar", label: "Themenradar", icon: <Swords className="h-4 w-4" /> },
-    { to: "/seo-evidence", label: "Lokale SEO-Nachweise", icon: <MapPin className="h-4 w-4" /> },
-    { to: "/content-proposals", label: "Content-Entwürfe", icon: <PenLine className="h-4 w-4" /> },
-    { to: "/rank-tracking", label: "Ranktracker", icon: <LineChart className="h-4 w-4" /> },
-    { to: "/research", label: "SEO-Research", icon: <FileText className="h-4 w-4" /> },
-    { to: "/research-quality", label: "Qualität & CRO", icon: <FileSearch className="h-4 w-4" /> },
-    { to: "/research-monitoring", label: "SEO-Verlauf & GEO", icon: <Activity className="h-4 w-4" /> },
-    { to: "/conversion-trust", label: "Conversion & Trust", icon: <Gauge className="h-4 w-4" /> },
-    { to: "/ai-intelligence", label: "KI-Empfehlungen & Referrals", icon: <Bot className="h-4 w-4" /> },
-    { to: "/content-studio", label: "Content Studio", icon: <PenLine className="h-4 w-4" /> },
-    { to: "/wdf-idf", label: "WDF*IDF", icon: <Sigma className="h-4 w-4" /> },
-    { to: "/geo", label: "GEO-Check", icon: <Bot className="h-4 w-4" /> },
-    { to: "/competitors", label: "Wettbewerber", icon: <Swords className="h-4 w-4" /> },
-    { to: "/backlinks", label: "Backlinks", icon: <Link2 className="h-4 w-4" /> },
-    { to: "/search-console", label: "Search Console", icon: <LineChart className="h-4 w-4" /> },
-    { to: "/matomo", label: "Matomo", icon: <BarChart3 className="h-4 w-4" /> },
+  { section: "Sichtbarkeit", hint: "Google, KI-Antworten, Wettbewerb", items: [
+    { to: "/search-console", label: "Search Console", icon: i(LineChart) },
+    { to: "/rank-tracking", label: "Ranktracker", icon: i(TrendingUp) },
+    { to: "/keywords", label: "Keyword-Recherche", icon: i(KeyRound) },
+    { to: "/serp", label: "SERP-Analyse", icon: i(Search) },
+    { to: "/ai-visibility", label: "KI-Erwähnungen", icon: i(Eye) },
+    { to: "/ai-intelligence", label: "KI-Empfehlungen & Referrals", icon: i(Sparkles) },
+    { to: "/geo", label: "GEO-Check", icon: i(Bot) },
+    { to: "/research-monitoring", label: "SEO-Verlauf & GEO", icon: i(History) },
+    { to: "/competitors", label: "Wettbewerber", icon: i(Swords) },
+    { to: "/competitor-radar", label: "Themenradar", icon: i(Radar) },
+    { to: "/backlinks", label: "Backlinks", icon: i(Link2) },
   ] },
-  { section: "Betrieb", items: [
-    { to: "/monitoring", label: "Monitoring", icon: <Activity className="h-4 w-4" /> },
-    { to: "/reports", label: "Berichte", icon: <FileText className="h-4 w-4" /> },
-    { to: "/settings", label: "Einstellungen", icon: <Settings className="h-4 w-4" /> },
+  { section: "Content", hint: "Recherche, Texte, Qualität", items: [
+    { to: "/research", label: "SEO-Research", icon: i(Microscope) },
+    { to: "/content", label: "Content-Optimierung", icon: i(PenLine) },
+    { to: "/wdf-idf", label: "WDF*IDF", icon: i(Sigma) },
+    { to: "/content-refresh", label: "Content-Refresh", icon: i(RefreshCw) },
+    { to: "/content-proposals", label: "Content-Entwürfe", icon: i(FilePen) },
+    { to: "/content-studio", label: "Content Studio", icon: i(Lightbulb) },
+    { to: "/research-quality", label: "Qualität & CRO", icon: i(MessageSquareQuote) },
+  ] },
+  { section: "Conversion", hint: "Besucher, Vertrauen, Wert", items: [
+    { to: "/matomo", label: "Matomo", icon: i(BarChart3) },
+    { to: "/conversion-trust", label: "Conversion & Trust", icon: i(ShieldCheck) },
+    { to: "/opportunity-value", label: "Wirtschaftliche Chancen", icon: i(BadgeEuro) },
+  ] },
+  { section: "Maßnahmen", hint: "Aufgaben und Nachweise", items: [
+    { to: "/seo-work", label: "SEO-Maßnahmen", icon: i(ClipboardList) },
+    { to: "/seo-evidence", label: "Lokale Nachweise", icon: i(MapPinned) },
+    { to: "/monitoring", label: "Monitoring", icon: i(Activity) },
+    { to: "/reports", label: "Berichte", icon: i(FileText) },
+  ] },
+  { section: "System", fixed: true, items: [
+    { to: "/settings", label: "Einstellungen", icon: i(Settings) },
   ] },
 ];
+
+/** Section that holds the current route; a nested route such as /audit/issues/x belongs to /audit. */
+export function sectionFor(pathname: string): string | undefined {
+  let best: { section: string; len: number } | undefined;
+  for (const g of NAV) {
+    for (const item of g.items) {
+      const hit = item.to === "/" ? pathname === "/" : pathname === item.to || pathname.startsWith(item.to + "/");
+      if (hit && (!best || item.to.length > best.len)) best = { section: g.section, len: item.to.length };
+    }
+  }
+  return best?.section;
+}
+
+const NAV_KEY = "seo-werkbank:nav-open";
+
+function readOpen(): string[] {
+  try {
+    const v = JSON.parse(localStorage.getItem(NAV_KEY) ?? "[]");
+    return Array.isArray(v) ? v.filter((x) => typeof x === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
+function NavGroupBlock({ group, active, open, onToggle }: { group: NavGroup; active: boolean; open: boolean; onToggle: () => void }) {
+  const expanded = group.fixed || open || active;
+  const id = "nav-" + group.section.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+  return (
+    <div>
+      {group.fixed ? (
+        <div className="mb-1 px-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">{group.section}</div>
+      ) : (
+        <button type="button" onClick={onToggle} aria-expanded={expanded} aria-controls={id} disabled={active}
+          title={active ? "Enthält die geöffnete Seite" : undefined}
+          className={clsx("group flex w-full items-center gap-1.5 rounded-lg px-2 py-1 text-left transition",
+            !active && "hover:bg-slate-100 dark:hover:bg-slate-800")}>
+          <ChevronRight className={clsx("h-3.5 w-3.5 shrink-0 text-slate-400 transition-transform", expanded && "rotate-90")} />
+          <span className="min-w-0 flex-1">
+            <span className={clsx("block text-[11px] font-semibold uppercase tracking-wider",
+              active ? "text-brand-700 dark:text-brand-300" : "text-slate-500 dark:text-slate-400")}>{group.section}</span>
+            {group.hint && !expanded && <span className="block truncate text-[11px] text-slate-400 dark:text-slate-500">{group.hint}</span>}
+          </span>
+          {!expanded && <span className="text-[11px] tabular-nums text-slate-400 dark:text-slate-500">{group.items.length}</span>}
+        </button>
+      )}
+      {expanded && (
+        <ul id={id} className={clsx("space-y-0.5", !group.fixed && "mt-0.5")}>
+          {group.items.map((item) => (
+            <li key={item.to}>
+              <NavLink to={item.to} end={item.to === "/"}
+                className={({ isActive }) => clsx("flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-sm transition",
+                  isActive ? "bg-brand-50 font-medium text-brand-700 dark:bg-brand-900/30 dark:text-brand-200"
+                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-50")}>
+                {item.icon}{item.label}
+              </NavLink>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
 
 function Brand() {
   return (
@@ -64,7 +150,7 @@ function Brand() {
       <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600 text-white"><Share2 className="h-4 w-4" /></span>
       <span className="leading-tight">
         <span className="block text-sm font-semibold text-slate-900 dark:text-slate-50">SEO-Werkbank</span>
-        <span className="block text-[11px] text-slate-500 dark:text-slate-400">basiert auf OpenSEOSuite · lokal</span>
+        <span className="block text-[11px] text-slate-500 dark:text-slate-400">Sichtbarkeit &amp; Content</span>
       </span>
     </Link>
   );
@@ -79,26 +165,20 @@ export default function Layout({ children }: { children: ReactNode }) {
   useEffect(() => setOpen(false), [location.pathname]);
   const { data: alerts } = useQuery({ queryKey: ["alerts", "unread"], queryFn: () => api.get("/alerts", { unread: true, per_page: 1 }), refetchInterval: 60_000 });
   const unread = alerts?.unread ?? 0;
+  const activeSection = sectionFor(location.pathname);
+  const [openGroups, setOpenGroups] = useState<string[]>(readOpen);
+  const toggleGroup = (section: string) => setOpenGroups((prev) => {
+    const next = prev.includes(section) ? prev.filter((s) => s !== section) : [...prev, section];
+    try { localStorage.setItem(NAV_KEY, JSON.stringify(next)); } catch { /* storage unavailable: keep in memory only */ }
+    return next;
+  });
 
   const sidebar = (
-    <nav className="flex h-full flex-col gap-5 overflow-y-auto px-3 py-4" aria-label="Hauptnavigation">
+    <nav className="flex h-full flex-col gap-3 overflow-y-auto px-3 py-4" aria-label="Hauptnavigation">
       <Brand />
       {NAV.map((group) => (
-        <div key={group.section}>
-          <div className="mb-1 px-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">{group.section}</div>
-          <ul className="space-y-0.5">
-            {group.items.map((item) => (
-              <li key={item.to}>
-                <NavLink to={item.to} end={item.to === "/"}
-                  className={({ isActive }) => clsx("flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-sm transition",
-                    isActive ? "bg-brand-50 font-medium text-brand-700 dark:bg-brand-900/30 dark:text-brand-200"
-                      : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-50")}>
-                  {item.icon}{item.label}
-                </NavLink>
-              </li>
-            ))}
-          </ul>
-        </div>
+        <NavGroupBlock key={group.section} group={group} active={group.section === activeSection}
+          open={openGroups.includes(group.section)} onToggle={() => toggleGroup(group.section)} />
       ))}
     </nav>
   );
