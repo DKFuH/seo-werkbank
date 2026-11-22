@@ -39,6 +39,8 @@ SEO-Werkbank ist eine Weiterentwicklung von [OpenSEOSuite](https://github.com/Su
   manuelle oder anbieterbezogene SERP-Beobachtungen. Keine unabhängige Google-Messung.
 - **SEO-Research** (`/research`): mandantengetrennte Themen- und Fragenhierarchien,
   Suchreise-Planung, belegbare Beobachtungen und Rechercheprotokolle.
+- **Qualität & CRO** (`/research-quality`): transparente Content-Nachweise, Landingpage-Textsignale,
+  Quellenprüfung für Vergleiche und QA-Checklisten für Linkable-Assets.
 - Deutsche Stoppwörter auch in SERP-Analyse und Content-Optimierung; deutsche Signalwörter für kommerzielle
   Suchintention.
 
