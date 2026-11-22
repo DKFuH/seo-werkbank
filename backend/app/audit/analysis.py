@@ -426,6 +426,12 @@ def analyse_crawl(crawl_id: int, *, sitemap: SitemapReport | None = None, site_c
             add("geo_ai_user_blocked", None, {"crawlers": geo_site["blocked_user"]})
         if geo_site and not geo_site.get("llms_ok"):
             add("geo_llms_missing", None, {"status": geo_site.get("llms_status")})
+        elif geo_site.get("llms_issues"):
+            add("geo_llms_incomplete", None, {"issues": geo_site["llms_issues"]})
+        if geo_site.get("cloudflare_blocks"):
+            add("geo_cloudflare_ai_block", None, {"crawlers": geo_site["cloudflare_blocks"]})
+        if geo_site.get("restrictive"):
+            add("geo_content_signal_restrictive", None, {"signals": geo_site["restrictive"]})
         if start is not None and start_data:
             if start_url.startswith("https://") and not start_data.get("hsts"):
                 add("hsts_missing", None, {})

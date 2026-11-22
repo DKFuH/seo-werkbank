@@ -97,6 +97,11 @@ the current implementation.
 
 ## GEO integrity checks
 
+- `noai`/`noimageai` are not part of a standard and the large AI providers do not document support for them; the check
+  reports the intent, not an effect.
+- The llms.txt draft uses page titles and meta descriptions as crawled and groups by the first path segment. It is a
+  starting point; sections and wording need editing before upload.
+
 - Hidden-instruction detection uses fixed English and German phrases; other wording or languages are not found, and a
   match is shown for human review, not judged as an attack.
 - The CDN bot-access test sends requests from this server with the crawlers' user agents. CDNs that verify crawlers by

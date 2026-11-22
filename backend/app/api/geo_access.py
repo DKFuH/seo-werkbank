@@ -13,9 +13,11 @@ from __future__ import annotations
 
 import asyncio
 import re
+from urllib.parse import urlsplit
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ..crawler.fetcher import Fetcher, FetchResult
@@ -93,3 +95,84 @@ async def bot_access(site_id: int, body: AccessIn, user: User = Depends(current_
                   "IP-Adressen prüfen, können echte Crawler anders behandeln. Eine Sperre hier ist ein starker Hinweis, "
                   "kein Beweis; „ok“ garantiert nicht, dass der echte Crawler durchkommt.",
     }
+
+
+# --------------------------------------------------------------------------- llms.txt draft from the last crawl
+_SKIP_SEGMENTS = {"tag", "tags", "category", "kategorie", "author", "autor", "page", "seite", "feed", "search", "suche",
+                  "wp-admin", "wp-content", "login", "cart", "warenkorb", "checkout", "kasse", "account", "konto"}
+_LEGAL = {"impressum", "datenschutz", "datenschutzerklaerung", "agb", "privacy", "imprint", "terms", "cookie", "cookies"}
+
+
+def _section(path: str) -> str | None:
+    """First path segment as section name; None for pages that do not belong in llms.txt."""
+    segments = [s for s in path.strip("/").split("/") if s]
+    if not segments:
+        return "Start"
+    first = segments[0].lower()
+    if first in _SKIP_SEGMENTS or any(s.isdigit() for s in segments):
+        return None
+    if first in _LEGAL:
+        return "Rechtliches"
+    return first.replace("-", " ").replace("_", " ").strip().capitalize() if len(segments) > 1 else "Wichtige Seiten"
+
+
+def build_llms_txt(name: str, summary: str | None, pages: list[dict], *, per_section: int = 15, max_sections: int = 10) -> dict:
+    """Markdown per llmstxt.org from crawled pages (url, title, meta_description, pagerank), best-linked first.
+
+    Only data the crawl actually found; pages without a title are skipped. A draft to edit, not to publish blindly.
+    """
+    sections: dict[str, list[dict]] = {}
+    for p in sorted(pages, key=lambda x: -(x.get("pagerank") or 0)):
+        parts = urlsplit(p["url"])
+        if parts.query or not (p.get("title") or "").strip():
+            continue
+        sec = _section(parts.path)
+        if sec is None or sec == "Start":
+            continue
+        bucket = sections.setdefault(sec, [])
+        if len(bucket) < per_section:
+            bucket.append(p)
+    topical = sorted((s for s in sections if s not in ("Wichtige Seiten", "Rechtliches")), key=lambda s: -len(sections[s]))
+    order = ["Wichtige Seiten", *topical][:max_sections]
+    if "Rechtliches" in sections:
+        order.append("Rechtliches")
+    lines = [f"# {name.strip()}", ""]
+    if summary and summary.strip():
+        lines += [f"> {' '.join(summary.split())}", ""]
+    count = 0
+    for sec in order:
+        if sec not in sections:
+            continue
+        lines.append(f"## {sec}")
+        for p in sections[sec]:
+            title = " ".join(p["title"].split()).replace("[", "(").replace("]", ")")
+            desc = " ".join((p.get("meta_description") or "").split())
+            lines.append(f"- [{title}]({p['url']})" + (f": {desc}" if desc else ""))
+            count += 1
+        lines.append("")
+    return {"text": "\n".join(lines).rstrip() + "\n", "pages": count, "sections": [s for s in order if s in sections],
+            "summary_missing": not (summary and summary.strip())}
+
+
+@router.get("/sites/{site_id}/geo/llms-txt-draft")
+def llms_txt_draft(site_id: int, download: bool = False, user: User = Depends(current_user), db: Session = Depends(get_db)):
+    from ..models import Page
+    from .deps import download as download_response
+    from .deps import latest_crawl
+
+    site = get_site_for(db, user, site_id)
+    crawl = latest_crawl(db, site.id)
+    if crawl is None:
+        raise HTTPException(422, "Zuerst einen Crawl abschließen")
+    rows = db.execute(select(Page.url, Page.title, Page.meta_description, Page.pagerank, Page.depth).where(
+        Page.crawl_id == crawl.id, Page.indexable.is_(True), Page.is_html.is_(True), Page.status_code == 200)
+        .order_by(Page.pagerank.desc()).limit(2000)).all()
+    pages = [{"url": u, "title": t, "meta_description": d, "pagerank": pr} for u, t, d, pr, _ in rows]
+    start = next((p for p in pages if urlsplit(p["url"]).path in ("", "/")), None)
+    result = build_llms_txt(site.name, start["meta_description"] if start else None, pages)
+    if download:
+        return download_response(result["text"].encode("utf-8"), "llms.txt", "text/markdown; charset=utf-8")
+    return {**result, "crawl_id": crawl.id,
+            "method": "Entwurf aus indexierbaren Seiten des letzten Crawls, gruppiert nach erstem Pfadabschnitt und sortiert "
+                      "nach interner Verlinkung. Titel und Beschreibungen stammen aus den Seiten. Vor dem Veröffentlichen "
+                      "kürzen und eine eigene Kurzbeschreibung prüfen."}
