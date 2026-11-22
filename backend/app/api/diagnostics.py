@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import asyncio
 import re
-from collections import Counter
 from urllib.parse import urlsplit
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -93,7 +92,7 @@ async def _render_scan(url: str, user_agent: str, choice: str) -> dict:
                     await page.wait_for_timeout(1200)
             rendered = await renderer._safe_content(page)
             parsed = parse_html(rendered.encode("utf8"), url) if rendered else None
-        except Exception as exc:  # noqa: BLE001 - render failure must not leak page text/query
+        except Exception:  # noqa: BLE001 - render failure must not leak page text/query
             parsed = None
             action = "scan_incomplete" if choice == "initial" else action
         finally:
