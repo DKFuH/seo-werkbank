@@ -24,6 +24,9 @@ Exporten und Fehlerbehebung.
 - **Erweiterte Audits** in den passenden Bereichen: SERP-Überschneidung (SERP-Analyse), Relaunch-Vergleich (Crawler),
   Paginierung (Interne Verlinkung) und Rich-Result-Potenzial (Strukturierte Daten) ([Anleitung](docs/ADVANCED_SEO.md)).
 
+- **Verzeichnisse & KI-Quellen:** Verzeichnisbewertung (Lokale Nachweise) und wiederkehrende KI-Zitate
+  (KI-Erwähnungen) ([Anleitung](docs/AUTHORITY_INTELLIGENCE.md)).
+
 ## Was gegenüber OpenSEOSuite dazugekommen ist
 
 - **Deutsche Oberfläche**: alle Seiten, die 95 Audit-Regeln, Hinweise und Fehlermeldungen; deutsche Zahlen- und

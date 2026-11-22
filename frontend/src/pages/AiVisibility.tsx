@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { Badge, Button, Card, Checkbox, EmptyState, ErrorBox, Field, Input, PageHeader, Select, Spinner, Textarea } from "../components/ui";
 import { api } from "../lib/api";
 import { useSite } from "../lib/context";
+import { AiSourceStabilityPanel } from "../components/AuthorityPanels";
 import { fmtDateTime } from "../lib/format";
 
 type Observation = { id: number; platform: string; model_name: string | null; prompt: string; brand_mentioned: boolean;
@@ -79,5 +80,6 @@ export default function AiVisibility() {
       {o.notes && <p className="mt-2 whitespace-pre-wrap text-sm text-slate-500">{o.notes}</p>}
     </Card>)}
     {remove.error && <ErrorBox error={remove.error} />}
+    {site && <AiSourceStabilityPanel siteId={site.id} />}
   </div>;
 }
