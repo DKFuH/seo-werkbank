@@ -19,6 +19,8 @@ Funktionen zusammenarbeiten** – einschließlich Admin-Einstellungen, Importen,
 Crawling, Keyword-Recherche, KI-Sichtbarkeit, Content-Freigabe, Matomo, Monitoring,
 Exporten und Fehlerbehebung.
 
+- **Browser- und Bilddiagnostik:** Consent-Request-Zeitfolgen, Roh-/JS-Rendering und Markup-Hinweise für mögliche LCP-Bilder ([Anleitung](docs/TECHNICAL_DIAGNOSTICS.md)).
+
 ## Was gegenüber OpenSEOSuite dazugekommen ist
 
 - **Deutsche Oberfläche**: alle Seiten, die 95 Audit-Regeln, Hinweise und Fehlermeldungen; deutsche Zahlen- und
