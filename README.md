@@ -43,6 +43,8 @@ SEO-Werkbank ist eine Weiterentwicklung von [OpenSEOSuite](https://github.com/Su
   Quellenprüfung für Vergleiche und QA-Checklisten für Linkable-Assets.
 - **SEO-Verlauf & GEO** (`/research-monitoring`): erfasste Ereignisse mit Positionshistorie,
   beobachtete SERP-Features, Indexierungs-Crawl-Abgleich und KI-Zitationsstichproben.
+- **Conversion & Trust** (`/conversion-trust`): dokumentierte Funnel-Stufen, Vertrauensbelege
+  und Markenpositionierungen im Abgleich mit dem Website-Crawl.
 - Deutsche Stoppwörter auch in SERP-Analyse und Content-Optimierung; deutsche Signalwörter für kommerzielle
   Suchintention.
 

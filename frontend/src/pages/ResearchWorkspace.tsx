@@ -4,12 +4,15 @@ import { Badge, Button, Card, EmptyState, ErrorBox, Field, Input, PageHeader, Se
 import { api } from "../lib/api";
 import { useSite } from "../lib/context";
 
-type Kind = "topic_map" | "paa_question" | "search_journey" | "content_evidence" | "cro_review" |
+type Kind = "funnel_step" | "trust_proof" | "brand_profile" | "topic_map" | "paa_question" | "search_journey" | "content_evidence" | "cro_review" |
   "comparison" | "asset_brief" | "indexing" | "serp_feature" | "update_event" | "geo_sample";
 type RecordItem = { id: number; kind: Kind; title: string; payload: Record<string, string | string[]>; notes: string; source: string };
 type Result = { items: RecordItem[]; categories: string[]; method: string };
 type Fields = { title: string; keys: string[]; helper: string };
 const categories: Record<Kind, Fields> = {
+  funnel_step: { title: "Conversion-Funnel-Schritt", keys: ["page_url", "stage", "action", "action_url", "friction", "form_fields", "evidence_url"], helper: "Stufe und Handlungsaufforderung dokumentieren; Formularfelder/Probleme manuell erfassen" },
+  trust_proof: { title: "Vertrauensnachweis", keys: ["page_url", "claim", "proof_type", "proof_url", "checked_at"], helper: "Eine konkrete belegbare Aussage statt automatischer Vertrauens-Scores" },
+  brand_profile: { title: "Markenpositionierung", keys: ["brand_name", "positioning", "offer", "audience", "tone", "evidence_url"], helper: "Leistungsversprechen, Zielgruppen und Quellen der eigenen Marke" },
   topic_map: { title: "Geschäftsbezogene Themenlandkarte", keys: ["offer", "attributes", "audience", "excluded_topics"], helper: "Attribute und Ausschlüsse mit Komma trennen" },
   paa_question: { title: "PAA-Fragenhierarchie", keys: ["topic", "question", "evidence_url"], helper: "Nur belegte Fragen erfassen; keine Live-PAA-Daten behaupten" },
   search_journey: { title: "Suchreise und Linkpfad", keys: ["source_url", "target_url", "stage", "intent"], helper: "Stage: awareness, consideration, decision oder conversion" },
@@ -61,7 +64,8 @@ export default function ResearchWorkspace() {
     <Input value={values[name] ?? ""} maxLength={3000} onChange={(e) => setValues((prev) => ({ ...prev, [name]: e.target.value }))}
       required={["offer", "attributes", "topic", "question", "source_url", "target_url", "stage", "page_url", "claim",
         "criterion", "result", "subject_a", "subject_b", "purpose", "audience", "format", "status",
-        "keyword", "provider", "features", "event_date", "event_type", "description", "platform", "prompt", "response"].includes(name)} />
+        "keyword", "provider", "features", "event_date", "event_type", "description", "platform", "prompt", "response",
+        "action", "brand_name", "positioning", "offer"].includes(name)} />
   </Field>;
   return <div className="space-y-4">
     <PageHeader title="SEO-Research-Workspace" description="Geschäftsbezogene Themen, echte Fragen, Inhaltsnachweise und Analysebeobachtungen mit sichtbarer Herkunft dokumentieren." />
