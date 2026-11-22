@@ -44,7 +44,23 @@ Dann **http://localhost:8000** öffnen und den ersten Administrator anlegen. Unt
 6. **Im eigenen CMS veröffentlichen**. Die Werkbank veröffentlicht nicht selbst.
 7. Vorgang anschließend als veröffentlicht markieren und nach ausreichender Zeit eine Folgemessung aufnehmen.
 
-## E. Mehr Funktionen nach Bedarf
+## E. Neue technische Prüfungen nach Bedarf
+
+Diese Funktionen sind bewusst **nicht** Teil des Pflicht-Schnellstarts. Sie nutzen einen vorhandenen Crawl oder erfordern eine ausdrückliche Diagnose.
+
+1. **Analyse → Tracking & Rendering:** Eigene Seiten-URL eintragen und **„Roh-HTML und JavaScript vergleichen“** wählen. Für den Browservergleich und den Consent-Test muss Playwright/Chromium **auf dem Backend** installiert sein; der normale Docker-Stack bringt Chromium nicht mit.
+2. **Consent:** Checkbox für die Berechtigung bestätigen. Optional die getrennten Akzeptieren-/Ablehnen-Szenarien auswählen und **„Consent-Diagnose ausdrücklich starten“** klicken. Ein protokollierter Fremdhost ist keine automatische Rechtsbewertung.
+3. **Bilder:** Auf derselben Seite Bildhinweise aus dem **letzten Crawl** ansehen. Ein frühes Lazy-Load-Bild ist nur ein möglicher LCP-Kandidat; echte LCP-/CLS-Werte stehen unter **Analyse → PageSpeed**.
+4. **Relaunch:** **Analyse → Crawler → Crawl anzeigen → Relaunch**. Zwei abgeschlossene Crawls vor/nach dem Relaunch auswählen, bei URL-Änderungen Zuordnungen `alt => neu` erfassen und **„Relaunch prüfen“** klicken.
+5. **Keyword-Overlap:** **Sichtbarkeit → SERP-Analyse → Zwei Keywords vergleichen**. Zwei Keywords und ggf. zwei manuelle URL-Listen eingeben. Gemeinsame URLs und Suchintention vergleichen.
+6. **Paginierung:** **Analyse → Interne Verlinkung → Paginierung**. Tiefe und eingehende Links kontrollieren.
+7. **Schema:** **Analyse → Strukturierte Daten → Rich-Result-Potenzial**. Gefundene JSON-LD-Typen und Validator-Hinweise prüfen.
+8. **Verzeichnisse:** **Content → SEO-Research → Verzeichnisqualität** dokumentieren; anschließend unter **Maßnahmen → Lokale Nachweise** vergleichen.
+9. **KI-Quellen:** Dieselbe tatsächliche Frage an mehreren Tagen unter **Sichtbarkeit → KI-Erwähnungen** erfassen; darunter **„Wiederkehrende KI-Quellen“** ansehen.
+
+**Ausführliche Klickanleitungen:** [Benutzerhandbuch, Kapitel 6.4, 7.4–7.7, 9.4, 10.4 und 13.5](BENUTZERHANDBUCH.md).
+
+## F. Mehr Funktionen nach Bedarf
 
 | Was willst du tun? | Wo? |
 |---|---|
@@ -60,13 +76,16 @@ Dann **http://localhost:8000** öffnen und den ersten Administrator anlegen. Unt
 | Regelmäßige Prüfungen anlegen | **Maßnahmen → Monitoring** |
 | PDFs, CSVs und Excel-Berichte holen | **Maßnahmen → Berichte** |
 
-## F. Typische Probleme
+## G. Typische Probleme
 
 - **Leeres Dashboard:** Meist fehlt der erste Crawl, ein GSC-Import oder die richtige Websiteauswahl.
 - **Kein SERP-Ergebnis:** Unter **System → Einstellungen → SERP-Anbieter** den Anbieter prüfen; SearXNG kann von Suchmaschinen blockiert werden.
 - **Keine Content-Refresh-Daten:** Query und URL fehlen als Paar im selben GSC-Datensatz.
 - **Kein Content-Entwurf:** Zuerst einen Content-Vorgang unter **SEO-Maßnahmen** erstellen.
 - **KI-Modell oder Matomo nicht verfügbar:** Instanzweite Konfiguration ist Administratoraufgabe.
+- **Tracking & Rendering ohne Browser:** Playwright/Chromium ist eine zusätzliche Installation; die reinen Bildhinweise benötigen nur einen abgeschlossenen Crawl.
+- **Keine Relaunch-Daten:** Zwei abgeschlossene Crawls derselben Website auswählen.
+- **Keine Verzeichnis-/KI-Quellenbewertung:** Zuerst Research-Einträge bzw. tatsächlich beobachtete KI-Zitationen dokumentieren.
 - **Keine Wirkung erkennbar:** Auf denselben Zeitraum, dieselbe Datenquelle und ausreichende Impressionen achten; Veränderungen beweisen keine Kausalität.
 
 Mehr Details, sämtliche Menüpunkte, Datengrenzen, Berechtigungen und Fehlerbehebung: **[Benutzerhandbuch](BENUTZERHANDBUCH.md)**. 
