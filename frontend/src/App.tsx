@@ -31,6 +31,7 @@ const RankTracking = lazy(() => import("./pages/RankTracking"));
 const ResearchWorkspace = lazy(() => import("./pages/ResearchWorkspace"));
 const ResearchQuality = lazy(() => import("./pages/ResearchQuality"));
 const ResearchMonitoring = lazy(() => import("./pages/ResearchMonitoring"));
+const ConversionTrust = lazy(() => import("./pages/ConversionTrust"));
 const WdfIdf = lazy(() => import("./pages/WdfIdf"));
 const Geo = lazy(() => import("./pages/Geo"));
 const Matomo = lazy(() => import("./pages/Matomo"));
@@ -76,6 +77,7 @@ export default function App() {
             <Route path="/research" element={<ResearchWorkspace />} />
             <Route path="/research-quality" element={<ResearchQuality />} />
             <Route path="/research-monitoring" element={<ResearchMonitoring />} />
+            <Route path="/conversion-trust" element={<ConversionTrust />} />
             <Route path="/wdf-idf" element={<WdfIdf />} />
             <Route path="/geo" element={<Geo />} />
             <Route path="/matomo" element={<Matomo />} />
