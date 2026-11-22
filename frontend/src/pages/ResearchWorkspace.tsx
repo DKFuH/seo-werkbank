@@ -4,12 +4,13 @@ import { Badge, Button, Card, EmptyState, ErrorBox, Field, Input, PageHeader, Se
 import { api } from "../lib/api";
 import { useSite } from "../lib/context";
 
-type Kind = "case_study" | "buyer_question" | "brand_claim" | "marketing_experiment" | "funnel_step" | "trust_proof" | "brand_profile" | "topic_map" | "paa_question" | "search_journey" | "content_evidence" | "cro_review" |
+type Kind = "directory_assessment" | "case_study" | "buyer_question" | "brand_claim" | "marketing_experiment" | "funnel_step" | "trust_proof" | "brand_profile" | "topic_map" | "paa_question" | "search_journey" | "content_evidence" | "cro_review" |
   "comparison" | "asset_brief" | "indexing" | "serp_feature" | "update_event" | "geo_sample";
 type RecordItem = { id: number; kind: Kind; title: string; payload: Record<string, string | string[]>; notes: string; source: string };
 type Result = { items: RecordItem[]; categories: string[]; method: string };
 type Fields = { title: string; keys: string[]; helper: string };
 const categories: Record<Kind, Fields> = {
+  directory_assessment: { title: "Verzeichnisqualität", keys: ["directory", "listing_url", "relevance", "editorial_value", "cost_eur", "referral_visits", "source_note"], helper: "Relevanz und redaktionellen Nutzwert als eigene Einschätzung 0–3 bewerten. Tatsächliche Kosten/Besuche nur mit Beleg eingeben." },
   case_study: { title: "Fallstudie mit Belegen", keys: ["project", "challenge", "approach", "outcome", "target_url", "evidence_url", "evidence_note"], helper: "Nur belegte eigene Projektdaten; veröffentlichte Aussagen gesondert prüfen" },
   buyer_question: { title: "Echte Kundenfrage", keys: ["question", "context", "audience", "source_note", "suggested_url"], helper: "Frage anonymisieren, keine personenbezogenen Kundendaten eingeben" },
   brand_claim: { title: "Externe Markenaussage", keys: ["subject", "claim", "source_url", "expected_statement", "checked_at"], helper: "Nur tatsächliche Quellen dokumentieren; URL nicht als Beweis der Wahrheit verstehen" },
@@ -70,7 +71,8 @@ export default function ResearchWorkspace() {
         "criterion", "result", "subject_a", "subject_b", "purpose", "audience", "format", "status",
         "keyword", "provider", "features", "event_date", "event_type", "description", "platform", "prompt", "response",
         "action", "brand_name", "positioning", "offer", "project", "challenge", "approach", "outcome",
-        "context", "audience", "subject", "source_url", "hypothesis", "metric", "unit", "start_date"].includes(name)} />
+        "context", "audience", "subject", "source_url", "hypothesis", "metric", "unit", "start_date",
+        "directory", "listing_url", "relevance", "editorial_value"].includes(name)} />
   </Field>;
   return <div className="space-y-4">
     <PageHeader title="SEO-Research-Workspace" description="Geschäftsbezogene Themen, echte Fragen, Inhaltsnachweise und Analysebeobachtungen mit sichtbarer Herkunft dokumentieren." />

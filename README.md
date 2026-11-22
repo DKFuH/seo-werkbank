@@ -23,6 +23,8 @@ Exporten und Fehlerbehebung.
 
 - **Erweiterte Audits:** Keyword-SERP-Overlap, Relaunch-Snapshots, Paginierung und strukturierte Daten ([Anleitung](docs/ADVANCED_SEO.md)).
 
+- **Authority Intelligence:** manuelle Verzeichnisqualität, Kosten und stabile KI-Zitationsbeobachtungen ([Anleitung](docs/AUTHORITY_INTELLIGENCE.md)).
+
 ## Was gegenüber OpenSEOSuite dazugekommen ist
 
 - **Deutsche Oberfläche**: alle Seiten, die 95 Audit-Regeln, Hinweise und Fehlermeldungen; deutsche Zahlen- und
