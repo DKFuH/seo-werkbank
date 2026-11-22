@@ -2,6 +2,7 @@
 sitemap consistency, image checks, scoring and summary statistics."""
 from __future__ import annotations
 
+import re
 from collections import Counter, defaultdict, deque
 from types import SimpleNamespace
 from urllib.parse import urlsplit
@@ -24,7 +25,7 @@ SITE_RULE_IDS = {r.id for r in RULES.values() if r.scope == "site"}
 POST_RULES = {  # rules produced by this module; cleared before re-analysis
     "redirect_loop", "redirect_chain", "redirect_broken", "link_to_redirect", "broken_internal_link",
     "broken_external_link", "broken_image", "img_large", "orphan_page", "deep_page", "single_inlink",
-    "title_duplicate", "description_duplicate", "h1_duplicate", "duplicate_content", "near_duplicate_content",
+    "title_duplicate", "description_duplicate", "h1_duplicate", "duplicate_content", "near_duplicate_content", "template_content",
     "canonical_broken", "canonical_chain", "hreflang_no_return", "hreflang_broken", "intl_duplicate",
     "sitemap_non_indexable", "not_in_sitemap",
 } | SITE_RULE_IDS
@@ -59,6 +60,42 @@ def pagerank(n: int, out_edges: list[set[int]], damping: float = 0.85, iteration
         if delta < 1e-9:
             break
     return [r * n for r in rank]
+
+
+TEMPLATE_SHARE = 0.5  # share of shared 5-word sequences from which two pages count as built from one template
+_WORDS = re.compile(r"[^\W_]+", re.UNICODE)
+
+
+def template_pairs(items: list[tuple[int, str]], threshold: float = TEMPLATE_SHARE, n: int = 5) -> dict[int, dict[int, float]]:
+    """Pages whose texts share most of their word sequences (Jaccard of 5-word shingles >= threshold).
+
+    Catches pages generated from one template with a few words swapped (city names, product names), which the
+    SimHash near-duplicate check misses once enough words differ. Sequences that occur on very many pages
+    (site-wide calls to action, contact boxes) are ignored so they do not link every page with every other one.
+    """
+    shingles: dict[int, set[int]] = {}
+    for pid, body in items:
+        words = _WORDS.findall((body or "").lower())
+        if len(words) >= n:
+            shingles[pid] = {hash(" ".join(words[i : i + n])) for i in range(len(words) - n + 1)}
+    index: dict[int, list[int]] = defaultdict(list)
+    for pid, sh in shingles.items():
+        for h in sh:
+            index[h].append(pid)
+    cap = max(25, len(shingles) // 10)
+    shared: dict[tuple[int, int], int] = defaultdict(int)
+    for members in index.values():
+        if 1 < len(members) <= cap:
+            members = sorted(members)
+            for i, a in enumerate(members):
+                for b in members[i + 1 :]:
+                    shared[(a, b)] += 1
+    out: dict[int, dict[int, float]] = defaultdict(dict)
+    for (a, b), inter in shared.items():
+        share = inter / (len(shingles[a]) + len(shingles[b]) - inter)
+        if share >= threshold:
+            out[a][b] = out[b][a] = round(share, 2)
+    return out
 
 
 def near_duplicate_pairs(items: list[tuple[int, str]]) -> dict[int, set[int]]:
@@ -266,6 +303,20 @@ def analyse_crawl(crawl_id: int, *, sitemap: SitemapReport | None = None, site_c
                 near_count += 1
                 add("near_duplicate_content", p, {"other_urls": others[:10]})
         dup_groups["near_duplicate_pages"] = near_count
+        long_pages = {p.id for p in indexable if (p.word_count or 0) >= 150}
+        if len(long_pages) > 1:
+            texts = list(db.execute(select(Page.id, Page.text).where(Page.crawl_id == crawl_id, Page.id.in_(long_pages))))
+            flagged_near = {pid for pid in near}
+            template_count = 0
+            for pid, others in template_pairs(texts).items():
+                p = by_id[pid]
+                others = {o: v for o, v in others.items() if by_id[o].content_hash != p.content_hash
+                          and not (pid in flagged_near and o in near.get(pid, set()))}
+                if others:
+                    template_count += 1
+                    add("template_content", p, {"other_urls": [{"url": by_id[o].url, "shared": v}
+                                                               for o, v in sorted(others.items(), key=lambda x: -x[1])][:10]})
+            dup_groups["template_pages"] = template_count
 
         # ---------------------------------------------------------------- canonicals
         for p in pages:

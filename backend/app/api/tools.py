@@ -18,6 +18,7 @@ from ..content.wdf_idf import analyse_wdf_idf
 from ..crawler.fetcher import Fetcher
 from ..crawler.parser import parse_html
 from ..db import get_db
+from ..integrations import gsc
 from ..integrations import pagespeed as psi
 from ..integrations.gsc import parse_number
 from ..keywords import research
@@ -193,8 +194,18 @@ def keyword_mapping(site_id: int, user: User = Depends(current_user), db: Sessio
     pages = [{"url": u, "title": t, "h1": h, "meta_description": d, "text": (x or "")[:6000]} for u, t, h, d, x in db.execute(
         select(Page.url, Page.title, Page.h1, Page.meta_description, Page.text).where(Page.crawl_id == crawl.id, Page.indexable.is_(True)).order_by(Page.pagerank.desc()).limit(1500))]
     items = research.map_keywords(keywords, pages)
-    return {"items": items, "crawl_id": crawl.id, "pages_considered": len(pages),
-            "summary": {s: sum(1 for i in items if i["status"] == s) for s in ("mapped", "cannibalisation risk", "no matching page")}}
+    # Compare the intended page (best on-page match) with the page Google actually shows for the query.
+    ranking = gsc.ranking_pages(db, site.id, keywords)
+    for item in items:
+        r = ranking.get(" ".join(item["keyword"].lower().split()))
+        item["gsc"] = r
+        intended = (item.get("best_page") or {}).get("url")
+        item["target_mismatch"] = bool(r and intended and not gsc.same_page(r["top"]["url"], intended))
+    summary = {s: sum(1 for i in items if i["status"] == s) for s in ("mapped", "cannibalisation risk", "no matching page")}
+    summary["target mismatch"] = sum(1 for i in items if i["target_mismatch"])
+    return {"items": items, "crawl_id": crawl.id, "pages_considered": len(pages), "summary": summary,
+            "gsc_available": bool(ranking),
+            "gsc_note": None if ranking else "Für den Abgleich mit Google braucht es Search-Console-Zeilen mit Suchanfrage und Seite (API-Synchronisierung)."}
 
 
 @router.get("/sites/{site_id}/keywords/export")

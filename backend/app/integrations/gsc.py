@@ -7,7 +7,7 @@ import secrets
 import time
 from collections import defaultdict
 from datetime import date, datetime, timedelta
-from urllib.parse import quote, urlencode
+from urllib.parse import quote, urlencode, urlsplit
 
 import httpx
 from fastapi import HTTPException
@@ -405,3 +405,41 @@ def insights(db: Session, site_id: int, days: int = 28) -> dict:
             cannibal.append({"query": q, "impressions": total, "pages": sorted(strong, key=lambda p: -p["impressions"])})
     result["cannibalisation"] = sorted(cannibal, key=lambda c: -c["impressions"])[:100]
     return result
+
+
+# --------------------------------------------------------------------------- ranking page per query
+def _norm_page(url: str | None) -> str:
+    p = urlsplit((url or "").strip())
+    host = (p.hostname or "").lower().removeprefix("www.")
+    return f"{host}{p.path.rstrip('/') or '/'}"
+
+
+def ranking_pages(db: Session, site_id: int, queries: list[str], days: int = 90) -> dict[str, dict]:
+    """For each query: the page with the most impressions in Search Console, plus all pages that received
+    impressions. Needs rows that combine query and page (API sync or a query+page export)."""
+    wanted = {" ".join(q.lower().split()) for q in queries if q.strip()}
+    if not wanted:
+        return {}
+    cond = [GscRow.site_id == site_id, GscRow.dataset == "query_page", GscRow.query.isnot(None), GscRow.page.isnot(None)]
+    latest = db.scalar(select(func.max(GscRow.day)).where(*cond))
+    if latest is not None:
+        cond.append(GscRow.day >= latest - timedelta(days=days))
+    rows = db.execute(
+        select(func.lower(GscRow.query), GscRow.page, func.sum(GscRow.clicks), func.sum(GscRow.impressions),
+               func.sum(GscRow.position * GscRow.impressions) / func.nullif(func.sum(GscRow.impressions), 0))
+        .where(*cond, func.lower(GscRow.query).in_(wanted))
+        .group_by(func.lower(GscRow.query), GscRow.page)).all()
+    out: dict[str, dict] = {}
+    for q, page, clicks, imps, pos in rows:
+        entry = out.setdefault(" ".join((q or "").split()), {"pages": []})
+        entry["pages"].append({"url": page, "clicks": round(clicks or 0), "impressions": round(imps or 0),
+                               "position": round(pos, 1) if pos is not None else None})
+    for entry in out.values():
+        entry["pages"].sort(key=lambda p: (-p["impressions"], -p["clicks"]))
+        entry["top"] = entry["pages"][0]
+        entry["pages"] = entry["pages"][:5]
+    return out
+
+
+def same_page(a: str | None, b: str | None) -> bool:
+    return bool(a and b) and _norm_page(a) == _norm_page(b)
