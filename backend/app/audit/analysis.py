@@ -368,6 +368,13 @@ def analyse_crawl(crawl_id: int, *, sitemap: SitemapReport | None = None, site_c
         var = site_checks.get("host_variant")
         if var and var.get("status") == 200 and var.get("final_host") == var.get("host"):
             add("host_variants", None, var)
+        geo_site = site_checks.get("geo") or {}
+        if geo_site.get("blocked_search"):
+            add("geo_ai_search_blocked", None, {"crawlers": geo_site["blocked_search"]})
+        if geo_site.get("blocked_user"):
+            add("geo_ai_user_blocked", None, {"crawlers": geo_site["blocked_user"]})
+        if geo_site and not geo_site.get("llms_ok"):
+            add("geo_llms_missing", None, {"status": geo_site.get("llms_status")})
         if start is not None and start_data:
             if start_url.startswith("https://") and not start_data.get("hsts"):
                 add("hsts_missing", None, {})

@@ -68,7 +68,7 @@ export const LABELS: Record<string, string> = {
   availability: "Erreichbarkeit", performance: "Performance", redirects: "Weiterleitungen", links: "Links", images: "Bilder",
   architecture: "Seitenarchitektur", indexability: "Indexierbarkeit", content: "Inhalt", international: "International",
   url: "URL-Struktur", security: "Sicherheit", mobile: "Mobil", html: "HTML", social: "Social Media",
-  structured_data: "Strukturierte Daten", sitemap: "Sitemap",
+  structured_data: "Strukturierte Daten", sitemap: "Sitemap", geo: "GEO / KI-Suche",
   informational: "informational", commercial: "kommerziell", transactional: "transaktional", navigational: "navigational", local: "lokal",
   queued: "in Warteschlange", running: "läuft", completed: "abgeschlossen", failed: "fehlgeschlagen", cancelled: "abgebrochen",
   pending: "ausstehend", ok: "ok", error: "Fehler", warning: "Warnung", info: "Info",

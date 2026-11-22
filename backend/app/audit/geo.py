@@ -232,3 +232,67 @@ def analyse_geo(page_url: str, html: bytes, parsed, *, robots_text: str = "", ro
         "notes": ["Checkliste nach veröffentlichten Empfehlungen; kein KI-Anbieter dokumentiert diese Punkte als Rankingfaktoren.",
                   "Gemessen am ausgelieferten HTML ohne JavaScript, wie die meisten KI-Crawler es sehen."],
     }
+
+
+# --------------------------------------------------------------------------- crawl integration
+# The same signals as the standalone GEO check, as audit findings for every crawled page. Thresholds are
+# conservative so short service pages are not flagged for missing lists or sources.
+_ARTICLE_TYPES = {"Article", "BlogPosting", "NewsArticle", "TechArticle", "Report"}
+_ENTITY_TYPES = {"Organization", "LocalBusiness", "HomeAndConstructionBusiness", "Corporation", "ProfessionalService",
+                 "Store", "Restaurant", "Person"}
+USER_FETCHERS = {"ChatGPT-User", "Claude-User", "Perplexity-User"}
+
+
+def page_findings(url: str, html: bytes, parsed, *, is_start: bool = False, now: datetime | None = None) -> list[tuple[str, dict]]:
+    """GEO findings for one indexable HTML page of a crawl."""
+    now = now or datetime.now(UTC)
+    out: list[tuple[str, dict]] = []
+    words = parsed.word_count
+    nodes = _nodes(parsed.jsonld)
+    types = set(all_types(parsed.jsonld))
+    tree = _main_tree(html)
+    paragraphs: list[str] = []
+    lists = tables = 0
+    if tree is not None:
+        paragraphs = [re.sub(r"\s+", " ", p.text_content()).strip() for p in tree.iter("p")]
+        paragraphs = [p for p in paragraphs if len(p.split()) >= 8]
+        lists = len(tree.xpath(".//ul[count(li)>=2]|.//ol[count(li)>=2]"))
+        tables = len(tree.xpath(".//table"))
+    host = urlsplit(url).hostname or ""
+    ext_hosts = {urlsplit(lk["url"]).hostname for lk in parsed.links
+                 if (urlsplit(lk["url"]).hostname or "") not in ("", host) and not (urlsplit(lk["url"]).hostname or "").endswith("." + host)}
+    q_heads = sum(1 for h in (parsed.headings or []) if h["level"] in (2, 3) and h["text"].strip().endswith("?"))
+    long_form = words >= 600
+
+    if words >= 300 and paragraphs and not 20 <= len(paragraphs[0].split()) <= 90:
+        out.append(("geo_no_answer_first", {"first_paragraph_words": len(paragraphs[0].split())}))
+    if long_form and q_heads == 0:
+        out.append(("geo_no_question_headings", {"words": words}))
+    if long_form and lists + tables == 0:
+        out.append(("geo_no_lists_tables", {"words": words}))
+    if words >= 800 and not ext_hosts:
+        out.append(("geo_no_sources", {"words": words}))
+    long_paras = [len(p.split()) for p in paragraphs if len(p.split()) > 120]
+    if long_paras:
+        out.append(("geo_long_paragraphs", {"paragraphs_over_120_words": len(long_paras), "longest": max(long_paras)}))
+    articles = [n for n in nodes if _types(n) & _ARTICLE_TYPES]
+    if articles:
+        dates = [d for d in (_parse_date(str(n.get(k))) for n in articles for k in ("dateModified", "datePublished") if n.get(k)) if d]
+        if not dates:
+            out.append(("geo_no_date", {}))
+        elif (now - max(dates)).days > 548:
+            out.append(("geo_stale", {"last_modified": max(dates).date().isoformat(), "days": (now - max(dates)).days}))
+        if not any(n.get("author") for n in articles):
+            out.append(("geo_no_author", {}))
+    if is_start and not (types & _ENTITY_TYPES):
+        out.append(("geo_entity_missing", {"schema_types": sorted(types)[:20]}))
+    return out
+
+
+def site_findings(robots: RobotsRules | None, start_url: str, llms_status: int | None, llms_text: str) -> dict:
+    """Site-level GEO facts stored with the crawl's site checks."""
+    blocked = [ua for ua, _, _ in AI_CRAWLERS if robots is not None and not robots.allowed(start_url, ua)]
+    return {"blocked_search": [ua for ua in blocked if ua in SEARCH_CRITICAL],
+            "blocked_user": [ua for ua in blocked if ua in USER_FETCHERS],
+            "blocked_other": [ua for ua in blocked if ua not in SEARCH_CRITICAL and ua not in USER_FETCHERS],
+            "llms_status": llms_status, "llms_ok": llms_status == 200 and llms_text.lstrip().startswith("#")}

@@ -148,3 +148,33 @@ def test_content_analyze_includes_wdf_idf(client, auth, fixture_site):
     w = r.json()["wdf_idf"]
     assert w["documents"][0]["is_own"] is True and w["terms"] and "status" in w["terms"][0]
     assert all(t["term"] not in ("der", "und", "die") for t in w["terms"])
+
+
+# ------------------------------------------------------------------ GEO inside the regular crawl
+def test_geo_page_findings_thresholds():
+    from app.audit.geo import page_findings
+    short = parse_html(b"<html><body><main><h1>X</h1><p>Kurzer Text ohne viel Inhalt hier.</p></main></body></html>", "https://x.example/a", "text/html")
+    assert page_findings("https://x.example/a", b"<html><body><main><h1>X</h1><p>Kurzer Text</p></main></body></html>", short) == []
+    long_text = " ".join(["Wort"] * 140)
+    html = (f"<html><head><script type='application/ld+json'>{{\"@type\":\"Article\",\"headline\":\"A\"}}</script></head>"
+            f"<body><main><h1>A</h1><p>{long_text}</p>" + "".join(f"<h2>Abschnitt {i}</h2><p>{long_text}</p>" for i in range(5))
+            + "</main></body></html>").encode()
+    p = parse_html(html, "https://x.example/b", "text/html")
+    ids = {f[0] for f in page_findings("https://x.example/b", html, p, is_start=True)}
+    assert {"geo_no_answer_first", "geo_no_question_headings", "geo_no_lists_tables", "geo_no_sources",
+            "geo_long_paragraphs", "geo_no_date", "geo_no_author", "geo_entity_missing"} <= ids
+
+
+def test_geo_site_findings():
+    from app.audit.geo import site_findings
+    from app.crawler.robots import RobotsRules
+    rules = RobotsRules("User-agent: OAI-SearchBot\nDisallow: /\n\nUser-agent: ChatGPT-User\nDisallow: /\n", 200)
+    s = site_findings(rules, "https://x.example/", 404, "")
+    assert s["blocked_search"] == ["OAI-SearchBot"] and s["blocked_user"] == ["ChatGPT-User"] and s["llms_ok"] is False
+    assert site_findings(None, "https://x.example/", 200, "# Titel\n")["llms_ok"] is True
+
+
+def test_crawl_reports_geo_rules(client, auth, crawled):
+    summary = client.get(f"/api/crawls/{crawled['crawl_id']}/issues", headers=auth).json()
+    rules = {g.get("rule_id") or g.get("id") for g in summary.get("groups", summary.get("items", []))}
+    assert "geo_llms_missing" in rules  # the fixture site has no /llms.txt

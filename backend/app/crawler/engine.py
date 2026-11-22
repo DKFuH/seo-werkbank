@@ -9,6 +9,7 @@ from urllib.parse import urlsplit
 from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import insert, select, update
 
+from ..audit import geo
 from ..audit.page_checks import check_page, check_url, indexability, robots_directives
 from ..audit.rules import RULES
 from ..config import get_settings
@@ -224,6 +225,8 @@ class Crawler:
                        content_hash=parsed.content_hash, simhash=parsed.simhash, text=parsed.text, data=data)
             findings.extend(check_page(url, parsed, status=res.status, headers=res.headers, size=len(res.body),
                                        elapsed_ms=res.elapsed_ms, indexable=ok, directives=directives))
+            if ok:
+                findings.extend(geo.page_findings(url, body, parsed, is_start=url == self.start_url))
             page_nofollow = "nofollow" in directives
             internal = external = 0
             seen_targets: set[tuple[str, str]] = set()
@@ -313,6 +316,9 @@ class Crawler:
             res = await self.fetcher.fetch_following(f"{p.scheme}://{variant}/", "GET", max_body=4096)
             final_host = urlsplit(res.final_url or "").hostname
             checks["host_variant"] = {"host": variant, "status": res.status, "final_host": final_host, "error": res.error}
+        llms = await self.fetcher.fetch_following(f"{p.scheme}://{p.netloc}/llms.txt", max_body=256 * 1024)
+        llms_text = llms.body.decode("utf-8", "replace")[:4000] if llms.status == 200 else ""
+        checks["geo"] = geo.site_findings(rules, self.start_url, llms.status, llms_text)
         self.site_checks = checks
 
     async def _check_targets(self, urls: list[str], image: bool = False) -> dict[str, dict]:
