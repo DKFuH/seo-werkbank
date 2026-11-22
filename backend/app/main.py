@@ -21,6 +21,7 @@ from .api import (
     competitor_radar,
     content_proposals,
     content_refresh,
+    content_studio,
     conversion_trust,
     crawls,
     evidence,
@@ -143,7 +144,7 @@ def create_app() -> FastAPI:
     async def job_limit(_request: Request, exc: JobLimitError):
         return JSONResponse({"detail": str(exc)}, status_code=429, headers={"Retry-After": "30"})
 
-    for r in (auth.router, sites.router, crawls.router, tools.router, integrations.router, content_refresh.router, workflow.router, ai_visibility.router, competitor_radar.router, evidence.router, content_proposals.router, rank_tracking.router, research.router, research_quality.router, research_monitoring.router, research_index_geo.router, conversion_trust.router, ai_recommendations.router):
+    for r in (auth.router, sites.router, crawls.router, tools.router, integrations.router, content_refresh.router, workflow.router, ai_visibility.router, competitor_radar.router, evidence.router, content_proposals.router, rank_tracking.router, research.router, research_quality.router, research_monitoring.router, research_index_geo.router, conversion_trust.router, ai_recommendations.router, content_studio.router):
         app.include_router(r, prefix="/api")
 
     @app.get("/api/health", tags=["system"])
