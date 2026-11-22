@@ -326,3 +326,19 @@ class AiVisibilityObservation(Base):
     observed_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
     __table_args__ = (Index("ix_ai_visibility_site_platform_date", "site_id", "platform", "observed_at"),)
+
+
+class SeoContentProposal(Base):
+    """Reviewable user-authored content revision, never automatically published."""
+
+    __tablename__ = "seo_content_proposals"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    work_item_id: Mapped[int] = mapped_column(ForeignKey("seo_work_items.id", ondelete="CASCADE"), unique=True, index=True)
+    original_text: Mapped[str] = mapped_column(Text, default="")
+    proposed_text: Mapped[str] = mapped_column(Text)
+    rationale: Mapped[str] = mapped_column(Text, default="")
+    status: Mapped[str] = mapped_column(String(20), default="draft")
+    approved_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    marked_published_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, onupdate=utcnow)

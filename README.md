@@ -33,6 +33,8 @@ SEO-Werkbank ist eine Weiterentwicklung von [OpenSEOSuite](https://github.com/Su
   Wettbewerber-Crawls mit belegbaren Quellseiten; keine erfundenen Rankings oder Volumina.
 - **Lokales SEO & Nachweise** (`/seo-evidence`): Aktionsplan aus importierten NAP-Daten,
   manuell erfassten Bewertungsanfragen und Abgleich von Publikationen mit Backlink-Datensätzen.
+- **Content-Entwürfe** (`/content-proposals`): gespeicherter Ausgangstext und Entwurf,
+  Diff, gesonderte Freigabe sowie rein manuelle Dokumentation einer Veröffentlichung.
 - Deutsche Stoppwörter auch in SERP-Analyse und Content-Optimierung; deutsche Signalwörter für kommerzielle
   Suchintention.
 

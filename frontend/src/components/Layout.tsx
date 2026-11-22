@@ -36,6 +36,7 @@ export const NAV: { section: string; items: { to: string; label: string; icon: R
     { to: "/ai-visibility", label: "KI-Erwähnungen", icon: <Bot className="h-4 w-4" /> },
     { to: "/competitor-radar", label: "Themenradar", icon: <Swords className="h-4 w-4" /> },
     { to: "/seo-evidence", label: "Lokale SEO-Nachweise", icon: <MapPin className="h-4 w-4" /> },
+    { to: "/content-proposals", label: "Content-Entwürfe", icon: <PenLine className="h-4 w-4" /> },
     { to: "/wdf-idf", label: "WDF*IDF", icon: <Sigma className="h-4 w-4" /> },
     { to: "/geo", label: "GEO-Check", icon: <Bot className="h-4 w-4" /> },
     { to: "/competitors", label: "Wettbewerber", icon: <Swords className="h-4 w-4" /> },
