@@ -85,7 +85,8 @@ def parse_lighthouse(lhr: dict, loading_experience: dict | None = None) -> dict:
         if aid in LAB_METRICS or aid in ("metrics", "final-screenshot"):
             continue
         items = []
-        for it in (details.get("items") or [])[:8]:
+        detail_items = details.get("items")
+        for it in (detail_items[:8] if isinstance(detail_items, list) else []):
             if isinstance(it, dict):
                 label = it.get("url") or (it.get("node") or {}).get("snippet") or it.get("entity") or it.get("label")
                 if isinstance(label, str):
