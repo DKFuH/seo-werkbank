@@ -24,6 +24,7 @@ const ContentRefresh = lazy(() => import("./pages/ContentRefresh"));
 const OpportunityValue = lazy(() => import("./pages/OpportunityValue"));
 const SeoWork = lazy(() => import("./pages/SeoWork"));
 const AiVisibility = lazy(() => import("./pages/AiVisibility"));
+const CompetitorRadar = lazy(() => import("./pages/CompetitorRadar"));
 const WdfIdf = lazy(() => import("./pages/WdfIdf"));
 const Geo = lazy(() => import("./pages/Geo"));
 const Matomo = lazy(() => import("./pages/Matomo"));
@@ -62,6 +63,7 @@ export default function App() {
             <Route path="/opportunity-value" element={<OpportunityValue />} />
             <Route path="/seo-work" element={<SeoWork />} />
             <Route path="/ai-visibility" element={<AiVisibility />} />
+            <Route path="/competitor-radar" element={<CompetitorRadar />} />
             <Route path="/wdf-idf" element={<WdfIdf />} />
             <Route path="/geo" element={<Geo />} />
             <Route path="/matomo" element={<Matomo />} />
