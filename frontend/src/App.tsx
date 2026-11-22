@@ -11,6 +11,7 @@ const Audit = lazy(() => import("./pages/Audit"));
 const IssueDetail = lazy(() => import("./pages/IssueDetail"));
 const PageDetail = lazy(() => import("./pages/PageDetail"));
 const Crawler = lazy(() => import("./pages/Crawler"));
+const Diagnostics = lazy(() => import("./pages/Diagnostics"));
 const InternalLinks = lazy(() => import("./pages/InternalLinks"));
 const Sitemaps = lazy(() => import("./pages/Sitemaps"));
 const Schema = lazy(() => import("./pages/Schema"));
@@ -59,6 +60,7 @@ export default function App() {
             <Route path="/audit/issues/:ruleId" element={<IssueDetail />} />
             <Route path="/pages/:crawlId/:pageId" element={<PageDetail />} />
             <Route path="/crawler" element={<Crawler />} />
+            <Route path="/diagnostics" element={<Diagnostics />} />
             <Route path="/internal-links" element={<InternalLinks />} />
             <Route path="/sitemaps" element={<Sitemaps />} />
             <Route path="/schema" element={<Schema />} />
