@@ -24,6 +24,13 @@ SEO-Werkbank ist eine Weiterentwicklung von [OpenSEOSuite](https://github.com/Su
 - Deutsche Stoppwörter auch in SERP-Analyse und Content-Optimierung; deutsche Signalwörter für kommerzielle
   Suchintention.
 
+## Lokaler MCP-Zugang (optional)
+
+Ein schreibgeschützter MCP-Server für Desktop-KI-Assistenten verbindet sich über einen
+lokal laufenden SEO-Werkbank-REST-Server und einen normalen Benutzerzugang.
+Keine freigegebenen Schreibwerkzeuge, kein öffentliches MCP-HTTP und keine Umgehung
+von Website-Berechtigungen. [Installation und Sicherheitsgrenzen](docs/MCP_SERVER.md).
+
 ## Schnellstart (Windows, ohne Docker)
 
 ```bash
