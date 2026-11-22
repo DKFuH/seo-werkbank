@@ -24,13 +24,6 @@ SEO-Werkbank ist eine Weiterentwicklung von [OpenSEOSuite](https://github.com/Su
 - Deutsche Stoppwörter auch in SERP-Analyse und Content-Optimierung; deutsche Signalwörter für kommerzielle
   Suchintention.
 
-## Datenanbieter-Schnittstelle (optional erweiterbar)
-
-Ein quellennachvollziehbares, lesendes Provider-Register macht vorhandene GSC-,
-Keyword-Import- und Backlink-Daten einheitlich abrufbar. Suchvolumen, Rankings
-oder Backlink-Indizes werden **nicht** ohne Datenquelle erfunden. Erweiterung und
-Schnittstellen: [Datenanbieter](docs/SEO_DATA_PROVIDERS.md).
-
 ## Schnellstart (Windows, ohne Docker)
 
 ```bash
@@ -48,6 +41,13 @@ Administratorkonto angelegt. Docker und PostgreSQL funktionieren wie in der
 
 Matomo: in Matomo unter *Persönlich → Sicherheit* einen Auth-Token mit Leserechten anlegen und unter
 *Einstellungen → Matomo* zusammen mit der Matomo-URL eintragen.
+
+## Datenanbieter-Schnittstelle (optional erweiterbar)
+
+Ein quellennachvollziehbares, lesendes Provider-Register macht vorhandene GSC-,
+Keyword-Import- und Backlink-Daten einheitlich abrufbar. Suchvolumen, Rankings
+oder Backlink-Indizes werden **nicht** ohne Datenquelle erfunden. Erweiterung und
+Schnittstellen: [Datenanbieter](docs/SEO_DATA_PROVIDERS.md).
 
 ## Tests
 
