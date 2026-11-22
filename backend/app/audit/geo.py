@@ -82,6 +82,13 @@ def _parse_date(value: str) -> datetime | None:
         return None
 
 
+def _faq_questions(tree) -> int:
+    """Questions in FAQ markup (details/summary, definition lists, H4) that are not H2/H3."""
+    if tree is None:
+        return 0
+    return sum(1 for el in tree.xpath(".//summary|.//dt|.//h4") if el.text_content().strip().endswith("?"))
+
+
 def _main_tree(html: bytes):
     try:
         doc = lxml.html.fromstring(html)
@@ -182,7 +189,8 @@ def analyse_geo(page_url: str, html: bytes, parsed, *, robots_text: str = "", ro
         lists = len(tree.xpath(".//ul[count(li)>=2]|.//ol[count(li)>=2]"))
         tables = len(tree.xpath(".//table"))
         if paragraphs:
-            first_answer_words = len(paragraphs[0].split())
+            answer = next((p for p in paragraphs[:3] if 20 <= len(p.split()) <= 90), paragraphs[0])
+            first_answer_words = len(answer.split())
     headings = parsed.headings or []
     h2plus = [h for h in headings if h["level"] in (2, 3)]
     questions_h = sum(1 for h in h2plus if h["text"].strip().endswith("?"))
@@ -190,13 +198,14 @@ def analyse_geo(page_url: str, html: bytes, parsed, *, robots_text: str = "", ro
     checks.append(_check("h1", "Struktur", "Genau eine H1", "pass" if len(h1) == 1 else "warn", f"{len(h1)} H1", "Eine H1, die das Thema klar benennt.", 3))
     checks.append(_check("answer_first", "Struktur", "Direkte Antwort am Anfang",
                          "pass" if first_answer_words and 20 <= first_answer_words <= 90 else "warn",
-                         f"erster Absatz: {first_answer_words} Wörter" if first_answer_words else "kein Absatz gefunden",
+                         f"Antwortabsatz: {first_answer_words} Wörter" if first_answer_words else "kein Absatz gefunden",
                          "Den ersten Absatz als eigenständige Antwort in 40–60 Wörtern formulieren; solche Passagen lassen sich leicht zitieren.", 8))
     checks.append(_check("subheadings", "Struktur", "Gliederung mit Zwischenüberschriften",
                          "pass" if len(h2plus) >= max(2, words // 450) else "warn",
                          f"{len(h2plus)} H2/H3 bei {words} Wörtern", "Abschnitte mit aussagekräftigen H2/H3 gliedern (etwa alle 300 Wörter).", 5))
-    checks.append(_check("question_headings", "Struktur", "Überschriften als Fragen", "pass" if questions_h >= 2 else "warn",
-                         f"{questions_h} Frage-Überschrift(en)", "Einige H2/H3 als echte Nutzerfragen formulieren, direkt darunter die Antwort.", 4))
+    faq_q = _faq_questions(tree)
+    checks.append(_check("question_headings", "Struktur", "Fragen als Überschrift oder FAQ", "pass" if questions_h + faq_q >= 2 else "warn",
+                         f"{questions_h} Frage-Überschrift(en), {faq_q} FAQ-Frage(n)", "Einige H2/H3 als echte Nutzerfragen formulieren, direkt darunter die Antwort.", 4))
     checks.append(_check("lists_tables", "Struktur", "Listen oder Tabellen", "pass" if lists + tables >= 1 else "warn",
                          f"{lists} Liste(n), {tables} Tabelle(n)", "Schritte, Vergleiche und Kennzahlen als Liste oder Tabelle aufbereiten.", 4))
     long_paras = sum(1 for p in paragraphs if len(p.split()) > 120)
@@ -264,9 +273,10 @@ def page_findings(url: str, html: bytes, parsed, *, is_start: bool = False, now:
     q_heads = sum(1 for h in (parsed.headings or []) if h["level"] in (2, 3) and h["text"].strip().endswith("?"))
     long_form = words >= 600
 
-    if words >= 300 and paragraphs and not 20 <= len(paragraphs[0].split()) <= 90:
-        out.append(("geo_no_answer_first", {"first_paragraph_words": len(paragraphs[0].split())}))
-    if long_form and q_heads == 0:
+    # A short teaser or eyebrow line often comes first; an answer paragraph among the first three counts.
+    if words >= 300 and paragraphs and not any(20 <= len(p.split()) <= 90 for p in paragraphs[:3]):
+        out.append(("geo_no_answer_first", {"first_paragraphs_words": [len(p.split()) for p in paragraphs[:3]]}))
+    if long_form and q_heads == 0 and "FAQPage" not in types and _faq_questions(tree) < 2:
         out.append(("geo_no_question_headings", {"words": words}))
     if long_form and lists + tables == 0:
         out.append(("geo_no_lists_tables", {"words": words}))

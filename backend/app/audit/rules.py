@@ -323,7 +323,7 @@ _R = [
      'Der erste Absatz ist zu kurz oder zu lang für eine eigenständige Antwort. Kompakte Antwortabsätze werden in KI-Antworten leichter zitiert.',
      'Den ersten Absatz als eigenständige Antwort in etwa 40–60 Wörtern formulieren.'),
     ('geo_no_question_headings', 'Längerer Text ohne Frage-Überschriften', 'low', 'geo',
-     'Der Text hat über 600 Wörter, aber keine H2/H3 in Frageform.',
+     'Der Text hat über 600 Wörter, aber weder H2/H3 in Frageform noch einen FAQ-Block.',
      'Einige Zwischenüberschriften als echte Nutzerfragen formulieren und direkt darunter beantworten.'),
     ('geo_no_lists_tables', 'Längerer Text ohne Listen oder Tabellen', 'low', 'geo',
      'Der Text hat über 600 Wörter, aber keine Liste und keine Tabelle.',
