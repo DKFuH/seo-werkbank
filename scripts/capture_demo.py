@@ -43,7 +43,9 @@ async def main() -> None:
             await page.locator('input[type="email"]').fill(EMAIL)
             await page.locator('input[type="password"]').fill(PASSWORD)
             await page.get_by_role("button", name="Anmelden").click()
-            await page.wait_for_url(BASE + "/**", timeout=20000)
+            await page.get_by_role("navigation", name="Hauptnavigation").wait_for(timeout=20000)
+            if await page.locator('input[type="password"]').count():
+                raise RuntimeError("Login did not complete; no demo images were saved.")
             for route, filename in SCREENS:
                 await page.goto(BASE + route, wait_until="networkidle")
                 await page.screenshot(path=str(OUT / (filename + ".png")), full_page=False)
