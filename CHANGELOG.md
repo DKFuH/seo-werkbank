@@ -5,6 +5,20 @@ uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased] - SEO-Werkbank
 
+### Added (GEO)
+- GEO check group **Integrität** and five crawl audit rules: `geo_snippet_limited` (nosnippet, max-snippet below 50,
+  data-nosnippet on half the text), `geo_hidden_instructions` (LLM instructions in comments, attributes or hidden
+  text, invisible control characters), `geo_schema_not_visible` (headline, product name, price or FAQ question only in
+  JSON-LD), `geo_date_inconsistent` (future dates, dateModified before datePublished, visible date over 30 days off),
+  `geo_brand_inconsistent` (start page: brand name missing from title/Open Graph or differing from og:site_name).
+- **CDN bot access** (`POST /sites/{id}/geo/bot-access`): requests a page of the own site with a browser and with
+  eleven AI crawler user agents and reports blocks, challenge pages and diverging responses. On demand only.
+- AI crawler list: Applebot (now a search crawler that must not be blocked), DuckAssistBot, Amazonbot.
+
+### Fixed (GEO)
+- GEO integrity checks decode HTML as UTF-8 before parsing; lxml otherwise reads pages without a charset declaration
+  as Latin-1.
+
 ### Changed
 - **Navigation** grouped by the question a user brings: Analyse, Sichtbarkeit, Content, Conversion, Maßnahmen (plus Übersicht and
   System). Groups collapse; the group of the open page is always expanded and highlighted, other open groups are remembered per

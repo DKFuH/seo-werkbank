@@ -226,7 +226,7 @@ class Crawler:
             findings.extend(check_page(url, parsed, status=res.status, headers=res.headers, size=len(res.body),
                                        elapsed_ms=res.elapsed_ms, indexable=ok, directives=directives))
             if ok:
-                findings.extend(geo.page_findings(url, body, parsed, is_start=url == self.start_url))
+                findings.extend(geo.page_findings(url, body, parsed, is_start=url == self.start_url, headers=res.headers))
             page_nofollow = "nofollow" in directives
             internal = external = 0
             seen_targets: set[tuple[str, str]] = set()

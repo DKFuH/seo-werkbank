@@ -95,6 +95,15 @@ the current implementation.
 - CTA and CRO hints are word matches in page text (for example "jetzt" or "book"); layout, forms and real conversions are not examined.
 - The new screens were tested through the API; they have not been clicked through one by one in a browser.
 
+## GEO integrity checks
+
+- Hidden-instruction detection uses fixed English and German phrases; other wording or languages are not found, and a
+  match is shown for human review, not judged as an attack.
+- The CDN bot-access test sends requests from this server with the crawlers' user agents. CDNs that verify crawlers by
+  IP address can treat the real crawler differently in both directions.
+- "Schema visible" compares text literally (case and whitespace ignored); values rendered only by JavaScript count as
+  not visible.
+
 ## Security and multi-user use
 
 - Integration secrets are stored unencrypted in the application database.

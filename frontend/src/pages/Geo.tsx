@@ -5,11 +5,53 @@ import {
   Badge, Button, Card, type Column, DataTable, EmptyState, ErrorBox, Field, Input, Notice, PageHeader, ScoreRing, Spinner, Stat,
 } from "../components/ui";
 import { api } from "../lib/api";
+import { useSite } from "../lib/context";
 import { fmtInt } from "../lib/format";
 
 const TONE: Record<string, string> = { pass: "green", warn: "amber", fail: "red", info: "gray" };
 const LABEL: Record<string, string> = { pass: "ok", warn: "prüfen", fail: "Problem", info: "Info" };
-const GROUPS = ["Zugang", "Entität", "Struktur", "Belege"];
+const GROUPS = ["Zugang", "Integrität", "Entität", "Struktur", "Belege"];
+
+const VERDICT: Record<string, [string, string]> = {
+  ok: ["green", "kommt durch"], blocked: ["red", "gesperrt"], challenge: ["red", "Prüfseite"],
+  different: ["amber", "abweichend"], error: ["gray", "Fehler"],
+};
+
+/** Requests the own site with a browser and with each AI crawler's user agent: does a CDN/WAF block the bots? */
+function BotAccessCard() {
+  const { site } = useSite();
+  const [url, setUrl] = useState("");
+  const run = useMutation({ mutationFn: () => api.post(`/sites/${site!.id}/geo/bot-access`, url.trim() ? { url: url.trim() } : {}) });
+  const d = run.data;
+  const columns: Column<any>[] = [
+    { key: "agent", header: "Crawler", render: (b) => <span className="font-medium">{b.agent}</span> },
+    { key: "op", header: "Anbieter", render: (b) => b.operator },
+    { key: "verdict", header: "Ergebnis", render: (b) => <Badge tone={VERDICT[b.verdict]?.[0] ?? "gray"}>{VERDICT[b.verdict]?.[1] ?? b.verdict}</Badge> },
+    { key: "reason", header: "Details", render: (b) => <span className="text-xs text-slate-500 dark:text-slate-400">{b.reason}</span> },
+  ];
+  if (!site) return null;
+  return (
+    <Card title="Sperrt das CDN KI-Crawler?" padded={false}
+      description="robots.txt kann alles erlauben, während Cloudflare oder eine Firewall die Bots trotzdem abweist. Ruft eine Seite der ausgewählten Website mit Browser- und mit Bot-Kennung ab (12 Anfragen).">
+      <div className="space-y-3 p-4">
+        <form onSubmit={(e) => { e.preventDefault(); run.mutate(); }} className="flex flex-col gap-3 sm:flex-row sm:items-end">
+          <Field label={`URL auf ${site.domain} (leer = Startseite)`} className="flex-1">
+            <Input type="url" maxLength={2048} value={url} onChange={(e) => setUrl(e.target.value)} placeholder={site.url} />
+          </Field>
+          <Button type="submit" loading={run.isPending}>Bot-Zugang prüfen</Button>
+        </form>
+        {run.error && <ErrorBox error={run.error} />}
+        {d && (
+          d.blocked.length
+            ? <Notice tone="warn">Abgewiesen: {d.blocked.join(", ")}. Browser bekommt HTTP {d.browser.status ?? "–"}.</Notice>
+            : <Notice tone="success">Kein KI-Crawler abgewiesen. Browser bekommt HTTP {d.browser.status ?? "–"}.</Notice>
+        )}
+      </div>
+      {d && <DataTable dense columns={columns} rows={d.items} rowKey={(b: any) => b.agent} />}
+      {d && <p className="px-4 py-3 text-xs text-slate-500 dark:text-slate-400">{d.method}</p>}
+    </Card>
+  );
+}
 
 export default function Geo() {
   const [url, setUrl] = useState("");
@@ -27,7 +69,7 @@ export default function Geo() {
   return (
     <div>
       <PageHeader title="GEO-Check"
-        description="Prüft, ob eine Seite von KI-Suchsystemen (ChatGPT, Claude, Perplexity, Gemini, Copilot) abgerufen, verstanden und zitiert werden kann: Crawler-Zugang, llms.txt, Entität, Antwortstruktur und Belege." />
+        description="Prüft, ob eine Seite von KI-Suchsystemen (ChatGPT, Claude, Perplexity, Gemini, Copilot) abgerufen, verstanden und zitiert werden kann: Crawler-Zugang, Integrität, Entität, Antwortstruktur und Belege." />
       <div className="space-y-4">
         <Card title="Seite prüfen">
           <form onSubmit={submit} className="flex flex-col gap-3 sm:flex-row sm:items-end">
@@ -37,6 +79,8 @@ export default function Geo() {
             <Button type="submit" variant="primary" icon={<Bot className="h-4 w-4" />} loading={run.isPending}>Prüfen</Button>
           </form>
         </Card>
+
+        <BotAccessCard />
 
         {run.isPending && <Card><Spinner label="Seite, robots.txt und llms.txt werden geladen…" /></Card>}
         {run.error && <ErrorBox error={run.error} onRetry={() => run.mutate()} />}

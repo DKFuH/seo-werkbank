@@ -518,7 +518,17 @@ Bei Bedarf kann ein freigegebener, noch nicht publizierter Entwurf zur weiteren 
 1. Öffentliche URL eingeben.
 2. **Prüfen**.
 3. Hinweise zu robots.txt, KI-Crawlern, llms.txt, strukturierten Daten, Autor-/Entitätsinformationen und Antwortstruktur betrachten.
+   Die Gruppe **Integrität** zeigt Snippet-Grenzen, mögliche versteckte Anweisungen an KI-Systeme, nicht sichtbare
+   strukturierte Daten, widersprüchliche Datumsangaben und einen uneinheitlichen Markennamen.
 4. Auffälligkeiten redaktionell/technisch prüfen und ggf. als Maßnahme dokumentieren.
+
+**Sperrt das CDN KI-Crawler?** Die Karte ruft eine Seite der ausgewählten Website einmal mit Browser- und dann mit der
+Kennung von elf KI-Crawlern ab (OAI-SearchBot, ClaudeBot, PerplexityBot, Googlebot, Applebot …). „gesperrt“ oder
+„Prüfseite“ heißt: Cloudflare oder eine Firewall weist diese Kennung ab, obwohl robots.txt sie vielleicht erlaubt.
+Die Anfragen kommen von diesem Server, nicht aus den Netzen der Anbieter. CDNs, die Crawler über ihre IP prüfen,
+behandeln echte Crawler unter Umständen anders. Das Ergebnis ist ein starker Hinweis, kein Beweis.
+
+Dieselben Integritätsprüfungen laufen bei jedem Crawl als Audit-Regeln mit (Kategorie GEO / KI-Suche).
 
 Die Erfüllung solcher Kriterien garantiert keine Aufnahme in KI-Antworten.
 
