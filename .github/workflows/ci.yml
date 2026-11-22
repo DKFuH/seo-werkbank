@@ -180,7 +180,7 @@ jobs:
   demo-capture:
     runs-on: ubuntu-latest
     env:
-      SEO_DATA_DIR: ${{ runner.temp }}/seo-werkbank-demo
+      SEO_DATA_DIR: "./demo-data" # job-level env cannot access runner.temp context
       SEO_SCHEDULER_ENABLED: "false"
       SEO_DEMO_URL: "http://127.0.0.1:8000"
       SEO_DEMO_EMAIL: "demo@example.org"
