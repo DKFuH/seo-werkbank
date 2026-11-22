@@ -342,3 +342,36 @@ class SeoContentProposal(Base):
     marked_published_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, onupdate=utcnow)
+
+
+class RankTarget(Base):
+    """An explicit keyword, search engine, locale and intended landing page."""
+
+    __tablename__ = "rank_targets"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    site_id: Mapped[int] = mapped_column(ForeignKey("sites.id", ondelete="CASCADE"), index=True)
+    keyword: Mapped[str] = mapped_column(String(500))
+    engine: Mapped[str] = mapped_column(String(24), default="google")
+    country: Mapped[str] = mapped_column(String(2), default="de")
+    language: Mapped[str] = mapped_column(String(2), default="de")
+    device: Mapped[str] = mapped_column(String(12), default="desktop")
+    location: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    landing_url: Mapped[str | None] = mapped_column(String(2048), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+    __table_args__ = (Index("ix_rank_targets_site_keyword", "site_id", "keyword"),)
+
+
+class RankObservation(Base):
+    """A provider-sourced or manually supplied observation, NOT a GSC average."""
+
+    __tablename__ = "rank_observations"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    target_id: Mapped[int] = mapped_column(ForeignKey("rank_targets.id", ondelete="CASCADE"), index=True)
+    observed_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+    provider: Mapped[str] = mapped_column(String(32))
+    position: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    result_url: Mapped[str | None] = mapped_column(String(2048), nullable=True)
+    search_depth: Mapped[int] = mapped_column(Integer, default=10)
+    serp_features: Mapped[list] = mapped_column(JSON, default=list)
+    notes: Mapped[str] = mapped_column(String(1000), default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
