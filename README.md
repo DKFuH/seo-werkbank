@@ -21,6 +21,8 @@ SEO-Werkbank ist eine Weiterentwicklung von [OpenSEOSuite](https://github.com/Su
   llms.txt, Entität und sameAs, Autor, Aktualität, Antwortstruktur, Listen, Zahlen und Quellen.
 - **Matomo** (`/matomo`): Besuche, Kanäle, Einstiegsseiten, Ziele und Geräte aus der Reporting-API, verknüpft
   mit dem letzten Crawl, inklusive indexierbarer Seiten ohne Besuch.
+- **Content-Refresh** (`/content-refresh`): GSC-Query-URL-Chancen, redaktionelle Prüfhinweise und kopierbare Briefings;
+  keine automatische Veröffentlichung. Details: [Content-Refresh](docs/CONTENT_REFRESH.md).
 - Deutsche Stoppwörter auch in SERP-Analyse und Content-Optimierung; deutsche Signalwörter für kommerzielle
   Suchintention.
 
