@@ -83,6 +83,20 @@ class RelaunchIn(BaseModel):
     mappings: list[Mapping] = Field(default_factory=list, max_length=300)
 
 
+def redirect_evidence(old_url: str, target_url: str, latest: dict[str, Page]) -> str:
+    """A target's 200 response cannot establish that its old URL redirects."""
+    if old_url == target_url:
+        return "not_required_same_url"
+    previous = latest.get(old_url)
+    if previous is None:
+        return "old_url_not_checked"
+    if previous.status_code not in (301, 308):
+        return "permanent_redirect_not_observed"
+    if (previous.redirect_to or "").rstrip("/") != target_url:
+        return "permanent_redirect_target_differs"
+    return "permanent_redirect_observed"
+
+
 def _snapshot(db: Session, site_id: int, crawl_id: int) -> Crawl:
     crawl = db.scalar(select(Crawl).where(Crawl.id == crawl_id, Crawl.site_id == site_id,
                                           Crawl.competitor_id.is_(None), Crawl.status == "completed"))
@@ -112,21 +126,23 @@ def relaunch(site_id: int, body: RelaunchIn, user: User = Depends(current_user),
         old_key = p.url.rstrip("/")
         target_key = mapped.get(old_key, old_key)
         target = newer.get(target_key)
+        redirect_status = redirect_evidence(old_key, target_key, newer)
         status = "target_absent_in_new_crawl"
         if target:
-            if target.redirect_to:
-                status = "redirect_observed"
-            elif target.status_code != 200:
+            if target.status_code != 200:
                 status = "non_200_target"
             elif not target.indexable:
                 status = "target_not_indexable"
             elif target.canonical and target.canonical.rstrip("/") != target_key:
                 status = "canonical_differs"
+            elif redirect_status not in ("not_required_same_url", "permanent_redirect_observed"):
+                status = "redirect_needs_verification"
             elif p.title and target.title and p.title != target.title:
                 status = "title_changed_review"
             else:
                 status = "observed_ok"
         rows.append({"old_url": p.url, "intended_new_url": target_key, "status": status,
+                     "redirect_evidence": redirect_status,
                      "target_http_status": target.status_code if target else None,
                      "target_canonical": target.canonical if target else None,
                      "target_indexable": target.indexable if target else None,
