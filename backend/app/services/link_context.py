@@ -22,6 +22,8 @@ def link_context(text: str, significant_terms: list[str]) -> dict | None:
         if len(paragraph) > 1000 or len(paragraph) < 20:
             continue
         words = [(m.group(), m.start(), m.end()) for m in _WORD.finditer(paragraph)]
+        if len(words) <= len(terms):
+            continue
         matches = [(word, start, end, stem(word.lower())) for word, start, end in words]
         matched = [m for m in matches if m[3] in terms]
         if len({m[3] for m in matched}) < len(terms):

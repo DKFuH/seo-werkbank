@@ -571,8 +571,8 @@ def contextual_link_opportunities(crawl_id: int, limit: int = Query(50, ge=1, le
     base = link_opportunities(crawl_id, limit=500, user=user, db=db)
     items = base["items"]
     urls = {s["source_url"] for s in items}
-    texts = dict(db.execute(select(Page.url, Page.text).where(
-        Page.crawl_id == crawl.id, Page.url.in_(urls)))) if urls else {}
+    texts = {url: body for url, body in db.execute(select(Page.url, Page.text).where(
+        Page.crawl_id == crawl.id, Page.url.in_(urls)))} if urls else {}
     candidates = []
     for item in items:
         context = link_context(texts.get(item["source_url"]) or "", item["matched_terms"])
