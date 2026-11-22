@@ -7,6 +7,7 @@ import {
   Badge, Button, Card, Checkbox, chartColors, type Column, DataTable, EmptyState, ErrorBox, ExportMenu, Field, Input, Modal, Notice,
   PageHeader, Pagination, ProgressBar, SearchInput, Select, Spinner, Stat, StatusCode, Tabs, Textarea, Url,
 } from "../components/ui";
+import { RelaunchPanel } from "../components/AdvancedSeoPanels";
 import { api } from "../lib/api";
 import { type CrawlSummary, useSite } from "../lib/context";
 import { fmtBytes, fmtDateTime, fmtInt, fmtMs, fmtNum, scoreColor, shortUrl, timeAgo, titleCase } from "../lib/format";
@@ -391,7 +392,7 @@ function StructureTab({ stats }: { stats: Record<string, any> }) {
 }
 
 /* ------------------------------------------------------------------ page */
-type TabId = "pages" | "links" | "redirects" | "duplicates" | "structure";
+type TabId = "pages" | "links" | "redirects" | "duplicates" | "structure" | "relaunch";
 
 export default function Crawler() {
   const { site, loading, refresh } = useSite();
@@ -559,11 +560,13 @@ export default function Crawler() {
               { id: "redirects", label: "Weiterleitungen", count: stats.redirects?.total ?? null },
               { id: "duplicates", label: "Duplikate" },
               { id: "structure", label: "Struktur" },
+              { id: "relaunch", label: "Relaunch" },
             ]} />
             {tab === "pages" && <PagesTab crawlId={inspectedId} base={site.url} />}
             {tab === "links" && <LinksTab crawlId={inspectedId} base={site.url} />}
             {tab === "redirects" && <RedirectsTab crawlId={inspectedId} base={site.url} />}
             {tab === "duplicates" && <DuplicatesTab crawlId={inspectedId} base={site.url} />}
+            {tab === "relaunch" && siteId !== null && <RelaunchPanel siteId={siteId} crawls={crawls} newestId={inspectedId} />}
             {tab === "structure" && (detail.isLoading ? <Card><Spinner /></Card> : detail.error ? <ErrorBox error={detail.error} onRetry={() => detail.refetch()} /> : <StructureTab stats={stats} />)}
           </section>
         )}

@@ -7,12 +7,13 @@ import {
   Badge, Button, Card, chartColors, type Column, DataTable, EmptyState, ErrorBox, Field, Input, NeedsCrawl, Notice, PageHeader,
   Pagination, SearchInput, Select, Spinner, Stat, Tabs, Textarea, Url,
 } from "../components/ui";
+import { SchemaPotentialPanel } from "../components/AdvancedSeoPanels";
 import { api } from "../lib/api";
 import { useSite } from "../lib/context";
 import { fmtInt, shortUrl, titleCase } from "../lib/format";
 
-type TabId = "overview" | "validator" | "generator";
-const TAB_IDS: TabId[] = ["overview", "validator", "generator"];
+type TabId = "overview" | "potential" | "validator" | "generator";
+const TAB_IDS: TabId[] = ["overview", "potential", "validator", "generator"];
 const tooltipStyle = { background: "#0f172a", border: "none", borderRadius: 8, color: "#f8fafc", fontSize: 12 } as const;
 const axisTick = { fontSize: 12, fill: "#94a3b8" } as const;
 
@@ -393,6 +394,7 @@ function Generator({ initialType }: { initialType: string | null }) {
 
 /* ------------------------------------------------------------------ page */
 export default function Schema() {
+  const { site } = useSite();
   const [params, setParams] = useSearchParams();
   const raw = params.get("tab") as TabId | null;
   const tab: TabId = raw && TAB_IDS.includes(raw) ? raw : "overview";
@@ -406,10 +408,12 @@ export default function Schema() {
       <PageHeader title="Strukturierte Daten" description="schema.org-Markup aus dem Crawl prüfen, beliebige Seiten oder Schnipsel validieren und JSON-LD aus Vorlagen erzeugen." />
       <Tabs<TabId> value={tab} onChange={(id) => go(id)} tabs={[
         { id: "overview", label: "Website-Überblick" },
+        { id: "potential", label: "Rich-Result-Potenzial" },
         { id: "validator", label: "Validator" },
         { id: "generator", label: "Generator" },
       ]} />
       {tab === "overview" && <Overview onGenerate={(type) => go("generator", type)} />}
+      {tab === "potential" && site && <SchemaPotentialPanel siteId={site.id} />}
       {tab === "validator" && <Validator />}
       {tab === "generator" && <Generator key={params.get("type") ?? ""} initialType={params.get("type")} />}
     </>

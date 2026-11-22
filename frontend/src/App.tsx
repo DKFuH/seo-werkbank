@@ -12,8 +12,6 @@ const IssueDetail = lazy(() => import("./pages/IssueDetail"));
 const PageDetail = lazy(() => import("./pages/PageDetail"));
 const Crawler = lazy(() => import("./pages/Crawler"));
 const Diagnostics = lazy(() => import("./pages/Diagnostics"));
-const AdvancedSeo = lazy(() => import("./pages/AdvancedSeo"));
-const AuthorityIntelligence = lazy(() => import("./pages/AuthorityIntelligence"));
 const InternalLinks = lazy(() => import("./pages/InternalLinks"));
 const Sitemaps = lazy(() => import("./pages/Sitemaps"));
 const Schema = lazy(() => import("./pages/Schema"));
@@ -63,8 +61,6 @@ export default function App() {
             <Route path="/pages/:crawlId/:pageId" element={<PageDetail />} />
             <Route path="/crawler" element={<Crawler />} />
             <Route path="/diagnostics" element={<Diagnostics />} />
-            <Route path="/advanced-seo" element={<AdvancedSeo />} />
-            <Route path="/authority-intelligence" element={<AuthorityIntelligence />} />
             <Route path="/internal-links" element={<InternalLinks />} />
             <Route path="/sitemaps" element={<Sitemaps />} />
             <Route path="/schema" element={<Schema />} />
