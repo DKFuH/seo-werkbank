@@ -1,8 +1,6 @@
 """The MCP entrypoint is strictly read-only and cannot leak credentials on redirects."""
 from __future__ import annotations
 
-import json
-
 import httpx
 import pytest
 
