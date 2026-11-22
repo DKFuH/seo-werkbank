@@ -176,3 +176,59 @@ jobs:
           echo "CHROME_PATH=$CHROME" >> "$GITHUB_ENV"
       - name: Local Lighthouse (real Chromium, localhost fixture)
         run: pytest -q tests/test_local_lighthouse_ci.py
+
+  demo-capture:
+    runs-on: ubuntu-latest
+    env:
+      SEO_DATA_DIR: ${{ runner.temp }}/seo-werkbank-demo
+      SEO_SCHEDULER_ENABLED: "false"
+      SEO_DEMO_URL: "http://127.0.0.1:8000"
+      SEO_DEMO_EMAIL: "demo@example.org"
+      SEO_DEMO_PASSWORD: "ci-demo-password-only"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 20
+      - name: Install app and real browser
+        run: |
+          python -m pip install -e "./backend[dev,render]"
+          python -m playwright install --with-deps chromium
+          cd frontend
+          npm ci --no-audit --no-fund
+          npm run build
+      - name: Run isolated demo instance
+        shell: bash
+        run: |
+          set -e
+          (cd backend && python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 > /tmp/seo-demo.log 2>&1) &
+          for i in $(seq 1 50); do
+            if curl -fsS http://127.0.0.1:8000/api/health; then break; fi
+            sleep 1
+          done
+          curl -fsS http://127.0.0.1:8000/api/health
+          curl -fsS -X POST http://127.0.0.1:8000/api/auth/register \
+            -H 'Content-Type: application/json' \
+            -d '{"email":"demo@example.org","password":"ci-demo-password-only"}' > /tmp/demo-login.json
+          python - <<'PY'
+          import json
+          import urllib.request
+          payload = json.load(open('/tmp/demo-login.json'))
+          req = urllib.request.Request('http://127.0.0.1:8000/api/sites',
+              data=json.dumps({'name':'Demo-Website','url':'https://example.org/'}).encode(),
+              headers={'Content-Type':'application/json','Authorization':'Bearer '+payload['access_token']})
+          with urllib.request.urlopen(req, timeout=10) as result:
+              assert result.status == 201
+          PY
+      - name: Record real screenshots and WebM
+        run: python scripts/capture_demo.py
+      - name: Attach real demo capture (never upload personal production content)
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: seo-werkbank-demo-assets
+          path: docs/media/generated/
+          if-no-files-found: warn
