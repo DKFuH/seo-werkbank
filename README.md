@@ -24,6 +24,23 @@ SEO-Werkbank ist eine Weiterentwicklung von [OpenSEOSuite](https://github.com/Su
 - Deutsche Stoppwörter auch in SERP-Analyse und Content-Optimierung; deutsche Signalwörter für kommerzielle
   Suchintention.
 
+## Docker-Gesamtausgabe mit SearXNG
+
+Mit einem Kommando SEO-Werkbank, PostgreSQL und eine **interne** SearXNG-Metasuche
+starten (Docker Compose v2 und Python 3.11+ erforderlich):
+
+```bash
+python scripts/full_stack.py up
+```
+
+Danach <http://localhost:8000> öffnen und den ersten Administrator anlegen.
+Passwörter/Secrets werden beim ersten Start zufällig erzeugt und in der
+ignorierten `.env` gespeichert. Die Metasuche wird nur innerhalb des Docker-Netzes
+erreichbar sein und in der App automatisch vorausgewählt, solange noch kein
+SERP-Anbieter gespeichert wurde. Das bisherige einfache Docker-Setup bleibt erhalten.
+
+**Anleitung, Sicherheit, Updates und Backups:** [Docker-Gesamtausgabe](docs/DOCKER_FULL.md).
+
 ## Schnellstart (Windows, ohne Docker)
 
 ```bash

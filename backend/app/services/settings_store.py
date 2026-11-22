@@ -5,6 +5,8 @@ unencrypted in the application database - protect the database file accordingly 
 """
 from __future__ import annotations
 
+import os
+
 from sqlalchemy.orm import Session
 
 from ..models import Setting
@@ -25,6 +27,13 @@ _SECRET_KEYS = {"serp": {"google_cse_key", "brave_key"}, "pagespeed": {"api_key"
 def get_setting(db: Session, key: str) -> dict:
     row = db.get(Setting, key)
     value = dict(DEFAULTS.get(key, {}))
+    # Optional Docker full-stack integration: an environment default is applied
+    # ONLY when the administrator has never saved SERP settings. Explicit
+    # provider=none or a chosen external provider always wins.
+    if key == "serp" and row is None:
+        searxng_url = os.getenv("SEO_SEARXNG_URL", "").strip()
+        if searxng_url:
+            value.update({"provider": "searxng", "searxng_url": searxng_url})
     if row and isinstance(row.value, dict):
         value.update(row.value)
     return value

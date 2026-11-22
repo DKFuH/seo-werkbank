@@ -1,0 +1,72 @@
+# Self-contained, private full stack: SEO-Werkbank + PostgreSQL + SearXNG.
+# Start: python scripts/full_stack.py up
+# This stack uses a separate Compose project and separate volumes from the SQLite demo.
+name: seo-werkbank-full
+
+services:
+  app:
+    build:
+      context: .
+      args:
+        PIP_EXTRAS: "[postgres]"
+    image: seo-werkbank:full
+    restart: unless-stopped
+    ports:
+      - "${SEO_BIND:-127.0.0.1}:${SEO_PORT:-8000}:8000"
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      SEO_DATA_DIR: /data
+      # Compose provides the DB URL explicitly so an old .env database setting
+      # cannot accidentally redirect this stack to another database.
+      SEO_DATABASE_URL: "postgresql+psycopg://seotoolkit:${POSTGRES_PASSWORD:?Run python scripts/full_stack.py init}@postgres:5432/seotoolkit"
+      SEO_SEARXNG_URL: "http://searxng:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      searxng:
+        condition: service_started
+    volumes:
+      - seo-data:/data
+
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: seotoolkit
+      POSTGRES_USER: seotoolkit
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:?Run python scripts/full_stack.py init}"
+    volumes:
+      - seo-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U seotoolkit -d seotoolkit"]
+      interval: 5s
+      timeout: 5s
+      retries: 18
+    # Intentionally no published database port.
+
+  searxng:
+    image: "docker.io/searxng/searxng:${SEARXNG_VERSION:-latest}"
+    restart: unless-stopped
+    environment:
+      SEARXNG_BASE_URL: "http://searxng:8080/"
+      SEARXNG_SECRET: "${SEARXNG_SECRET:?Run python scripts/full_stack.py init}"
+      SEARXNG_PUBLIC_INSTANCE: "false"
+      SEARXNG_LIMITER: "false"
+    volumes:
+      - ./deploy/searxng/settings.yml:/etc/searxng/settings.yml:ro
+      - searxng-cache:/var/cache/searxng
+    expose:
+      - "8080"
+    # No ports: SearXNG's JSON API stays available only on the Compose network.
+    # This single-user private instance does not need Valkey or a public-instance limiter.
+
+volumes:
+  seo-data:
+  seo-postgres:
+  searxng-cache:

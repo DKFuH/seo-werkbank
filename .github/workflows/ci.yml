@@ -119,3 +119,33 @@ jobs:
           $C exec -T postgres psql -U seotoolkit -d seotoolkit -tAc "select count(*) from users"
           $C down -v
           rm -f .env
+      - name: Smoke test full Docker stack with private SearXNG
+        shell: bash
+        run: |
+          set -e
+          # Full stack has its own Compose project and persistent volumes.
+          python scripts/full_stack.py init
+          C="docker compose -f docker-compose.full.yml"
+          if ! $C config --quiet; then
+            echo "::error::Full-stack Compose configuration is invalid"
+            exit 1
+          fi
+          if ! $C up -d --build > /tmp/full-up.log 2>&1; then
+            cat /tmp/full-up.log
+            exit 1
+          fi
+          ok=0
+          for i in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:8000/api/health; then ok=1; break; fi
+            sleep 2
+          done
+          if [ "$ok" != 1 ]; then
+            $C ps -a
+            $C logs --no-color --tail 40
+            exit 1
+          fi
+          $C exec -T app python -c "from app.db import session_scope; from app.services.settings_store import get_setting; s=session_scope(); db=s.__enter__(); cfg=get_setting(db,'serp'); assert cfg['provider']=='searxng' and cfg['searxng_url']=='http://searxng:8080', cfg; s.__exit__(None,None,None)"
+          # Check JSON endpoint, without requiring a particular live engine result.
+          $C exec -T app python -c "import json, urllib.request; r=urllib.request.urlopen('http://searxng:8080/search?q=searxng&format=json', timeout=65); d=json.load(r); assert isinstance(d.get('results'),list), d"
+          $C down -v
+          rm -f .env
