@@ -8,3 +8,19 @@ Im Frontend unter **Analyse → Tracking & Rendering**.
 - **Voraussetzungen:** Optionales Playwright/Chromium für Browserdiagnosen (`pip install -e ".[render]"` und `playwright install chromium`). Der reguläre Docker-Stack hat Chromium nicht automatisch installiert. Ohne Browser stehen die Bildhinweise aus Crawls zur Verfügung.
 - **Sicherheit:** Nur genau die Domain der eigenen, angemeldeten Website; Requests durch vorhandene SSRF-Browser-Guards; kein Zugriff auf andere Website-Projekte. Consent-Klicks nur nach explizitem Benutzerauslöser. Getrennte Sessions, maximal drei Szenarien und 120 protokollierte Requests je Szenario.
 - Kein automatischer DSGVO-, Consent-Mode- oder Tag-Manager-Compliance-Score. Eine gesonderte Kontrolle mit Browser-Devtools ist für Entscheidungen weiterhin erforderlich.
+
+## Bedienung Schritt für Schritt
+
+**Navigation:** `Analyse → Tracking & Rendering`.
+
+1. Oben die richtige Website auswählen und die vollständige URL aus dieser Domain eintragen.
+2. Für den Roh-HTML-/JavaScript-Vergleich **„Roh-HTML und JavaScript vergleichen“** drücken. Unterschiede bei Wortzahl, Title, Überschriften und Links sind manuell zu interpretieren.
+3. Für Consent zuerst **nur die Initialsitzung** aktiv lassen; die Berechtigungs-Checkbox setzen und **„Consent-Diagnose ausdrücklich starten“** klicken.
+4. Erst bei konkretem Bedarf die optionalen getrennten Klickversuche **„Alle akzeptieren“** und/oder **„Alle ablehnen“** auswählen. Die Software erkennt keine beliebigen CMP-Oberflächen und prüft keinen gespeicherten Consent-Zustand.
+5. Die **Bildwarnungen aus dem letzten Crawl** betrachten. Für reale LCP-/CLS-Metriken **Analyse → PageSpeed** öffnen.
+
+**Beispiel:** Zeitfolge mit einer Anfrage an einen Analyse-Host vor einem sichtbaren Consent-Klick → den konkreten Tracking-Aufbau im Browser manuell untersuchen. Daraus folgt weder automatisch ein rechtswidriges Tracking noch eine gesicherte Ursache fehlender Conversions.
+
+**Bei Fehlermeldungen:** Playwright und Chromium müssen **auf dem Rechner/Container laufen, auf dem das Backend ausgeführt wird**. Die Domain muss zur ausgewählten Website gehören. Private Netzwerke sind für die Browserinteraktion nicht freigegeben.
+
+Mehr Details: [Benutzerhandbuch, Kapitel 7.4–7.5](BENUTZERHANDBUCH.md).
