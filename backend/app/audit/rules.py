@@ -346,6 +346,21 @@ _R = [
     ('geo_no_author', 'Artikel ohne Autor', 'low', 'geo',
      'Ein Article/BlogPosting nennt keinen author.',
      'Autor mit Name und möglichst Profilseite angeben.'),
+    ('geo_snippet_limited', 'Textauszüge für Suche und KI eingeschränkt', 'medium', 'geo',
+     'nosnippet, max-snippet unter 50 Zeichen oder data-nosnippet auf mindestens der Hälfte des Textes. Google darf dann kaum etwas zitieren, auch nicht in AI Overviews.',
+     'Snippet-Grenzen lockern (max-snippet:-1) und data-nosnippet nur für Nebensachen verwenden.'),
+    ('geo_hidden_instructions', 'Mögliche versteckte Anweisungen an KI-Systeme', 'high', 'geo',
+     'Im HTML stehen Formulierungen, die sich an Sprachmodelle richten (etwa „ignore previous instructions“), in Kommentaren, Attributen oder verstecktem Text, oder auffällig viele unsichtbare Steuerzeichen. Das gilt als Manipulation und kann auf eine gehackte Seite hindeuten.',
+     'Fundstellen prüfen und entfernen; bei unbekannter Herkunft die Website auf Schadcode untersuchen.'),
+    ('geo_schema_not_visible', 'Strukturierte Daten nicht sichtbar', 'medium', 'geo',
+     'Überschrift, Produktname, Preis oder FAQ-Fragen aus dem JSON-LD stehen nicht im sichtbaren Text. Google verlangt, dass ausgezeichnete Inhalte für Nutzer sichtbar sind.',
+     'Die Werte sichtbar auf der Seite zeigen oder aus dem Markup entfernen.'),
+    ('geo_date_inconsistent', 'Widersprüchliche Datumsangaben', 'low', 'geo',
+     'Im Artikel-Schema liegt ein Datum in der Zukunft, dateModified vor datePublished, oder das sichtbare Datum weicht über 30 Tage ab.',
+     'datePublished, dateModified und das sichtbare Datum aufeinander abstimmen.'),
+    ('geo_brand_inconsistent', 'Markenname uneinheitlich', 'low', 'geo',
+     'Der Markenname aus dem Organization-Schema bzw. og:site_name steht nicht im Title oder in Open Graph, oder beide Namen weichen voneinander ab. KI-Systeme ordnen die Marke dann schwerer als eine Entität zu.',
+     'Denselben Markennamen in Title, og:site_name und Organization-Schema verwenden.'),
 ]
 
 RULES: dict[str, Rule] = {r[0]: Rule(*r) for r in _R}
