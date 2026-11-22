@@ -81,7 +81,7 @@ class JobManager:
         status, error, result = "completed", None, {}
         try:
             async with self._semaphore():
-                self._set(job_id, status="running", message="Starting")
+                self._set(job_id, status="running", message="Startet")
                 result = await func(ctx) or {}
         except asyncio.CancelledError:
             status = "cancelled"

@@ -68,9 +68,9 @@ def parse_sitemap(body: bytes, url: str) -> tuple[str, list[dict], list[str], li
             with gzip.GzipFile(fileobj=__import__("io").BytesIO(body)) as gz:
                 body = gz.read(MAX_SITEMAP_BYTES + 1)
         except (OSError, EOFError) as exc:
-            return "unknown", [], [f"Invalid gzip data: {exc}"], warnings
+            return "unknown", [], [f"Ungültige gzip-Daten: {exc}"], warnings
     if len(body) > MAX_SITEMAP_BYTES:
-        errors.append("Sitemap is larger than 50 MB uncompressed")
+        errors.append("Sitemap ist unkomprimiert größer als 50 MB")
         body = body[:MAX_SITEMAP_BYTES]
     stripped = body.lstrip(b"\xef\xbb\xbf \t\r\n")
     if not stripped.startswith(b"<"):
@@ -86,12 +86,12 @@ def parse_sitemap(body: bytes, url: str) -> tuple[str, list[dict], list[str], li
     if root is None:
         return "unknown", [], ["Empty or unparseable XML document"], warnings
     if parser.error_log:
-        errors.append(f"XML is not well-formed: {parser.error_log[0].message} (line {parser.error_log[0].line})")
+        errors.append(f"XML ist nicht wohlgeformt: {parser.error_log[0].message} (Zeile {parser.error_log[0].line})")
     kind = {"urlset": "urlset", "sitemapindex": "index"}.get(_local(root.tag), "unknown")
     if kind == "unknown":
-        return kind, [], [f"Unexpected root element <{_local(root.tag)}>"], warnings
+        return kind, [], [f"Unerwartetes Wurzelelement <{_local(root.tag)}>"], warnings
     if "sitemaps.org/schemas/sitemap" not in (root.tag if isinstance(root.tag, str) else ""):
-        warnings.append("Root element is missing the sitemaps.org namespace")
+        warnings.append("Dem Wurzelelement fehlt der sitemaps.org-Namespace")
     entries: list[dict] = []
     bad_dates = 0
     for node in root:
@@ -107,21 +107,21 @@ def parse_sitemap(body: bytes, url: str) -> tuple[str, list[dict], list[str], li
             elif name == "link" and child.get("rel") == "alternate" and child.get("hreflang"):
                 alternates.append({"hreflang": child.get("hreflang"), "href": child.get("href")})
         if not loc:
-            errors.append("Entry without <loc>")
+            errors.append("Eintrag ohne <loc>")
             continue
         if lastmod and not _valid_w3c_date(lastmod):
             bad_dates += 1
         entries.append({"loc": loc, "lastmod": lastmod, "alternates": alternates})
     if bad_dates:
-        errors.append(f"{bad_dates} <lastmod> value(s) are not valid W3C datetime")
+        errors.append(f"{bad_dates} <lastmod>-Wert(e) sind kein gültiges W3C-Datum")
     if len(entries) > MAX_URLS_PER_FILE:
-        errors.append(f"Sitemap lists {len(entries)} URLs; the limit is 50,000 per file")
+        errors.append(f"Sitemap enthält {len(entries)} URLs; erlaubt sind 50.000 pro Datei")
         entries = entries[:MAX_URLS_PER_FILE]
     if not entries:
-        warnings.append("Sitemap contains no entries")
+        warnings.append("Sitemap enthält keine Einträge")
     future = [e for e in entries if e["lastmod"] and e["lastmod"][:10] > date.today().isoformat()]
     if future:
-        warnings.append(f"{len(future)} <lastmod> value(s) are in the future")
+        warnings.append(f"{len(future)} <lastmod>-Wert(e) liegen in der Zukunft")
     return kind, entries, errors, warnings
 
 
@@ -156,17 +156,17 @@ async def discover_sitemaps(fetcher: Fetcher, start_url: str, robots_sitemaps: l
         cross_host = 0
         for e in entries:
             if len(report.urls) >= max_urls:
-                sf.warnings.append("URL limit reached; remaining sitemap entries were ignored")
+                sf.warnings.append("URL-Limit erreicht; restliche Sitemap-Einträge ignoriert")
                 break
             loc = normalize_url(e["loc"])
             if not loc:
-                sf.errors.append(f"Invalid <loc>: {e['loc'][:120]}")
+                sf.errors.append(f"Ungültiges <loc>: {e['loc'][:120]}")
                 continue
             if urlsplit(loc).hostname != urlsplit(url).hostname:
                 cross_host += 1
             report.urls.setdefault(loc, {"lastmod": e["lastmod"], "sitemap": url, "alternates": e["alternates"]})
         if cross_host:
-            sf.warnings.append(f"{cross_host} URL(s) are on a different host than the sitemap")
+            sf.warnings.append(f"{cross_host} URL(s) liegen auf einem anderen Host als die Sitemap")
     return report
 
 

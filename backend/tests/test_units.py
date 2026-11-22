@@ -72,7 +72,7 @@ def test_robots_rules():
     assert not r.allowed("https://example.com/search?q=x")
     assert r.sitemaps == ["https://example.com/sitemap.xml"]
     assert r.crawl_delay("*") == 2
-    assert any("nonsense" in e or "field: value" in e for e in r.errors)
+    assert any("nonsense" in e or "Feld: Wert" in e for e in r.errors)
     # the most specific user-agent group replaces the wildcard group
     assert not r.allowed("https://example.com/only-us/x", "UltimateSEOToolkit/0.1")
     assert r.allowed("https://example.com/private/x", "UltimateSEOToolkit/0.1")

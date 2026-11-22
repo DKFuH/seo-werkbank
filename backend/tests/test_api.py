@@ -324,7 +324,7 @@ def test_ai_layer_is_optional(client, auth, crawled):
     st = client.get("/api/ai/status", headers=auth).json()
     assert st["provider"] == "none" and st["available"] is False and "explain_issue" in st["tasks"]
     r = client.post("/api/ai/run", headers=auth, json={"task": "prioritise_fixes", "crawl_id": crawled["crawl_id"]})
-    assert r.status_code == 400 and "No AI provider" in r.json()["detail"]
+    assert r.status_code == 400 and "Kein KI-Anbieter" in r.json()["detail"]
 
 
 def test_ai_prompt_is_grounded_in_real_data(client, auth, crawled, monkeypatch):

@@ -34,7 +34,7 @@ class RobotsRules:
             if not line:
                 continue
             if ":" not in line:
-                self.errors.append(f"Line {n}: not a 'field: value' pair")
+                self.errors.append(f"Zeile {n}: kein Paar 'Feld: Wert'")
                 continue
             key, value = (x.strip() for x in line.split(":", 1))
             key = key.lower()
@@ -52,13 +52,13 @@ class RobotsRules:
             expecting_agents = False
             if key in ("allow", "disallow"):
                 if group is None:
-                    self.errors.append(f"Line {n}: rule appears before any User-agent line")
+                    self.errors.append(f"Zeile {n}: Regel steht vor jeder User-agent-Zeile")
                     continue
                 if value and len(value) > MAX_PATTERN_LENGTH:
-                    self.errors.append(f"Line {n}: rule longer than {MAX_PATTERN_LENGTH} characters ignored")
+                    self.errors.append(f"Zeile {n}: Regel länger als {MAX_PATTERN_LENGTH} Zeichen, ignoriert")
                 elif value:
                     if not value.startswith(("/", "*")):
-                        self.errors.append(f"Line {n}: path '{value}' should start with '/'")
+                        self.errors.append(f"Zeile {n}: Pfad '{value}' sollte mit '/' beginnen")
                         value = "/" + value
                     group.rules.append((key == "allow", value))
             elif key == "crawl-delay":
@@ -66,9 +66,9 @@ class RobotsRules:
                     if group:
                         group.crawl_delay = float(value)
                 except ValueError:
-                    self.errors.append(f"Line {n}: invalid crawl-delay '{value}'")
+                    self.errors.append(f"Zeile {n}: ungültiges Crawl-delay '{value}'")
             elif key not in ("host", "clean-param", "request-rate", "visit-time", "noindex"):
-                self.errors.append(f"Line {n}: unknown directive '{key}'")
+                self.errors.append(f"Zeile {n}: unbekannte Anweisung '{key}'")
 
     def _group_for(self, user_agent: str) -> list[_Group]:
         ua = user_agent.lower()

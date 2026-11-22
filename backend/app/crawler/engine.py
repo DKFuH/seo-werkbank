@@ -157,7 +157,7 @@ class Crawler:
                     await self._flush()
                 if self.ctx:
                     self.ctx.update(min(0.8, 0.8 * self.crawled / max(len(self.depths), 1)),
-                                    f"Crawled {self.crawled} of {len(self.depths)} discovered URLs")
+                                    f"{self.crawled} von {len(self.depths)} gefundenen URLs gecrawlt")
 
     def _row(self, url: str, **extra) -> dict:
         row = {"crawl_id": self.crawl_id, "url": url, "depth": self.depths.get(url),
@@ -338,7 +338,7 @@ class Crawler:
                 results[u] = entry
                 done += 1
                 if self.ctx:
-                    self.ctx.update(None, f"Checking {'images' if image else 'external links'}: {done}/{len(urls)}")
+                    self.ctx.update(None, f"Prüfe {'Bilder' if image else 'externe Links'}: {done}/{len(urls)}")
 
         await asyncio.gather(*(one(u) for u in urls))
         return results
@@ -361,7 +361,7 @@ class Crawler:
             rules = await self.robots_for(self.start_url)
             if self.cfg.use_sitemaps:
                 if self.ctx:
-                    self.ctx.update(0.01, "Discovering sitemaps", force=True)
+                    self.ctx.update(0.01, "Sitemaps werden gesucht", force=True)
                 self.sitemap = await discover_sitemaps(self.fetcher, self.start_url, rules.sitemaps,
                                                        max_urls=max(self.cfg.max_urls * 4, 5000))
             workers = [asyncio.create_task(self._worker()) for _ in range(self.cfg.concurrency)]
@@ -375,7 +375,7 @@ class Crawler:
             await self._flush()
 
             if self.ctx:
-                self.ctx.update(0.82, "Running site-level checks", force=True)
+                self.ctx.update(0.82, "Websiteweite Prüfungen laufen", force=True)
             await self._site_checks()
             link_status: dict[str, dict] = {}
             if self.cfg.check_external_links and self.cfg.max_external_links:
@@ -387,7 +387,7 @@ class Crawler:
             image_status = await self._check_targets(list(self.image_urls)[: self.cfg.max_images], image=True) if self.image_urls else {}
 
             if self.ctx:
-                self.ctx.update(0.9, "Analysing site structure and issues", force=True)
+                self.ctx.update(0.9, "Struktur und Befunde werden ausgewertet", force=True)
             stats = await asyncio.to_thread(
                 analyse_crawl, self.crawl_id, sitemap=self.sitemap, site_checks=self.site_checks,
                 external_status=link_status, image_status=image_status, limit_hit=self.limit_hit)

@@ -50,7 +50,7 @@ class AIError(RuntimeError):
 async def status(cfg: dict) -> dict:
     provider = cfg.get("provider", "none")
     if provider == "none":
-        return {"provider": "none", "available": False, "message": "No AI provider configured. All non-AI features work without one."}
+        return {"provider": "none", "available": False, "message": "Kein KI-Anbieter eingerichtet. Alle Funktionen ohne KI arbeiten trotzdem."}
     try:
         async with httpx.AsyncClient(timeout=6) as client:
             if provider == "ollama":
@@ -59,18 +59,18 @@ async def status(cfg: dict) -> dict:
                 models = [m["name"] for m in r.json().get("models", [])]
                 ok = any(m.split(":")[0] == cfg.get("model", "").split(":")[0] for m in models)
                 return {"provider": provider, "available": True, "models": models, "model": cfg.get("model"),
-                        "message": "Ollama is reachable." if ok else f"Ollama is reachable but model '{cfg.get('model')}' is not pulled."}
+                        "message": "Ollama ist erreichbar." if ok else f"Ollama ist erreichbar, aber das Modell '{cfg.get('model')}' ist nicht geladen."}
             r = await client.get(f"{cfg['base_url'].rstrip('/')}/models", headers={"Authorization": f"Bearer {cfg.get('api_key', '')}"})
             return {"provider": provider, "available": r.status_code == 200, "model": cfg.get("model"),
-                    "message": "API reachable." if r.status_code == 200 else f"API answered HTTP {r.status_code}"}
+                    "message": "API erreichbar." if r.status_code == 200 else f"API antwortete mit HTTP {r.status_code}"}
     except httpx.HTTPError as exc:
-        return {"provider": provider, "available": False, "message": f"Could not reach the AI provider: {exc}"}
+        return {"provider": provider, "available": False, "message": f"KI-Anbieter nicht erreichbar: {exc}"}
 
 
 async def complete(cfg: dict, prompt: str, system: str = SYSTEM_PROMPT) -> str:
     provider = cfg.get("provider", "none")
     if provider == "none":
-        raise AIError("No AI provider is configured (Settings -> AI).")
+        raise AIError("Kein KI-Anbieter eingerichtet (Einstellungen → KI-Anbieter).")
     base = (cfg.get("base_url") or "").rstrip("/")
     messages = [{"role": "system", "content": system}, {"role": "user", "content": prompt}]
     try:
@@ -79,17 +79,17 @@ async def complete(cfg: dict, prompt: str, system: str = SYSTEM_PROMPT) -> str:
                 r = await client.post(f"{base}/api/chat", json={"model": cfg.get("model"), "messages": messages, "stream": False,
                                                                  "options": {"temperature": 0.3}})
                 if r.status_code != 200:
-                    raise AIError(f"Ollama answered HTTP {r.status_code}")
+                    raise AIError(f"Ollama antwortete mit HTTP {r.status_code}")
                 return r.json().get("message", {}).get("content", "").strip()
             if provider == "openai_compatible":
                 r = await client.post(f"{base}/chat/completions", headers={"Authorization": f"Bearer {cfg.get('api_key', '')}"},
                                       json={"model": cfg.get("model"), "messages": messages, "temperature": 0.3})
                 if r.status_code != 200:
-                    raise AIError(f"The AI API answered HTTP {r.status_code}")
+                    raise AIError(f"Die KI-API antwortete mit HTTP {r.status_code}")
                 return r.json()["choices"][0]["message"]["content"].strip()
     except httpx.HTTPError as exc:
-        raise AIError(f"Could not reach the AI provider: {exc}") from exc
-    raise AIError(f"Unknown AI provider '{provider}'")
+        raise AIError(f"KI-Anbieter nicht erreichbar: {exc}") from exc
+    raise AIError(f"Unbekannter KI-Anbieter '{provider}'")
 
 
 def build_prompt(task: str, data: dict, extra: str = "") -> str:

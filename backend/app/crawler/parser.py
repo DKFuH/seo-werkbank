@@ -299,7 +299,7 @@ def parse_html(body: bytes, url: str, content_type_header: str = "") -> ParsedPa
         try:
             page.jsonld.extend(_flatten_jsonld(json.loads(raw)))
         except json.JSONDecodeError as exc:
-            page.jsonld_errors.append(f"Invalid JSON-LD: {exc.msg} (line {exc.lineno}, column {exc.colno})")
+            page.jsonld_errors.append(f"Ungültiges JSON-LD: {exc.msg} (Zeile {exc.lineno}, Spalte {exc.colno})")
     page.jsonld = page.jsonld[:60]
     page.microdata_types = list(dict.fromkeys(
         el.get("itemtype").strip() for el in doc.xpath("//*[@itemscope][@itemtype]")
