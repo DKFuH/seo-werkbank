@@ -152,6 +152,8 @@ jobs:
 
   browser-diagnostics:
     runs-on: ubuntu-latest
+    env:
+      SEO_RENDER_SANDBOX: "false" # GitHub-hosted Chromium cannot use its Linux sandbox; CI only
     defaults:
       run:
         working-directory: backend
@@ -167,5 +169,10 @@ jobs:
       - run: python -m playwright install --with-deps chromium
       - run: pytest -q tests/test_render.py
       - run: npm install -g lighthouse
+      - name: Set Chrome path from Playwright
+        shell: bash
+        run: |
+          CHROME=$(python -c "from playwright.sync_api import sync_playwright; p=sync_playwright().start(); print(p.chromium.executable_path); p.stop()")
+          echo "CHROME_PATH=$CHROME" >> "$GITHUB_ENV"
       - name: Local Lighthouse (real Chromium, localhost fixture)
         run: pytest -q tests/test_local_lighthouse_ci.py

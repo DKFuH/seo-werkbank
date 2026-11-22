@@ -1,10 +1,10 @@
 """Security: secrets are never persisted as plaintext, including per-user OAuth tokens."""
-from cryptography.fernet import Fernet
 import pytest
+from cryptography.fernet import Fernet
 
 from app.db import session_scope
 from app.models import Setting
-from app.services.credential_crypto import decrypt_payload, encrypt_payload, decrypt_secret, encrypt_secret
+from app.services.credential_crypto import decrypt_payload, decrypt_secret, encrypt_payload, encrypt_secret
 from app.services.settings_store import get_private, get_setting, migrate_integration_secrets, set_private, set_setting
 
 
