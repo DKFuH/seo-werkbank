@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections import Counter, defaultdict
-from datetime import date, timedelta
+from datetime import date, datetime, time, timedelta
 
 from fastapi import APIRouter, Depends
 from sqlalchemy import select
@@ -21,21 +21,34 @@ def change_timeline(site_id: int, user: User = Depends(current_user), db: Sessio
     events = db.scalars(select(SeoResearchRecord).where(
         SeoResearchRecord.site_id == site.id, SeoResearchRecord.kind == "update_event").limit(300)).all()
     targets = db.scalars(select(RankTarget).where(RankTarget.site_id == site.id).limit(200)).all()
-    out = []
+    dated: dict[int, date] = {}
     for event in events:
         try:
-            when = date.fromisoformat(str(event.payload["event_date"]))
+            dated[event.id] = date.fromisoformat(str(event.payload["event_date"]))
         except ValueError:
+            pass
+    # One query for every observation that can fall into any event window (instead of events x targets queries).
+    by_target: dict[int, list[RankObservation]] = defaultdict(list)
+    if dated and targets:
+        lo = datetime.combine(min(dated.values()) - timedelta(days=14), time.min)
+        hi = datetime.combine(max(dated.values()) + timedelta(days=15), time.min)
+        for obs in db.scalars(select(RankObservation).where(
+                RankObservation.target_id.in_([t.id for t in targets]),
+                RankObservation.observed_at >= lo, RankObservation.observed_at < hi)
+                .order_by(RankObservation.observed_at, RankObservation.id).limit(100_000)):
+            by_target[obs.target_id].append(obs)
+    out = []
+    for event in events:
+        when = dated.get(event.id)
+        if when is None:
             out.append({"id": event.id, "title": event.title, "date": event.payload["event_date"],
                         "comparison": [], "warning": "Invalid date; use YYYY-MM-DD"})
             continue
+        start = datetime.combine(when - timedelta(days=14), time.min)
+        stop = datetime.combine(when + timedelta(days=15), time.min)
         comparisons = []
         for target in targets:
-            observations = db.scalars(select(RankObservation).where(
-                RankObservation.target_id == target.id,
-                RankObservation.observed_at >= when - timedelta(days=14),
-                RankObservation.observed_at < when + timedelta(days=15))
-                .order_by(RankObservation.observed_at).limit(100)).all()
+            observations = [x for x in by_target.get(target.id, []) if start <= x.observed_at < stop]
             before = [x for x in observations if x.observed_at.date() < when and x.position is not None]
             after = [x for x in observations if x.observed_at.date() > when and x.position is not None]
             if before and after and before[-1].provider == after[0].provider:

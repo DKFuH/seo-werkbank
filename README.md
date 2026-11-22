@@ -27,6 +27,9 @@ SEO-Werkbank ist eine Weiterentwicklung von [OpenSEOSuite](https://github.com/Su
   sowie manuelle Seitenrelevanz; Szenarien, keine Umsatzprognosen.
 - **SEO-Maßnahmen** (`/seo-work`): manuelles Tracking für redaktionelle Inhalte, Bewertungen,
   Veröffentlichungen, lokale SEO-Maßnahmen und Wettbewerbsbeobachtungen, GSC-Vergleichsmessungen.
+  Details: [SEO-Maßnahmen](docs/SEO_WORKFLOW.md).
+- **Linkkontext** (`/internal-links`): zu bestehenden internen Linkchancen eine echte Textpassage der Quellseite und ein
+  Ankervorschlag; keine automatische Linksetzung.
 - **KI-Erwähnungen** (`/ai-visibility`): manuelle, zeitgestempelte Beobachtungen zu Markennennungen
   und belegten URLs; keine Live-Überwachung oder erfundene AI-Rankings.
 - **Wettbewerber-Themenradar** (`/competitor-radar`): thematische Wortpaare aus tatsächlichen

@@ -159,7 +159,10 @@ def create_snapshot(site_id: int, item_id: int, body: SnapshotIn, user: User = D
         raise HTTPException(422, "Keine datierten GSC-Query-URL-Paare für diese URL")
     source = "api" if "api" in sources else "csv"
     source_criteria = [*criteria, GscRow.source == source]
-    end = db.scalar(select(func.max(GscRow.day)).where(*source_criteria))
+    # The window ends at the newest day of the whole site dataset, not of this URL: otherwise a page
+    # without recent impressions would get a follow-up covering the same old period as its baseline.
+    end = db.scalar(select(func.max(GscRow.day)).where(
+        GscRow.site_id == site.id, GscRow.dataset == "query_page", GscRow.source == source))
     start = end - timedelta(days=body.days - 1)
     range_criteria = [*source_criteria, GscRow.day.between(start, end)]
     weighted = func.sum(case((GscRow.position.is_not(None), GscRow.position * GscRow.impressions), else_=0))

@@ -29,3 +29,21 @@ def test_rank_targets_isolation_and_observation(client, auth, fixture_site):
     assert client.delete(f"{path}/{target['id']}", headers=h).status_code == 404
     assert client.post(f"{path}/{target['id']}/capture", headers=auth).status_code == 422
     assert client.delete(f"{path}/{target['id']}", headers=auth).status_code == 204
+
+
+def test_bare_host_treats_www_and_apex_as_same_site():
+    from app.api.rank_tracking import _bare_host
+
+    assert _bare_host("https://www.Example.de/a") == "example.de"
+    assert _bare_host("https://example.de") == "example.de"
+    assert _bare_host("not a url") == ""
+
+
+def test_observation_offset_is_converted_to_utc(client, auth, fixture_site):
+    site = client.post("/api/sites", headers=auth, json={"name": "Rank tz", "url": fixture_site.url + "/"}).json()
+    path = f"/api/sites/{site['id']}/rank-targets"
+    target = client.post(path, headers=auth, json={"keyword": "timezone target"}).json()
+    r = client.post(f"{path}/{target['id']}/observations", headers=auth,
+                    json={"position": 3, "observed_at": "2026-01-10T12:00:00+02:00"})
+    assert r.status_code == 201, r.text
+    assert r.json()["observed_at"] == "2026-01-10T10:00:00"
