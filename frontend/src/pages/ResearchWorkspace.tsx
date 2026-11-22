@@ -4,12 +4,16 @@ import { Badge, Button, Card, EmptyState, ErrorBox, Field, Input, PageHeader, Se
 import { api } from "../lib/api";
 import { useSite } from "../lib/context";
 
-type Kind = "funnel_step" | "trust_proof" | "brand_profile" | "topic_map" | "paa_question" | "search_journey" | "content_evidence" | "cro_review" |
+type Kind = "case_study" | "buyer_question" | "brand_claim" | "marketing_experiment" | "funnel_step" | "trust_proof" | "brand_profile" | "topic_map" | "paa_question" | "search_journey" | "content_evidence" | "cro_review" |
   "comparison" | "asset_brief" | "indexing" | "serp_feature" | "update_event" | "geo_sample";
 type RecordItem = { id: number; kind: Kind; title: string; payload: Record<string, string | string[]>; notes: string; source: string };
 type Result = { items: RecordItem[]; categories: string[]; method: string };
 type Fields = { title: string; keys: string[]; helper: string };
 const categories: Record<Kind, Fields> = {
+  case_study: { title: "Fallstudie mit Belegen", keys: ["project", "challenge", "approach", "outcome", "target_url", "evidence_url", "evidence_note"], helper: "Nur belegte eigene Projektdaten; veröffentlichte Aussagen gesondert prüfen" },
+  buyer_question: { title: "Echte Kundenfrage", keys: ["question", "context", "audience", "source_note", "suggested_url"], helper: "Frage anonymisieren, keine personenbezogenen Kundendaten eingeben" },
+  brand_claim: { title: "Externe Markenaussage", keys: ["subject", "claim", "source_url", "expected_statement", "checked_at"], helper: "Nur tatsächliche Quellen dokumentieren; URL nicht als Beweis der Wahrheit verstehen" },
+  marketing_experiment: { title: "Marketing-Experiment", keys: ["hypothesis", "metric", "unit", "start_date", "end_date", "baseline", "followup", "cost", "source_note"], helper: "Messwerte nur mit gleicher Einheit und vergleichbarem Zeitraum interpretieren; nicht kausal" },
   funnel_step: { title: "Conversion-Funnel-Schritt", keys: ["page_url", "stage", "action", "action_url", "friction", "form_fields", "evidence_url"], helper: "Stufe und Handlungsaufforderung dokumentieren; Formularfelder/Probleme manuell erfassen" },
   trust_proof: { title: "Vertrauensnachweis", keys: ["page_url", "claim", "proof_type", "proof_url", "checked_at"], helper: "Eine konkrete belegbare Aussage statt automatischer Vertrauens-Scores" },
   brand_profile: { title: "Markenpositionierung", keys: ["brand_name", "positioning", "offer", "audience", "tone", "evidence_url"], helper: "Leistungsversprechen, Zielgruppen und Quellen der eigenen Marke" },
@@ -65,7 +69,8 @@ export default function ResearchWorkspace() {
       required={["offer", "attributes", "topic", "question", "source_url", "target_url", "stage", "page_url", "claim",
         "criterion", "result", "subject_a", "subject_b", "purpose", "audience", "format", "status",
         "keyword", "provider", "features", "event_date", "event_type", "description", "platform", "prompt", "response",
-        "action", "brand_name", "positioning", "offer"].includes(name)} />
+        "action", "brand_name", "positioning", "offer", "project", "challenge", "approach", "outcome",
+        "context", "audience", "subject", "source_url", "hypothesis", "metric", "unit", "start_date"].includes(name)} />
   </Field>;
   return <div className="space-y-4">
     <PageHeader title="SEO-Research-Workspace" description="Geschäftsbezogene Themen, echte Fragen, Inhaltsnachweise und Analysebeobachtungen mit sichtbarer Herkunft dokumentieren." />

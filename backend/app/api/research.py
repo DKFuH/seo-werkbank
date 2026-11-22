@@ -24,7 +24,8 @@ from .deps import latest_crawl
 router = APIRouter(tags=["seo-research"])
 Kinds = Literal["topic_map", "paa_question", "search_journey", "content_evidence", "cro_review",
                 "comparison", "asset_brief", "indexing", "serp_feature", "update_event", "geo_sample",
-                "funnel_step", "trust_proof", "brand_profile"]
+                "funnel_step", "trust_proof", "brand_profile", "case_study",
+                "buyer_question", "brand_claim", "marketing_experiment"]
 REQUIRED = {
     "topic_map": ("offer", "attributes"),
     "paa_question": ("question", "topic"),
@@ -40,6 +41,11 @@ REQUIRED = {
     "funnel_step": ("page_url", "stage", "action"),
     "trust_proof": ("page_url", "claim"),
     "brand_profile": ("brand_name", "positioning", "offer"),
+    "case_study": ("project", "challenge", "approach", "outcome", "target_url"),
+    "buyer_question": ("question", "context", "audience"),
+    "brand_claim": ("claim", "source_url", "subject"),
+    "marketing_experiment": ("hypothesis", "metric", "unit", "start_date"),
+
 }
 STAGES = ("awareness", "consideration", "decision", "conversion")
 SOURCE = ("manual", "import", "crawl", "provider")

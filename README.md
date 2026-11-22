@@ -47,6 +47,8 @@ SEO-Werkbank ist eine Weiterentwicklung von [OpenSEOSuite](https://github.com/Su
   und Markenpositionierungen im Abgleich mit dem Website-Crawl.
 - **KI-Stichproben & Referrals** (`/ai-intelligence`): explizite Prompttests, manuelle oder
   konfigurierte Chatmodellantworten und optionale Matomo-Referrals (keine garantierte KI-Suche).
+- **Content Studio** (`/content-studio`): Fallstudien aus erfassten Fakten als freizugebende
+  Entwürfe, Käuferfragen, Markenabgleich und Marketing-Experimente.
 - Deutsche Stoppwörter auch in SERP-Analyse und Content-Optimierung; deutsche Signalwörter für kommerzielle
   Suchintention.
 
