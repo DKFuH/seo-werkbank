@@ -1,6 +1,8 @@
 """Provider records must retain provenance, preserve empty metrics and isolate sites."""
 from datetime import date
 
+import pytest
+
 from app.db import session_scope
 from app.models import Backlink, GscRow, Keyword
 from app.services.seo_data_providers import provider_catalogue, provider_data
@@ -59,8 +61,5 @@ def test_provider_provenance_and_scope(client, auth, fixture_site):
 
 def test_registry_rejects_unknown_and_extreme_limits(client, auth, fixture_site):
     with session_scope() as db:
-        try:
+        with pytest.raises(ValueError, match="Unknown"):
             provider_data(db, 1, "other")
-            assert False
-        except ValueError:
-            pass
