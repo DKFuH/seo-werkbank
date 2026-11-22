@@ -21,6 +21,7 @@ const Keywords = lazy(() => import("./pages/Keywords"));
 const Serp = lazy(() => import("./pages/Serp"));
 const Content = lazy(() => import("./pages/Content"));
 const ContentRefresh = lazy(() => import("./pages/ContentRefresh"));
+const OpportunityValue = lazy(() => import("./pages/OpportunityValue"));
 const WdfIdf = lazy(() => import("./pages/WdfIdf"));
 const Geo = lazy(() => import("./pages/Geo"));
 const Matomo = lazy(() => import("./pages/Matomo"));
@@ -56,6 +57,7 @@ export default function App() {
             <Route path="/serp" element={<Serp />} />
             <Route path="/content" element={<Content />} />
             <Route path="/content-refresh" element={<ContentRefresh />} />
+            <Route path="/opportunity-value" element={<OpportunityValue />} />
             <Route path="/wdf-idf" element={<WdfIdf />} />
             <Route path="/geo" element={<Geo />} />
             <Route path="/matomo" element={<Matomo />} />

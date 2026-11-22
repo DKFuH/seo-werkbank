@@ -23,6 +23,8 @@ SEO-Werkbank ist eine Weiterentwicklung von [OpenSEOSuite](https://github.com/Su
   mit dem letzten Crawl, inklusive indexierbarer Seiten ohne Besuch.
 - **Content-Refresh** (`/content-refresh`): GSC-Query-URL-Chancen, redaktionelle Prüfhinweise und kopierbare Briefings;
   keine automatische Veröffentlichung. Details: [Content-Refresh](docs/CONTENT_REFRESH.md).
+- **Wirtschaftliche SEO-Chancen** (`/opportunity-value`): Nutzerdefinierte Lead-, Abschluss- und DB-Annahmen
+  sowie manuelle Seitenrelevanz; Szenarien, keine Umsatzprognosen.
 - Deutsche Stoppwörter auch in SERP-Analyse und Content-Optimierung; deutsche Signalwörter für kommerzielle
   Suchintention.
 
