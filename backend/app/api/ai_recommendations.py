@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import re
 from datetime import datetime
-from typing import Literal
 from urllib.parse import urlsplit
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -16,7 +15,8 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ..db import get_db
-from ..integrations import ai, matomo as mt
+from ..integrations import ai
+from ..integrations import matomo as mt
 from ..models import AiPromptSample, AiPromptTest, User, utcnow
 from ..security.auth import current_user, get_site_for
 from ..services.settings_store import get_setting
