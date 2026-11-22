@@ -392,3 +392,28 @@ class SeoResearchRecord(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, onupdate=utcnow)
     __table_args__ = (Index("ix_seo_research_site_kind", "site_id", "kind"),)
+
+
+class AiPromptTest(Base):
+    """An explicit prompt test. Responses are sampled, not verified web-search results."""
+
+    __tablename__ = "ai_prompt_tests"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    site_id: Mapped[int] = mapped_column(ForeignKey("sites.id", ondelete="CASCADE"), index=True)
+    prompt: Mapped[str] = mapped_column(Text)
+    brand_terms: Mapped[list] = mapped_column(JSON, default=list)
+    competitor_terms: Mapped[list] = mapped_column(JSON, default=list)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+
+
+class AiPromptSample(Base):
+    """Human-recorded or explicitly requested provider-model answer."""
+
+    __tablename__ = "ai_prompt_samples"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    test_id: Mapped[int] = mapped_column(ForeignKey("ai_prompt_tests.id", ondelete="CASCADE"), index=True)
+    source: Mapped[str] = mapped_column(String(32))
+    provider: Mapped[str] = mapped_column(String(32))
+    model_name: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    answer: Mapped[str] = mapped_column(Text)
+    observed_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
