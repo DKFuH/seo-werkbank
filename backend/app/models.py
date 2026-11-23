@@ -348,6 +348,7 @@ class SeoContentProposal(Base):
     original_text: Mapped[str] = mapped_column(Text, default="")
     proposed_text: Mapped[str] = mapped_column(Text)
     rationale: Mapped[str] = mapped_column(Text, default="")
+    content_type: Mapped[str] = mapped_column(String(40), default="text/plain")
     status: Mapped[str] = mapped_column(String(20), default="draft")
     approved_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     marked_published_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
@@ -526,3 +527,16 @@ class Log404(Base):
     count: Mapped[int] = mapped_column(Integer, default=0)
     first_seen: Mapped[datetime] = mapped_column(DateTime)
     last_seen: Mapped[datetime] = mapped_column(DateTime)
+
+
+class SchemaTemplate(Base):
+    """Site-scoped JSON-LD mapping template; applies only to previews."""
+    __tablename__ = "schema_templates"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    site_id: Mapped[int] = mapped_column(ForeignKey("sites.id", ondelete="CASCADE"), index=True)
+    name: Mapped[str] = mapped_column(String(160))
+    schema_type: Mapped[str] = mapped_column(String(80))
+    url_pattern: Mapped[str] = mapped_column(String(300), default="*")
+    field_mapping: Mapped[dict[str, str]] = mapped_column(JSON, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, onupdate=utcnow)
