@@ -11,6 +11,7 @@ from urllib.parse import urlsplit
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from pydantic import BaseModel, Field
 from sqlalchemy import delete, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from ..config import get_settings
@@ -237,5 +238,9 @@ def propose_404_redirect(site_id: int, body: RedirectFrom404, user: User = Depen
                         status_code=301, origin="404", state="proposed",
                         note="Vorschlag aus aggregiertem 404-Log; Ziel fachlich prüfen")
     db.add(rule)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError as exc:
+        db.rollback()
+        raise HTTPException(409, "Regel für diese URL existiert bereits") from exc
     return {"id": rule.id, "state": rule.state, "note": "Keine automatische Weiterleitung"}
