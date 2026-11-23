@@ -31,7 +31,7 @@ class ProposalIn(PrefillIn):
 class TemplateIn(BaseModel):
     name: str = Field(min_length=1, max_length=160)
     schema_type: str = Field(min_length=1, max_length=80)
-    url_pattern: str = Field("*", max_length=300)
+    url_pattern: str = Field("/*", max_length=300)
     field_mapping: dict[str, str] = Field(default_factory=dict, max_length=12)
 
 
