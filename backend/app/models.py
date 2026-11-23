@@ -486,7 +486,8 @@ class RedirectRule(Base):
     note: Mapped[str] = mapped_column(Text, default="")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, onupdate=utcnow)
-    __table_args__ = (Index("ix_redirect_rules_site_state", "site_id", "state"),)
+    __table_args__ = (Index("ix_redirect_rules_site_state", "site_id", "state"),
+                      Index("ux_redirect_rules_site_source", "site_id", "source_url", unique=True))
 
 
 class LogImport(Base):

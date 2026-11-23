@@ -10,7 +10,7 @@ type ItemsResponse = { items: Item[] };
 type Proposal = { exists: boolean; work_item_id: number; status?: "draft" | "approved" | "published";
   original_text?: string; proposed_text?: string; rationale?: string; approved_at?: string | null;
   marked_published_at?: string | null; diff?: string[]; diff_truncated?: boolean;
-  remote_publication?: false; note?: string; content_type?: string };
+  remote_publication?: false; note?: string; content_type?: string; safe_html?: string | null };
 
 export default function ContentProposals() {
   const { site } = useSite();
@@ -75,7 +75,13 @@ export default function ContentProposals() {
     {proposal.data && <Card title="Revision" actions={<Badge tone={proposal.data.status === "approved" ? "green" : proposal.data.status === "published" ? "blue" : "gray"}>
       {proposal.data.exists ? proposal.data.status : "noch kein Entwurf"}
     </Badge>}>
-      {proposal.data.content_type === "application/ld+json" && <p className="mb-3 text-sm font-medium text-amber-700 dark:text-amber-300">JSON-LD-Schemaentwurf: Änderungen müssen gültiges schema.org-JSON sein. Freigabe ist keine Veröffentlichung.</p>}
+      {proposal.data.content_type === "application/ld+json" && <div className="mb-3 space-y-2">
+        <p className="text-sm font-medium text-amber-700 dark:text-amber-300">JSON-LD-Schemaentwurf: Der gespeicherte Entwurf ist reines JSON. Nicht unverändert zwischen HTML-Script-Tags kopieren; dafür ausschließlich den sicheren HTML-Block unten verwenden. Freigabe ist keine Veröffentlichung.</p>
+        {proposal.data.safe_html && <div>
+          <p className="mb-1 text-xs font-semibold">Sicherer HTML-Einbettungsblock (nur bei gespeichertem Entwurf aktuell)</p>
+          <pre className="max-h-48 overflow-auto rounded bg-slate-950 p-3 text-xs text-slate-100">{proposal.data.safe_html}</pre>
+        </div>}
+      </div>}
       <div className="grid gap-3 lg:grid-cols-2">
         <Field label="Ausgangstext (manuell, optional)">
           <Textarea rows={9} maxLength={100000} value={original} disabled={!editable}

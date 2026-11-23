@@ -58,3 +58,12 @@ Primärquellen:
 - https://developers.google.com/search/docs/appearance/structured-data/intro-structured-data
 - https://developers.google.com/search/docs/appearance/structured-data/sd-policies
 - https://schema.org/docs/documents.html
+
+## Sichere HTML-Ausgabe von gespeicherten JSON-LD-Entwürfen
+
+`proposed_text` ist **reines JSON** und absichtlich nicht HTML-escaped. Dieser
+Wert darf niemals unverändert zwischen HTML-`<script>`-Tags kopiert werden.
+Die Content-Entwurfansicht bietet dafür bei gültigem gespeichertem JSON einen
+separaten `safe_html`-Block, der `<`, `>`, `&` und Unicode-Trennzeichen
+sicher serialisiert. Der Block entspricht dem **gespeicherten** Entwurf; nach
+ungespeicherten Textänderungen muss erst gespeichert werden.

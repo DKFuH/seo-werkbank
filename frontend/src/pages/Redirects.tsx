@@ -9,6 +9,14 @@ type Rule = {
   origin: string; state: string; confidence: number | null; note: string;
 };
 type Simulation = { rules: number; findings: { source_url: string; issue: string; status?: number }[]; note: string };
+const issueLabels: Record<string, string> = {
+  duplicate_source: "Doppelte Quell-URL",
+  self_redirect: "Weiterleitung auf sich selbst",
+  redirect_loop: "Weiterleitungsschleife",
+  redirect_chain: "Weiterleitungskette",
+  target_not_indexable: "Ziel nicht mit Status 200/indexierbar",
+  target_not_verified: "Ziel im Crawl nicht nachgewiesen",
+};
 
 export default function Redirects() {
   const { site } = useSite();
@@ -77,7 +85,7 @@ export default function Redirects() {
       {sim.isFetching && <Spinner />}
       {sim.error && <ErrorBox error={sim.error} onRetry={() => sim.refetch()} />}
       {sim.data && <div className="mt-3 text-sm"><p>{sim.data.rules} Regeln · {sim.data.findings.length} Hinweise</p>
-        <ul className="mt-2 list-disc pl-5">{sim.data.findings.map((f, i) => <li key={i}>{f.issue}: {f.source_url}</li>)}</ul>
+        <ul className="mt-2 list-disc pl-5">{sim.data.findings.map((f, i) => <li key={i}>{issueLabels[f.issue] ?? f.issue}: {f.source_url}</li>)}</ul>
         <p className="mt-2 text-xs text-slate-500">{sim.data.note}</p></div>}
     </Card>
   </div>;

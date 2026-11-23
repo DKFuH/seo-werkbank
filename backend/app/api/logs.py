@@ -11,6 +11,7 @@ from urllib.parse import urlsplit
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from pydantic import BaseModel, Field
 from sqlalchemy import delete, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from ..config import get_settings
@@ -100,7 +101,12 @@ async def upload_logs(site_id: int, file: UploadFile = File(...), fmt: str = For
         # Bind the temporary file to its import ID so startup recovery can
         # remove only files belonging to interrupted imports.
         temp_path = os.path.join(tempfile.gettempdir(), f"seo-log-import-{record.id}-{os.path.basename(path)}")
-        os.replace(path, temp_path)
+        try:
+            os.replace(path, temp_path)
+        except Exception:
+            record.state = "failed"
+            db.commit()
+            raise
         path = None
 
         async def work(ctx):
@@ -125,6 +131,14 @@ async def upload_logs(site_id: int, file: UploadFile = File(...), fmt: str = For
             db.delete(record)
             db.commit()
             raise HTTPException(429, str(exc)) from exc
+        except Exception:
+            # Unexpected scheduler/DB failure must not leave an orphaned file
+            # or an un-deletable "processing" import until the next restart.
+            Path(temp_path).unlink(missing_ok=True)
+            db.rollback()
+            record.state = "failed"
+            db.commit()
+            raise
         # The scheduled job owns and deletes the temporary file.
         path = None
         return {"import_id": record.id, "job_id": job_id, "state": "processing",
@@ -224,5 +238,9 @@ def propose_404_redirect(site_id: int, body: RedirectFrom404, user: User = Depen
                         status_code=301, origin="404", state="proposed",
                         note="Vorschlag aus aggregiertem 404-Log; Ziel fachlich prüfen")
     db.add(rule)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError as exc:
+        db.rollback()
+        raise HTTPException(409, "Regel für diese URL existiert bereits") from exc
     return {"id": rule.id, "state": rule.state, "note": "Keine automatische Weiterleitung"}

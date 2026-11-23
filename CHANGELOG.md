@@ -5,6 +5,14 @@ uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased] - SEO-Werkbank
 
+### Fixed (SEO Operations quality)
+- Failed log-import job creation now deletes the temporary file and records failed state.
+- Redirect rules are database-unique per site/source (migration `0013`, duplicate preflight), and API collisions return 409.
+- Added redirect API regression tests, Apache .htaccess guidance and single RewriteEngine directive.
+- Log parser allows up to two additional trailing quoted fields and skips overlong lines with bounded memory.
+- Schema proposal details expose a separately HTML-escaped block; raw JSON remains raw JSON.
+
+
 ### Added (SEO Operations: PR #41–#43)
 - **Redirect-Management:** Crawl-basierte Vorschläge, manuelle Regeln, Schleifen-/Kettensimulation, Freigabe und sichere Apache-, Nginx- sowie CSV-Exportentwürfe; keine automatische Serveränderung. Migration `0010`.
 - **Logfile-/404-Monitor:** Apache/Nginx Common/Combined und gzip als begrenzte Importjobs, datensparsame Aggregate statt IPs/Rohlogs, UA-basierte Bot-Indizien, 404-Referrer-Hosts und Übergabe an Redirect-Entwürfe. Migration `0011`.

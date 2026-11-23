@@ -14,7 +14,7 @@ from urllib.parse import urlsplit
 _LOG = re.compile(
     r'^\S+ \S+ \S+ \[(?P<time>[^\]]+)\] '
     r'"(?P<request>[^"]*)" (?P<status>\d{3}) (?:\d+|-)'
-    r'(?: "(?P<referer>[^"]*)" "(?P<agent>[^"]*)")?'
+    r'(?: "(?P<referer>[^"]*)" "(?P<agent>[^"]*)"(?: "[^"]*"){0,2})?'
     r'\s*$'
 )
 _REQUEST = re.compile(r"^[A-Z]+\s+(\S+)\s+HTTP/\d(?:\.\d)?$")
@@ -25,6 +25,7 @@ _SENSITIVE_SEGMENT = re.compile(
 MAX_DECOMPRESSED_BYTES = 500 * 1024 * 1024
 MAX_ROWS = 5_000_000
 MAX_GROUPS = 200_000
+MAX_LINE_BYTES = 64 * 1024
 
 
 def classify_agent(raw: str) -> str:
@@ -104,11 +105,20 @@ def parse_file(path: str | Path, *, compressed: bool = False, fmt: str = "auto")
     first = last = None
     opener = gzip.open if compressed else open
     with opener(path, "rb") as fh:
-        for raw in fh:
+        while raw := fh.readline(MAX_LINE_BYTES + 1):
             decompressed += len(raw)
             total += 1
             if decompressed > MAX_DECOMPRESSED_BYTES or total > MAX_ROWS:
                 raise ValueError("Logdatei überschreitet Verarbeitungsgrenzen")
+            if len(raw) > MAX_LINE_BYTES:
+                # Drain oversized lines in bounded chunks without storing their content.
+                while raw and not raw.endswith(b"\n"):
+                    raw = fh.readline(MAX_LINE_BYTES + 1)
+                    decompressed += len(raw)
+                    if decompressed > MAX_DECOMPRESSED_BYTES:
+                        raise ValueError("Logdatei überschreitet Verarbeitungsgrenzen")
+                skipped += 1
+                continue
             line = raw.decode("utf-8", errors="replace")
             item = parse_line(line, fmt)
             if item is None:
