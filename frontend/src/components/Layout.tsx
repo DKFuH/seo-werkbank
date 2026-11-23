@@ -4,7 +4,7 @@ import {
   Activity, Bell, FileSearch, FileText, Gauge, Globe2, Languages, LayoutDashboard, Link2, LogOut, MapPin, Menu, Moon, Network,
   PenLine, Search, Settings, Share2, ListTree, Sun, Swords, Braces, Bug, KeyRound, LineChart, X, Sigma, Bot, BarChart3,
   ChevronRight, ClipboardList, Eye, FilePen, History, Microscope, Radar, RefreshCw, ShieldCheck, Target, TrendingUp, BadgeEuro,
-  MapPinned, MessageSquareQuote, Sparkles, Lightbulb,
+  MapPinned, MessageSquareQuote, Sparkles, Lightbulb, CircleHelp,
 } from "lucide-react";
 import { type ReactNode, useEffect, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
@@ -80,6 +80,7 @@ export const NAV: NavGroup[] = [
   ] },
   { section: "System", fixed: true, items: [
     { to: "/settings", label: "Einstellungen", icon: i(Settings) },
+    { to: "/help", label: "Hilfe & Handbuch", icon: i(CircleHelp) },
   ] },
 ];
 

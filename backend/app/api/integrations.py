@@ -427,6 +427,7 @@ class SettingsIn(BaseModel):
     ai: dict[str, str] | None = None
     gsc: dict[str, str] | None = None
     matomo: dict[str, str] | None = None
+    notifications: dict[str, str] | None = None
 
 
 @router.put("/settings")
@@ -436,11 +437,24 @@ def write_settings(body: SettingsIn, user: User = Depends(admin_user), db: Sessi
         raise HTTPException(422, "Unbekannter SERP-Anbieter")
     if "ai" in data and data["ai"].get("provider") not in (None, "none", "ollama", "openai_compatible"):
         raise HTTPException(422, "Unbekannter KI-Anbieter")
+    if "notifications" in data:
+        n = data["notifications"]
+        if n.get("enabled", "false") not in ("true", "false"):
+            raise HTTPException(422, "Benachrichtigungen müssen ein- oder ausgeschaltet sein")
+        if n.get("min_severity", "high") not in ("low", "medium", "high", "critical"):
+            raise HTTPException(422, "Ungültiger Schweregrad")
+        if n.get("smtp_port") and (not n["smtp_port"].isdigit() or not (1 <= int(n["smtp_port"]) <= 65535)):
+            raise HTTPException(422, "Ungültiger SMTP-Port")
+        hook = n.get("webhook_url", "")
+        if hook and hook != "********":
+            parsed = urlsplit(hook)
+            if parsed.scheme != "https" or parsed.port not in (None, 443) or parsed.username or parsed.password:
+                raise HTTPException(422, "Webhook muss HTTPS auf Port 443 ohne Credentials verwenden")
     for key, value in data.items():
         for k, v in value.items():
             if len(v) > 2048:
                 raise HTTPException(422, f"Wert für {key}.{k} ist zu lang")
-            if k.endswith("url") and v:
+            if k.endswith("url") and v and v != "********":
                 parts = urlsplit(v)
                 if parts.scheme not in ("http", "https") or not parts.hostname:
                     raise HTTPException(422, f"{key}.{k} must be an http(s) URL")
