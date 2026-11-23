@@ -8,7 +8,7 @@ import {
   ScoreRing, Select, Spinner, Tabs, Url,
 } from "../components/ui";
 import { api } from "../lib/api";
-import { useSite } from "../lib/context";
+import { useJob, useSite } from "../lib/context";
 import { fmtBytes, fmtDateTime, fmtMs, scoreColor, shortUrl, titleCase } from "../lib/format";
 
 const CATEGORIES: [string, string][] = [["performance", "Performance"], ["accessibility", "Barrierefreiheit"], ["best-practices", "Best Practices"], ["seo", "SEO"]];
@@ -205,6 +205,49 @@ function Result({ result }: { result: any }) {
   );
 }
 
+
+function BatchPageSpeed({ siteId }: { siteId: number }) {
+  const [limit, setLimit] = useState(5);
+  const [jobId, setJobId] = useState<number | null>(null);
+  const [done, setDone] = useState<string>("");
+  const qc = useQueryClient();
+  const summary = useQuery<{ sampled_urls: number; field_coverage: Record<string, number>;
+    field_ratings_by_url: Record<string, Record<string, number>>; method: string }>({
+    queryKey: ["pagespeed-batch-summary", siteId],
+    queryFn: () => api.get(`/sites/${siteId}/pagespeed/summary`),
+  });
+  const batch = useMutation<{ job_id: number; queued_urls: number }>({
+    mutationFn: () => api.post(`/sites/${siteId}/pagespeed/batch`, { limit, strategy: "mobile" }),
+    onSuccess: data => { setDone(""); setJobId(data.job_id); },
+  });
+  useJob(jobId, job => {
+    setJobId(null);
+    setDone(job.status === "completed" ? "Batch abgeschlossen; Ergebnisse unten aktualisiert." : "Batch fehlgeschlagen: Jobverlauf prüfen.");
+    void qc.invalidateQueries({ queryKey: ["pagespeed-batch-summary", siteId] });
+    void qc.invalidateQueries({ queryKey: ["pagespeed-history"] });
+  });
+  return <Card title="Top-Seiten im Batch prüfen" description="Bis zu zehn indexierbare Seiten aus dem letzten Crawl nach internem PageRank. PSI-Aufrufe werden nacheinander mit Pausen ausgeführt.">
+    <div className="flex flex-wrap items-end gap-2">
+      <Field label="Anzahl Seiten"><Select value={limit} onChange={e => setLimit(Number(e.target.value))}>
+        {[3, 5, 10].map(x => <option value={x} key={x}>{x}</option>)}</Select></Field>
+      <Button loading={batch.isPending || jobId !== null} onClick={() => batch.mutate()}>Mobile Batch starten</Button>
+    </div>
+    {batch.error && <ErrorBox error={batch.error} />}
+    {done && <Notice>{done}</Notice>}
+    {summary.isLoading && <Spinner />}
+    {summary.data && <>
+      <p className="mt-3 text-sm">Bislang getestete URLs (mobile PSI): {summary.data.sampled_urls}</p>
+      {(["LCP", "INP", "CLS"] as const).map(m => <p key={m} className="text-xs text-slate-600 dark:text-slate-400">
+        {m}: {summary.data?.field_coverage[m] || 0} URLs mit echten Felddaten;
+        {" "}gut {summary.data?.field_ratings_by_url[m]?.good || 0},
+        {" "}verbesserungswürdig {summary.data?.field_ratings_by_url[m]?.["needs improvement"] || 0},
+        {" "}schlecht {summary.data?.field_ratings_by_url[m]?.poor || 0}
+      </p>)}
+      <p className="mt-2 text-xs text-slate-500">{summary.data.method}</p>
+    </>}
+  </Card>;
+}
+
 export default function PageSpeed() {
   const { site } = useSite();
   const qc = useQueryClient();
@@ -267,6 +310,7 @@ export default function PageSpeed() {
     <>
       <PageHeader title="PageSpeed" description="Lighthouse-Scores, Core Web Vitals echter Nutzer und priorisierte Performance-Empfehlungen für beliebige URLs." />
 
+      {site && <div className="mb-4"><BatchPageSpeed key={site.id} siteId={site.id} /></div>}
       <div className="mb-4 grid gap-4 lg:grid-cols-3">
         <Card title="Test starten" className="lg:col-span-2">
           <form onSubmit={submit} className="space-y-4">

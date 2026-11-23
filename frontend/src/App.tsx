@@ -42,8 +42,10 @@ const Competitors = lazy(() => import("./pages/Competitors"));
 const Backlinks = lazy(() => import("./pages/Backlinks"));
 const SearchConsole = lazy(() => import("./pages/SearchConsole"));
 const Monitoring = lazy(() => import("./pages/Monitoring"));
+const Health = lazy(() => import("./pages/Health"));
 const Reports = lazy(() => import("./pages/Reports"));
 const Settings = lazy(() => import("./pages/Settings"));
+const Help = lazy(() => import("./pages/Help"));
 
 export default function App() {
   const { user, loading } = useAuth();
@@ -91,8 +93,10 @@ export default function App() {
             <Route path="/backlinks" element={<Backlinks />} />
             <Route path="/search-console" element={<SearchConsole />} />
             <Route path="/monitoring" element={<Monitoring />} />
+            <Route path="/health" element={<Health />} />
             <Route path="/reports" element={<Reports />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/help" element={<Help />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Suspense>

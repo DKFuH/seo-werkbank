@@ -672,6 +672,24 @@ kürzen und dann als `/llms.txt` ins Wurzelverzeichnis der Website legen.
 
 Die Erfüllung solcher Kriterien garantiert keine Aufnahme in KI-Antworten.
 
+### 13.1a Website Health
+
+**Wo:** `Maßnahmen → Website Health`
+
+1. Website auswählen und **Überwachung starten**. Geprüft wird die Website-URL alle 15 Minuten.
+2. Oben stehen der aktuelle Status (UP, LANGSAM, DOWN) und die Verfügbarkeit im gewählten Zeitraum (24 Stunden, 7 oder 30 Tage).
+3. Die **Statusleiste** zeigt je Zeitabschnitt, ob alle Prüfungen in Ordnung waren, langsam oder fehlerhaft.
+4. Das **Kerzendiagramm** zeigt die Antwortzeit je Zeitabschnitt: erste und letzte Prüfung als Kerzenkörper, schnellste
+   und langsamste als Linie. Die gestrichelte Linie ist der Alert-Grenzwert, rote Marken unten zeigen Ausfälle.
+5. **Vorfälle** listet jeden Ausfall und jede Phase mit hoher Antwortzeit mit Beginn, Dauer und Ursache. Suchen,
+   filtern und sortieren ist möglich.
+6. **Einstellungen** am Diagramm: Grenzwert in ms (Standard 2.000), nach wie vielen langsamen Prüfungen in Folge ein
+   Vorfall entsteht (Standard 2) und das Prüfintervall (ab 15 Minuten). Weitere URLs lassen sich unter Monitoring
+   eintragen.
+
+Jeder neue und jeder behobene Vorfall erzeugt eine Meldung (Glocke oben rechts) und geht über eingerichtete
+Benachrichtigungskanäle raus. Geprüft wird von dem Server aus, auf dem SEO-Werkbank läuft.
+
 ### 13.2 KI-Erwähnungen
 
 **Wo:** `Sichtbarkeit → KI-Erwähnungen`
@@ -1000,6 +1018,54 @@ Die Umgebungsvariablen heißen `SEO_MCP_API_URL` und `SEO_MCP_API_TOKEN`. Nur lo
 
 Vollständige Einrichtung: [MCP-Server](MCP_SERVER.md).
 
+## 21.4 Neue Arbeitsabläufe für Version 0.2
+
+Diese Funktionen werden in den vier 0.2-Entwicklungs-PRs eingeführt. **Solange diese nicht in main übernommen sind, funktionieren die Klickwege nur auf einer Version, die die betreffenden Änderungen enthält.**
+
+### Integration-Schlüssel und Update
+
+**Wo:** Administration/Serverinstallation und **System → Einstellungen**.
+
+1. Vor dem Update **Datenbank und Anwendungsdaten sichern**.
+2. In verwalteten Installationen einen gültigen Fernet-Master-Key mit der Umgebungsvariable `SEO_MASTER_KEY` sicher hinterlegen. Auf Einzelplatzinstallationen wird andernfalls unter `SEO_DATA_DIR/.integration_master_key` eine Schlüsseldatei erzeugt.
+3. Die neue Version starten. Der Startvorgang verschlüsselt ältere Klartext-Integrationseinstellungen; ein nicht entschlüsselbarer Datensatz verhindert den Start.
+4. Das Schlüsselmaterial getrennt vom Datenbank-Backup aufbewahren. Verlust bedeutet Verlust des Zugriffs auf gespeicherte API-Secrets und OAuth-Tokens.
+
+**Keine Schlüsselrotation durch bloßes Ersetzen von `SEO_MASTER_KEY` durchführen.** Details: [Verschlüsselte Zugangsdaten](SECURE_INTEGRATIONS.md).
+
+### Eine URL bei Google auf Indexierung prüfen
+
+**Wo:** **Sichtbarkeit → Search Console → Google URL Inspection**.
+
+1. Search Console mit einem eigenen autorisierten Google-OAuth-Client verbinden.
+2. In der Werkbank die zur Website gehörende GSC-Property auswählen.
+3. Im neuen URL-Inspection-Feld eine URL derselben Website eintragen und **URL bei Google prüfen** anklicken.
+4. Den von Google berichteten Status, gegebenenfalls den letzten Crawl und Canonical-Angaben ansehen.
+
+Die Abfrage nutzt die **Google URL Inspection API**. Sie führt **keinen Live-URL-Test** aus, verändert nichts an Googles Index und kann Kontingentgrenzen unterliegen. Eine echte OAuth-Verbindung muss mit einem eigenen Google-Konto geprüft werden; die automatisierten Tests simulieren Google-Antworten. [Anleitung](GSC_URL_INSPECTION.md).
+
+### Benachrichtigungen und PageSpeed-Batches
+
+**Wo:** **System → Einstellungen → Monitor-Benachrichtigungen** sowie **Analyse → PageSpeed**.
+
+1. Als Administrator SMTP-Server (STARTTLS), Absender/Empfänger und/oder einen HTTPS-Webhook eintragen, Mindestschwere wählen und den Versand **ausdrücklich aktivieren**.
+2. Einen Monitor unter **Maßnahmen → Monitoring** betreiben. Neue Meldungen werden im Programm gespeichert; bei passender Konfiguration wird **ein gebündelter Versandversuch pro Monitorlauf** durchgeführt.
+3. Unter **Analyse → PageSpeed** zunächst einen Crawl für die Website abschließen.
+4. In **Top-Seiten im Batch prüfen** die Anzahl 3, 5 oder 10 auswählen und den Mobile-Batch starten.
+5. Ergebnisse und **Felddaten-Abdeckung** für LCP, INP und CLS getrennt von Lighthouse-Labordaten betrachten.
+
+Versand erfolgt best effort; es existiert keine garantierte persistente Wiederholungswarteschlange. Bei fehlenden Chrome-UX-Report-Felddaten bleibt ein echter CWV-Wert unbekannt. Details: [Monitoring und Batch-PageSpeed](NOTIFICATIONS_PAGESPEED.md).
+
+### SERP-Cluster und Hilfe
+
+**Wo:** **Sichtbarkeit → Keyword-Recherche → Cluster-Werkzeug → SERP-Overlap-Clustering**.
+
+1. 2–15 Keywords zeilenweise eintragen.
+2. Einen konfigurierten SERP-Anbieter nutzen oder für **alle** Keywords vollständige Ergebnislisten im angegebenen Format erfassen.
+3. Überschneidungsschwelle auswählen, **SERP-Cluster berechnen** und Gruppen auf tatsächliche Suchintention prüfen.
+
+Der vorhandene **lexikalische Clusterer** bleibt separat verfügbar. SERP-Cluster können **transitiv** sein; eine automatisch berechnete Gruppe garantiert nicht, dass jede Keyword-Paarung ähnlich ist. Unter **System → Hilfe & Handbuch** sind die passenden Dokumente erreichbar. Für echte Screenshots/Demo benötigt das Projekt eine gestartete Testinstallation; der Aufnahmehelfer ist [dokumentiert](KEYWORD_SERP_CLUSTERING.md).
+
 ## 22. Weiterführende Dokumentation
 
 Die technische Dokumentation des Projekts enthält Details zu Methoden, Grenzwerten und Schnittstellen:
@@ -1007,6 +1073,10 @@ Die technische Dokumentation des Projekts enthält Details zu Methoden, Grenzwer
 - [Tracking, Rendering und Bilddiagnostik](TECHNICAL_DIAGNOSTICS.md)
 - [Advanced SEO: Overlap, Relaunch, Paginierung, Schema](ADVANCED_SEO.md)
 - [Verzeichnisqualität und KI-Quellenstabilität](AUTHORITY_INTELLIGENCE.md)
+- [Verschlüsselte Zugangsdaten](SECURE_INTEGRATIONS.md)
+- [Google URL Inspection](GSC_URL_INSPECTION.md)
+- [Benachrichtigungen und PageSpeed-Batch](NOTIFICATIONS_PAGESPEED.md)
+- [SERP-Keyword-Clustering und Demo](KEYWORD_SERP_CLUSTERING.md)
 - [Docker-Gesamtausgabe](DOCKER_FULL.md)
 - [MCP-Server](MCP_SERVER.md)
 - [SEO-Datenanbieter](SEO_DATA_PROVIDERS.md)

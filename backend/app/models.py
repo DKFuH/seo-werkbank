@@ -422,3 +422,32 @@ class AiPromptSample(Base):
     model_name: Mapped[str | None] = mapped_column(String(120), nullable=True)
     answer: Mapped[str] = mapped_column(Text)
     observed_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+
+
+class UptimeCheck(Base):
+    """One uptime probe of one URL: outcome, total response time, HTTP status. Kept for 90 days."""
+
+    __tablename__ = "uptime_checks"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    monitor_id: Mapped[int] = mapped_column(ForeignKey("monitors.id", ondelete="CASCADE"), index=True)
+    url: Mapped[str] = mapped_column(String(2048))
+    checked_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, index=True)
+    outcome: Mapped[str] = mapped_column(String(20))  # ok|slow|timeout|ssl|dns|connection|redirect|not_found|server_error|http_error|encoding|incomplete|too_large
+    status_code: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    response_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    error: Mapped[str | None] = mapped_column(String(300), nullable=True)
+    __table_args__ = (Index("ix_uptime_checks_monitor_time", "monitor_id", "checked_at"),)
+
+
+class UptimeIncident(Base):
+    """A period in which a URL was down or slow, from the first failing to the first good check."""
+
+    __tablename__ = "uptime_incidents"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    monitor_id: Mapped[int] = mapped_column(ForeignKey("monitors.id", ondelete="CASCADE"), index=True)
+    url: Mapped[str] = mapped_column(String(2048))
+    outcome: Mapped[str] = mapped_column(String(20))
+    description: Mapped[str] = mapped_column(String(300))
+    started_at: Mapped[datetime] = mapped_column(DateTime, index=True)
+    resolved_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    checks: Mapped[int] = mapped_column(Integer, default=1)

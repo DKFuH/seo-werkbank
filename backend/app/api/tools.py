@@ -70,6 +70,52 @@ def keyword_cluster(body: ClusterIn, user: User = Depends(current_user)) -> dict
     return {"clusters": research.cluster_keywords(body.keywords, body.threshold, body.seed), "method": "Lexikalisch (gemeinsame Wortstämme, Jaccard-Ähnlichkeit)"}
 
 
+
+class SerpClusterIn(BaseModel):
+    keywords: list[str] = Field(min_length=2, max_length=15)
+    country: str = Field("de", pattern=r"^[a-z]{2}$")
+    lang: str = Field("de", pattern=r"^[a-z]{2}$")
+    min_overlap: int = Field(3, ge=1, le=10)
+    manual_results: dict[str, list[str]] | None = None
+
+
+@router.post("/keywords/serp-clusters")
+async def keyword_serp_clusters(body: SerpClusterIn, user: User = Depends(current_user),
+                                db: Session = Depends(get_db)) -> dict:
+    """Request 2–15 identical-provider SERPs, or cluster complete supplied URL sets."""
+    keywords = [" ".join(k.strip().split()) for k in body.keywords]
+    if any(not k or len(k) > 200 for k in keywords) or len(set(keywords)) != len(keywords):
+        raise HTTPException(422, "2–15 unterschiedliche Keywords mit höchstens 200 Zeichen eingeben")
+    if body.manual_results is not None:
+        if set(body.manual_results) != set(keywords):
+            raise HTTPException(422, "Manuelle SERP-Listen müssen exakt zu allen Keywords vorliegen")
+        results = {kw: urls[:10] for kw, urls in body.manual_results.items()}
+        for urls in results.values():
+            if not urls:
+                raise HTTPException(422, "Leere Ergebnisliste")
+            for url in urls:
+                parts = urlsplit(url)
+                if parts.scheme not in ("http", "https") or not parts.hostname or parts.username or parts.password:
+                    raise HTTPException(422, "Ungültige Ergebnis-URL")
+        provider = "manual"
+    else:
+        settings = get_setting(db, "serp")
+        if settings.get("provider", "none") == "none":
+            raise HTTPException(422, "SERP-Anbieter konfigurieren oder manuelle Ergebnisse liefern")
+        results = {}
+        for kw in keywords:
+            try:
+                result = await serp.search(settings, kw, country=body.country, lang=body.lang, num=10)
+            except serp.SerpError as exc:
+                raise HTTPException(502, "SERP-Anbieter konnte nicht alle Keywords abrufen") from exc
+            results[kw] = [r["url"] for r in result["results"]]
+        provider = settings["provider"]
+    return {"provider": provider, "clusters": research.cluster_by_serp(results, body.min_overlap),
+            "keywords_count": len(results), "min_overlap": body.min_overlap,
+            "method": "Identische URL-Überschneidungen in erfassten Top-10-Listen, transitive Gruppierung; "
+                      "keine bestätigten Google-Rankings und keine automatische Seitenarchitektur-Entscheidung."}
+
+
 @router.post("/keywords/intent")
 def keyword_intent(body: KeywordsIn, user: User = Depends(current_user)) -> dict:
     return {"items": [{"keyword": k, **research.classify_intent(k)} for k in body.keywords[:2000]]}
