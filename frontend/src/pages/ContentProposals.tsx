@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { Badge, Button, Card, EmptyState, ErrorBox, Field, PageHeader, Select, Spinner, Textarea } from "../components/ui";
 import { api } from "../lib/api";
 import { useSite } from "../lib/context";
@@ -10,10 +10,11 @@ type ItemsResponse = { items: Item[] };
 type Proposal = { exists: boolean; work_item_id: number; status?: "draft" | "approved" | "published";
   original_text?: string; proposed_text?: string; rationale?: string; approved_at?: string | null;
   marked_published_at?: string | null; diff?: string[]; diff_truncated?: boolean;
-  remote_publication?: false; note?: string };
+  remote_publication?: false; note?: string; content_type?: string };
 
 export default function ContentProposals() {
   const { site } = useSite();
+  const [params] = useSearchParams();
   const qc = useQueryClient();
   const [selected, setSelected] = useState(0);
   const [original, setOriginal] = useState("");
@@ -25,7 +26,9 @@ export default function ContentProposals() {
     queryFn: () => api.get("/sites/" + site!.id + "/seo-work", { kind: "content" }), enabled: !!site,
   });
   const choices = items.data?.items ?? [];
-  const id = choices.some((i) => i.id === selected) ? selected : (choices[0]?.id ?? 0);
+  const requested = Number(params.get("item") ?? 0);
+  const id = choices.some((i) => i.id === selected) ? selected :
+    choices.some((i) => i.id === requested) ? requested : (choices[0]?.id ?? 0);
   const path = "/sites/" + site?.id + "/seo-work/" + id + "/content-proposal";
   const qKey = ["content-proposal", site?.id, id];
   const proposal = useQuery<Proposal>({ queryKey: qKey, queryFn: () => api.get(path), enabled: !!site && id > 0 });
@@ -72,6 +75,7 @@ export default function ContentProposals() {
     {proposal.data && <Card title="Revision" actions={<Badge tone={proposal.data.status === "approved" ? "green" : proposal.data.status === "published" ? "blue" : "gray"}>
       {proposal.data.exists ? proposal.data.status : "noch kein Entwurf"}
     </Badge>}>
+      {proposal.data.content_type === "application/ld+json" && <p className="mb-3 text-sm font-medium text-amber-700 dark:text-amber-300">JSON-LD-Schemaentwurf: Änderungen müssen gültiges schema.org-JSON sein. Freigabe ist keine Veröffentlichung.</p>}
       <div className="grid gap-3 lg:grid-cols-2">
         <Field label="Ausgangstext (manuell, optional)">
           <Textarea rows={9} maxLength={100000} value={original} disabled={!editable}
