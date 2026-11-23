@@ -394,6 +394,16 @@ TECHNICAL_REQUIREMENT_IDS = frozenset({
     "canonical_broken", "not_https", "mixed_content", "insecure_form",
     "schema_invalid_json", "sitemap_invalid",
 })
+GOOGLE_RECOMMENDATION_IDS = frozenset({
+    "redirect_chain", "link_to_redirect", "empty_anchor",
+    "canonical_multiple", "canonical_chain", "title_missing",
+    "title_duplicate", "description_duplicate", "duplicate_content",
+    "https_not_enforced", "img_alt_missing", "img_large",
+    "viewport_missing", "viewport_not_responsive",
+    "schema_missing_required", "schema_missing_recommended",
+    "schema_structure", "hreflang_invalid", "hreflang_no_return",
+    "hreflang_broken", "hreflang_conflict", "sitemap_non_indexable",
+})
 SEO_HEURISTIC_IDS = frozenset({
     "slow_response", "html_too_large", "redirect_temporary",
     "nofollow_internal", "orphan_page", "deep_page", "single_inlink",
@@ -434,7 +444,9 @@ def classify_rule(rule_id: str) -> str:
         return "technical_requirement"
     if rule_id in SEO_HEURISTIC_IDS:
         return "seo_heuristic"
-    return "google_recommendation"
+    if rule_id in GOOGLE_RECOMMENDATION_IDS:
+        return "google_recommendation"
+    return "seo_heuristic"
 
 
 def rule_provenance(rule_id: str) -> dict:
