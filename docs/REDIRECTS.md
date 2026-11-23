@@ -26,3 +26,9 @@ Keine automatischen Deployments, Wildcard-Regeln, Cross-Domain-Weiterleitungen o
 - Der Apache-Export setzt `RewriteEngine On` nur einmal und enthält einen
   Hinweis auf **.htaccess im DocumentRoot**. Die Regel muss für vHost-Konfigurationen
   gesondert an deren Rewrite-Kontext angepasst werden.
+
+## Ablauf beim Update oder bei einer Migration
+
+Wenn das automatische Alembic-Upgrade bei `0013` abbricht, existieren möglicherweise mehrere Redirect-Zeilen mit derselben Kombination aus Website-ID und Quell-URL. **Vor Änderungen eine Datenbanksicherung anlegen.** Datensätze und Status fachlich vergleichen und die gewünschten Regeln gezielt erhalten. Danach das Upgrade erneut durchführen. Die Migration löst den Konflikt nicht durch automatisches Löschen.
+
+Das Importieren oder Exportieren einer Regel bedeutet **nicht**, dass sie auf dem Webserver aktiv ist. Apache-Regeln verwenden einen Pfad relativ zur `.htaccess` im DocumentRoot. Ein gleicher Ausdruck in einer vHost-Datei kann ein anderes Match-Verhalten haben; daher den Export nicht ohne Anpassung übernehmen.
