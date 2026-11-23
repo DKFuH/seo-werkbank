@@ -14,8 +14,8 @@ Ordered by expected value to users. Items move to `CHANGELOG.md` when shipped. S
 
 ## Later
 
-- Log-file analysis (crawl budget, bot hits per URL, status codes seen by Googlebot).
-- Bing Webmaster Tools and Google Analytics 4 integrations.
+- Advanced log-analysis adapters (custom access log formats, independently verified crawler signatures).
+- Google Analytics 4 integration (Bing Webmaster Tools and IndexNow are now implemented).
 - Image audit by downloading headers of all images (dimensions, format, compression potential).
 - Soft-404 detection, pagination-sequence checks, `srcset`/CSS-background link extraction, AMP checks.
 - Rendering-based mobile checks (tap targets, font sizes) through Playwright.
