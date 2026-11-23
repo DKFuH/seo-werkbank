@@ -53,19 +53,23 @@ def _completed_crawls(db: Session, site_id: int) -> list[Crawl]:
 
 
 def _candidates(db: Session, site_id: int) -> dict:
-    """Indexable HTML URLs of the latest crawl that are new or whose content hash changed since the previous crawl."""
+    """URLs for IndexNow since the previous crawl: new, content changed, and removed (404/410 now, indexable before)."""
     crawls = _completed_crawls(db, site_id)
     if not crawls:
-        return {"crawl_id": None, "previous_crawl_id": None, "new": [], "changed": []}
+        return {"crawl_id": None, "previous_crawl_id": None, "new": [], "changed": [], "removed": []}
     latest = crawls[0]
     current = {u: h for u, h in db.execute(select(Page.url, Page.content_hash).where(
         Page.crawl_id == latest.id, Page.is_html.is_(True), Page.indexable.is_(True)))}
     if len(crawls) < 2:
-        return {"crawl_id": latest.id, "previous_crawl_id": None, "new": [], "changed": []}
+        return {"crawl_id": latest.id, "previous_crawl_id": None, "new": [], "changed": [], "removed": []}
     previous = {u: h for u, h in db.execute(select(Page.url, Page.content_hash).where(Page.crawl_id == crawls[1].id))}
+    was_indexable = {u for (u,) in db.execute(select(Page.url).where(
+        Page.crawl_id == crawls[1].id, Page.is_html.is_(True), Page.indexable.is_(True)))}
+    gone = {u for (u,) in db.execute(select(Page.url).where(Page.crawl_id == latest.id, Page.status_code.in_((404, 410))))}
+    removed = sorted(was_indexable & gone)
     new = sorted(u for u in current if u not in previous)
     changed = sorted(u for u, h in current.items() if u in previous and h and previous[u] and h != previous[u])
-    return {"crawl_id": latest.id, "previous_crawl_id": crawls[1].id, "new": new, "changed": changed}
+    return {"crawl_id": latest.id, "previous_crawl_id": crawls[1].id, "new": new, "changed": changed, "removed": removed}
 
 
 @router.get("/sites/{site_id}/indexnow/status")
@@ -74,8 +78,9 @@ async def indexnow_status(site_id: int, user: User = Depends(current_user), db: 
     settings = get_setting(db, "indexnow")
     cand = _candidates(db, site.id)
     base = {"configured": bool((settings.get("key") or "").strip()), "docs": bing.DOCS["indexnow"],
-            "candidates": {**cand, "new": cand["new"][:500], "changed": cand["changed"][:500],
-                           "new_count": len(cand["new"]), "changed_count": len(cand["changed"])}}
+            "candidates": {**cand, "new": cand["new"][:500], "changed": cand["changed"][:500], "removed": cand["removed"][:500],
+                           "new_count": len(cand["new"]), "changed_count": len(cand["changed"]),
+                           "removed_count": len(cand["removed"])}}
     if not base["configured"]:
         return {**base, "key_file": None}
     try:
@@ -85,7 +90,7 @@ async def indexnow_status(site_id: int, user: User = Depends(current_user), db: 
 
 
 class IndexNowIn(BaseModel):
-    source: Literal["manual", "new", "changed", "new_changed"] = "manual"
+    source: Literal["manual", "new", "changed", "removed", "new_changed", "all"] = "manual"
     urls: list[str] = Field(default_factory=list, max_length=bing.INDEXNOW_MAX_URLS)
 
 
@@ -97,7 +102,9 @@ async def indexnow_submit(site_id: int, body: IndexNowIn, user: User = Depends(c
         urls = body.urls
     else:
         cand = _candidates(db, site.id)
-        urls = (cand["new"] if body.source in ("new", "new_changed") else []) + (cand["changed"] if body.source in ("changed", "new_changed") else [])
+        urls = ((cand["new"] if body.source in ("new", "new_changed", "all") else [])
+                + (cand["changed"] if body.source in ("changed", "new_changed", "all") else [])
+                + (cand["removed"] if body.source in ("removed", "all") else []))
     ok, rejected = bing.same_host_urls(urls, site.url)
     if not ok:
         raise HTTPException(422, "Keine URLs dieser Website zum Melden." + (f" {len(rejected)} URL(s) gehören zu einem anderen Host." if rejected else ""))

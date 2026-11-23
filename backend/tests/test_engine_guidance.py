@@ -4,7 +4,7 @@ from app.audit.rules import RULES, rule_dict
 
 
 def test_all_rules_have_engine_specific_entries():
-    assert len(RULES) == 117
+    assert len(RULES) == 122
     for rule_id in RULES:
         evidence = rule_dict(rule_id)["search_engines"]
         assert set(evidence) == {"bing", "brave"}

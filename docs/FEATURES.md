@@ -40,7 +40,7 @@ Exporten und Fehlerbehebung.
 
 ## Was gegenüber OpenSEOSuite dazugekommen ist
 
-- **Deutsche Oberfläche**: alle Seiten, die 117 Audit-Regeln, Hinweise und Fehlermeldungen; deutsche Zahlen- und
+- **Deutsche Oberfläche**: alle Seiten, die 122 Audit-Regeln, Hinweise und Fehlermeldungen; deutsche Zahlen- und
   Datumsformate. KI-Antworten (optional, Ollama oder OpenAI-kompatibel) auf Deutsch.
 - **Deutsche Exporte**: Search-Console-, Keyword-Planer- und Links-CSVs mit deutschen Spaltennamen und Zahlen
   (`1.234`, `8,47`) werden korrekt gelesen.

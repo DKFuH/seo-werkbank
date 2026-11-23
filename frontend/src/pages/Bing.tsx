@@ -14,11 +14,11 @@ const SITE_KEY = "seotk.bing.site";
 const tooltipStyle = { background: "#0f172a", border: "none", borderRadius: 8, color: "#f1f5f9", fontSize: 12 };
 const axisTick = { fontSize: 11, fill: "#94a3b8" };
 
-type Source = "new_changed" | "new" | "changed" | "manual";
+type Source = "all" | "new_changed" | "new" | "changed" | "removed" | "manual";
 
 function IndexNowPanel({ siteId }: { siteId: number }) {
   const qc = useQueryClient();
-  const [source, setSource] = useState<Source>("new_changed");
+  const [source, setSource] = useState<Source>("all");
   const [manual, setManual] = useState("");
   const status = useQuery({ queryKey: ["indexnow", siteId], queryFn: () => api.get(`/sites/${siteId}/indexnow/status`), retry: false });
   const submit = useMutation({
@@ -32,9 +32,16 @@ function IndexNowPanel({ siteId }: { siteId: number }) {
   if (status.error) return <Card title="IndexNow"><ErrorBox error={status.error} onRetry={() => status.refetch()} /></Card>;
   const s = status.data;
   const c = s.candidates ?? {};
-  const count = source === "new" ? c.new_count : source === "changed" ? c.changed_count : source === "new_changed" ? (c.new_count ?? 0) + (c.changed_count ?? 0)
-    : manual.split(/\s+/).filter(Boolean).length;
-  const preview: string[] = source === "new" ? c.new ?? [] : source === "changed" ? c.changed ?? [] : source === "new_changed" ? [...(c.new ?? []), ...(c.changed ?? [])] : [];
+  const counts: Record<Exclude<Source, "manual">, number> = {
+    new: c.new_count ?? 0, changed: c.changed_count ?? 0, removed: c.removed_count ?? 0,
+    new_changed: (c.new_count ?? 0) + (c.changed_count ?? 0), all: (c.new_count ?? 0) + (c.changed_count ?? 0) + (c.removed_count ?? 0),
+  };
+  const lists: Record<Exclude<Source, "manual">, string[]> = {
+    new: c.new ?? [], changed: c.changed ?? [], removed: c.removed ?? [],
+    new_changed: [...(c.new ?? []), ...(c.changed ?? [])], all: [...(c.new ?? []), ...(c.changed ?? []), ...(c.removed ?? [])],
+  };
+  const count = source === "manual" ? manual.split(/\s+/).filter(Boolean).length : counts[source];
+  const preview: string[] = source === "manual" ? [] : lists[source];
 
   return (
     <Card title="IndexNow" description="Meldet neue und geänderte URLs an Bing und weitere IndexNow-Suchmaschinen. Ein Hinweis, keine Indexierungsgarantie; Google nimmt nicht teil.">
@@ -54,9 +61,11 @@ function IndexNowPanel({ siteId }: { siteId: number }) {
           <div className="flex flex-wrap items-end gap-3">
             <Field label="Welche URLs?">
               <Select value={source} onChange={(e) => setSource(e.target.value as Source)} className="w-auto">
-                <option value="new_changed">Neu + geändert seit vorherigem Crawl</option>
+                <option value="all">Neu, geändert und gelöscht seit vorherigem Crawl</option>
+                <option value="new_changed">Neu + geändert</option>
                 <option value="new">Nur neue URLs</option>
                 <option value="changed">Nur geänderte Inhalte</option>
+                <option value="removed">Nur gelöschte URLs (404/410)</option>
                 <option value="manual">Eigene Liste</option>
               </Select>
             </Field>
@@ -71,7 +80,8 @@ function IndexNowPanel({ siteId }: { siteId: number }) {
           ) : (
             <div className="text-sm">
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Indexierbare HTML-Seiten des letzten Crawls, die neu sind oder deren Inhalt sich gegenüber dem vorherigen Crawl geändert hat.
+                Neu oder inhaltlich geändert: indexierbare HTML-Seiten des letzten Crawls. Gelöscht: im vorherigen Crawl indexierbar, jetzt 404 oder 410.
+                Bing empfiehlt, Änderungen möglichst laufend statt gebündelt zu melden („Avoid batch submissions when possible“).
               </p>
               {preview.length ? (
                 <ul className="mt-2 max-h-48 space-y-0.5 overflow-auto">

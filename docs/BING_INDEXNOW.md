@@ -42,6 +42,9 @@ Indexierung.
    - **Neu + geändert seit vorherigem Crawl:** indexierbare HTML-Seiten des
      letzten Crawls, die im vorherigen Crawl fehlten oder deren Inhalts-Hash
      sich geändert hat. Braucht zwei abgeschlossene Crawls.
+   - **Neu, geändert und gelöscht seit vorherigem Crawl:** zusätzlich URLs, die im vorherigen Crawl indexierbar waren und
+     jetzt 404 oder 410 liefern. Eine Weiterleitung (301) zählt nicht als Löschung. Bing nennt IndexNow ausdrücklich auch
+     für entfernte URLs.
    - **Eigene Liste:** eine URL pro Zeile; URLs anderer Hosts werden
      ausgelassen.
 
@@ -56,5 +59,6 @@ Antworten der IndexNow-API:
 | 422 | URLs gehören nicht zum Host |
 | 429 | zu viele Anfragen |
 
-Nur echte Änderungen melden. Wiederholtes Melden unveränderter URLs bringt
+Bing empfiehlt, Änderungen möglichst laufend statt gebündelt zu melden („Avoid batch submissions when possible“); die
+Werkbank sendet eine Liste je Klick, am besten nach jedem Crawl oder jeder Veröffentlichung. Nur echte Änderungen melden. Wiederholtes Melden unveränderter URLs bringt
 nichts und kann als Spam gewertet werden.

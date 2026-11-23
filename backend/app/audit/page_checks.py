@@ -32,6 +32,24 @@ def robots_directives(meta_robots: str | None, x_robots: str | None) -> set[str]
     return out
 
 
+def bing_legacy_directives(meta_parts: list[str], x_robots: str | None) -> list[str]:
+    """noarchive/nocache that apply to Bing: generic or bingbot/msnbot-scoped, not Googlebot-only."""
+    found: set[str] = set()
+    sources = list(meta_parts) + [x_robots or ""]
+    for raw in sources:
+        scoped = None
+        text = raw.lower()
+        for part in text.replace(";", ",").split(","):
+            part = part.strip()
+            if ":" in part and not part.startswith(("max-", "unavailable_after", "ai-")):
+                agent, _, part = part.partition(":")
+                scoped = agent.strip()
+                part = part.strip()
+            if part in ("noarchive", "nocache") and scoped in (None, "bingbot", "msnbot", "robots"):
+                found.add(part)
+    return sorted(found)
+
+
 def indexability(status: int | None, is_html: bool, directives: set[str], canonical: str | None, url: str,
                  blocked: bool = False) -> tuple[bool, str | None]:
     if blocked:
@@ -95,6 +113,9 @@ def check_page(url: str, page: ParsedPage, *, status: int, headers: dict[str, st
         out.append(("meta_refresh", {"content": page.meta_refresh}))
     if "noindex" in directives:
         out.append(("noindex", {"meta_robots": page.meta_robots, "x_robots_tag": headers.get("x-robots-tag")}))
+    legacy = bing_legacy_directives(page.bing_robots, headers.get("x-robots-tag"))
+    if legacy:
+        out.append(("bing_legacy_ai_directives", {"directives": legacy, "x_robots_tag": headers.get("x-robots-tag")}))
 
     # Canonical
     if page.canonical_count > 1:

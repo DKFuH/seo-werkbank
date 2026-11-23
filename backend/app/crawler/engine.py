@@ -307,7 +307,10 @@ class Crawler:
         if rules is not None:
             checks["robots"] = {"status": rules.status, "present": rules.present, "errors": rules.errors[:20],
                                 "sitemaps": rules.sitemaps[:50], "blocks_start": not rules.allowed(self.start_url, self.user_agent),
-                                "crawl_delay": rules.crawl_delay(self.user_agent)}
+                                "crawl_delay": rules.crawl_delay(self.user_agent),
+                                "googlebot_blocks_start": not rules.allowed(self.start_url, "Googlebot"),
+                                "bingbot_blocks_start": not rules.allowed(self.start_url, "bingbot"),
+                                "bingbot_missing_generic": rules.missing_generic_disallows("bingbot")}
         if p.scheme == "https" and p.port is None:
             res = await self.fetcher.fetch(f"http://{host}{p.path or '/'}", "GET", max_body=4096)
             checks["http_version"] = {"status": res.status, "redirect_to": res.redirect_to, "error": res.error}

@@ -8,7 +8,7 @@
 ![Selbst gehostet](https://img.shields.io/badge/selbst%20gehostet-ja-6366f1)
 [![Mitmachen](https://img.shields.io/badge/PRs-willkommen-brightgreen)](CONTRIBUTING.md)
 
-**Selbst gehostetes SEO-Werkzeug mit deutscher Oberfläche.** Crawler, technisches Audit mit 117 Regeln,
+**Selbst gehostetes SEO-Werkzeug mit deutscher Oberfläche.** Crawler, technisches Audit mit 122 Regeln,
 Search Console, Bing Webmaster Tools, Keyword- und SERP-Analyse, **WDF\*IDF**, **GEO-Check** für KI-Suchsysteme,
 Weiterleitungen, Logfile-Analyse, Schema-Management, Matomo, PageSpeed, Monitoring und Berichte.
 Läuft auf dem eigenen Rechner, die Daten bleiben dort. Kein bezahlter API-Zugang nötig.

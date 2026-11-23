@@ -133,5 +133,17 @@ class RobotsRules:
         delays = [g.crawl_delay for g in self._group_for(user_agent) if g.crawl_delay is not None]
         return max(delays) if delays else None
 
+    def missing_generic_disallows(self, agent: str = "bingbot") -> list[str]:
+        """Disallow patterns of the ``*`` groups that a crawler-specific group for ``agent`` does not repeat.
+
+        Bing documents that Bingbot ignores the generic section once a Bingbot section exists.
+        """
+        specific = [g for g in self.groups if any(a != "*" and a in agent.lower() for a in g.agents)]
+        if not specific:
+            return []
+        have = {pattern for g in specific for allow, pattern in g.rules if not allow}
+        want = {pattern for g in self.groups if "*" in g.agents for allow, pattern in g.rules if not allow and pattern}
+        return sorted(want - have)[:20]
+
     def blocks_everything(self, user_agent: str = "*") -> bool:
         return not self.allowed("https://x/", user_agent)
