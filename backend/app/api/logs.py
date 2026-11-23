@@ -97,7 +97,13 @@ async def upload_logs(site_id: int, file: UploadFile = File(...), fmt: str = For
         db.commit()
         db.refresh(record)
 
-        # Bind the temporary file to its import ID so startup recovery can\n        # remove only files belonging to interrupted imports.\n        temp_path = os.path.join(tempfile.gettempdir(), f"seo-log-import-{record.id}-{os.path.basename(path)}")\n        os.replace(path, temp_path)\n        path = None\n\n        async def work(ctx):
+        # Bind the temporary file to its import ID so startup recovery can
+        # remove only files belonging to interrupted imports.
+        temp_path = os.path.join(tempfile.gettempdir(), f"seo-log-import-{record.id}-{os.path.basename(path)}")
+        os.replace(path, temp_path)
+        path = None
+
+        async def work(ctx):
             try:
                 ctx.update(0.05, "Analysiere Logdatei")
                 result = await asyncio.to_thread(_process_import, record.id, temp_path, compressed, fmt)
