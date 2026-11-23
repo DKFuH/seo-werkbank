@@ -13,8 +13,8 @@ the current implementation.
 - **Rank tracking** is limited to Search Console's average position for your own verified site. There is no per-location, per-device
   daily tracking of arbitrary keywords.
 - **Indexed-page counts** cannot be verified without Search Console; sitemap size and indexable crawled pages are shown instead.
-- **Google Trends** is not integrated (no official API). **Bing Webmaster Tools** and **Google Analytics** integrations are not
-  implemented yet. **Google Business Profile** needs API access that Google grants per project and is not implemented.
+- **Google Trends** is not integrated (no official API). **Google Analytics** integration is not
+  implemented yet. Bing Webmaster Tools and IndexNow are separate optional integrations. **Google Business Profile** needs API access that Google grants per project and is not implemented.
 - **Google Ads Keyword Planner** has no direct API integration; use its CSV export.
 
 ## Estimates (always labelled in the UI)
@@ -134,5 +134,5 @@ the current implementation.
 
 ## Not implemented (roadmap)
 
-Log-file analysis · Bing Webmaster Tools · Google Analytics · Google Trends · e-mail/webhook notifications · batch page-speed testing
-across a crawl · URL Inspection API · SERP-overlap clustering in the UI (function exists) · encrypted secrets · distributed crawling.
+Custom log formats and verified bot identities · Google Analytics · Google Trends · e-mail/webhook notifications · batch page-speed testing
+across a crawl · SERP-overlap clustering in the UI (function exists) · encrypted secrets · distributed crawling.
