@@ -8,12 +8,13 @@ import {
   Pagination, SearchInput, Select, Spinner, Stat, Tabs, Textarea, Url,
 } from "../components/ui";
 import { SchemaPotentialPanel } from "../components/AdvancedSeoPanels";
+import SchemaManagementPanel from "../components/SchemaManagementPanel";
 import { api } from "../lib/api";
 import { useSite } from "../lib/context";
 import { fmtInt, shortUrl, titleCase } from "../lib/format";
 
-type TabId = "overview" | "potential" | "validator" | "generator";
-const TAB_IDS: TabId[] = ["overview", "potential", "validator", "generator"];
+type TabId = "overview" | "potential" | "validator" | "generator" | "management";
+const TAB_IDS: TabId[] = ["overview", "potential", "validator", "generator", "management"];
 const tooltipStyle = { background: "#0f172a", border: "none", borderRadius: 8, color: "#f8fafc", fontSize: 12 } as const;
 const axisTick = { fontSize: 12, fill: "#94a3b8" } as const;
 
@@ -411,11 +412,13 @@ export default function Schema() {
         { id: "potential", label: "Rich-Result-Potenzial" },
         { id: "validator", label: "Validator" },
         { id: "generator", label: "Generator" },
+        { id: "management", label: "Schema-Management" },
       ]} />
       {tab === "overview" && <Overview onGenerate={(type) => go("generator", type)} />}
       {tab === "potential" && site && <SchemaPotentialPanel siteId={site.id} />}
       {tab === "validator" && <Validator />}
       {tab === "generator" && <Generator key={params.get("type") ?? ""} initialType={params.get("type")} />}
+      {tab === "management" && site && <SchemaManagementPanel siteId={site.id} />}
     </>
   );
 }

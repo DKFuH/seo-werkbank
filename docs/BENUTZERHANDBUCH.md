@@ -31,6 +31,7 @@
 20. [Datenqualität, Berechtigungen und Grenzen](#20-datenqualität-berechtigungen-und-grenzen)
 21. [Betrieb, Updates und Sicherungen](#21-betrieb-updates-und-sicherungen)
 22. [Weiterführende Dokumentation](#22-weiterführende-dokumentation)
+23. [SEO-Operations: Redirects, Logfiles und Schema](#23-seo-operations-redirects-logfiles-und-schema)
 
 ---
 
@@ -1101,6 +1102,23 @@ Die technische Dokumentation des Projekts enthält Details zu Methoden, Grenzwer
 - [Lokale Nachweise](LOCAL_EVIDENCE.md)
 - [API-Referenz](API.md)
 - [Upstream-README / Originaldokumentation](UPSTREAM_README.md)
+
+---
+
+## 23. SEO-Operations: Redirects, Logfiles und Schema
+
+Die drei Module sind eng miteinander verbunden, nehmen aber **keine automatischen Server- oder CMS-Änderungen** vor.
+
+| Menü | Aktion | Ergebnis | Anleitung |
+| --- | --- | --- | --- |
+| Analyse → Weiterleitungen | Crawl-Vorschläge und manuelle Regeln, Simulation, Freigabe, Export | CSV, Apache- oder Nginx-Konfigurationsentwurf | [Redirects](REDIRECTS.md) |
+| Sichtbarkeit → Logfile & 404 | Begrenzter Import von Combined/Common/.gz, nur Aggregate | 404-Monitor, UA-basierte Bot-Indizien und Redirect-Vorschlag | [Log-Analyse](LOG_ANALYSIS.md) |
+| Analyse → Strukturierte Daten → Schema-Management | URL auswählen, JSON-LD aus Crawl vorbefüllen, Diff und Vorlagenvorschau | JSON-LD-Content-Entwurf für getrennte Freigabe | [Schema-Management](STRUCTURED_DATA.md) |
+
+**Regel:** Nicht jede 404-Seite braucht einen Redirect. Ein Ziel muss inhaltlich passen.
+Die Aussage „Googlebot“ im Log ist nur ein User-Agent-Indiz; für eine
+verifizierte Identität ist eine zusätzliche IP-/DNS-Prüfung notwendig.
+Bei JSON-LD müssen unbestätigte Felder vor Freigabe manuell ergänzt werden.
 
 ---
 

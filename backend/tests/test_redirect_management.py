@@ -13,7 +13,8 @@ def test_normalise_only_same_host():
     assert normalise_url(SITE, "https://example.de/alt") == "https://example.de/alt"
     for candidate in ("https://evil.test/alt", "https://example.de/a?next=evil",
                       "https://example.de/a%0d%0a", "https://example.de/a#fragment",
-                      "https://user@example.de/a"):
+                      "https://user@example.de/a", "https://example.de/a$host",
+                      "https://example.de/a;return"):
         with pytest.raises(HTTPException):
             normalise_url(SITE, candidate)
 
