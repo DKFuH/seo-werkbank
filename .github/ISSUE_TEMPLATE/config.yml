@@ -1,5 +1,8 @@
 blank_issues_enabled: false
 contact_links:
+  - name: Question or idea
+    url: https://github.com/DKFuH/seo-werkbank/discussions
+    about: Ask how something works or discuss an idea before opening an issue.
   - name: Report a security vulnerability
-    url: https://github.com/Sushang-Agnihotri/OpenSEOSuite/security/advisories/new
+    url: https://github.com/DKFuH/seo-werkbank/security/advisories/new
     about: Please report security problems privately instead of opening a public issue.
