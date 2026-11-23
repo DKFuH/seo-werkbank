@@ -30,11 +30,17 @@ Dann **http://localhost:8000** öffnen und den ersten Administrator anlegen. Unt
 **Sichtbarkeit → Search Console**:
 
 - **API-Variante:** Ein Administrator hinterlegt unter **System → Einstellungen** einen Google-OAuth-Client. Dann mit Google verbinden, Property auswählen, **Property speichern** und **Jetzt synchronisieren**.
-- **CSV-Variante:** Leistungs-CSV-Dateien unter **CSV importieren** einzeln hochladen.
+- **CSV-Variante:** Leistungs-CSV-Dateien unter **CSV importieren** einzeln hochladen. Im Fenster **Spalten zuordnen** erkannte Spalten prüfen, fehlende von Hand zuordnen und das Zahlenformat bestätigen.
 
 **Achtung:** Für Content-Refresh und seitenbezogene Messungen muss eine Zeile die **Suchanfrage und ihre URL zusammen** enthalten. Separate Query- und Pages-CSV-Dateien reichen dafür nicht. Undatierte CSV-Dateien erlauben keine Zeitvergleiche.
 
-## D. Eine Content-Chance umsetzen
+## D. Rankings und Erreichbarkeit im Blick behalten
+
+1. **Sichtbarkeit → Ranktracker → Portfolio (GSC):** wichtigste Zielkeywords mit Ziel-URL und Label anlegen. Die Positionen stammen aus der Search Console.
+2. Im Tab **Alle GSC-Keywords** nach **Top-3-Funden** und **Chancen** (Position 4–20) schauen und passende Suchanfragen **Ins Monitoring** übernehmen.
+3. **Maßnahmen → Website Health → Überwachung starten:** Die Website wird alle 15 Minuten auf Erreichbarkeit und Antwortzeit geprüft; Vorfälle erscheinen als Meldung.
+
+## E. Eine Content-Chance umsetzen
 
 1. **Content → Content-Refresh**: Seite und passende Suchanfragen prüfen.
 2. **Briefing kopieren** und fachlich überprüfen.
@@ -44,7 +50,7 @@ Dann **http://localhost:8000** öffnen und den ersten Administrator anlegen. Unt
 6. **Im eigenen CMS veröffentlichen**. Die Werkbank veröffentlicht nicht selbst.
 7. Vorgang anschließend als veröffentlicht markieren und nach ausreichender Zeit eine Folgemessung aufnehmen.
 
-## E. Neue technische Prüfungen nach Bedarf
+## F. Weitere technische Prüfungen nach Bedarf
 
 Diese Funktionen sind bewusst **nicht** Teil des Pflicht-Schnellstarts. Sie nutzen einen vorhandenen Crawl oder erfordern eine ausdrückliche Diagnose.
 
@@ -60,11 +66,12 @@ Diese Funktionen sind bewusst **nicht** Teil des Pflicht-Schnellstarts. Sie nutz
 
 **Ausführliche Klickanleitungen:** [Benutzerhandbuch, Kapitel 6.4, 7.4–7.7, 9.4, 10.4 und 13.5](BENUTZERHANDBUCH.md).
 
-## F. Mehr Funktionen nach Bedarf
+## G. Mehr Funktionen nach Bedarf
 
 | Was willst du tun? | Wo? |
 |---|---|
-| Zielkeyword speichern / aktuelle Rankingbeobachtung erfassen | **Sichtbarkeit → Ranktracker** |
+| Zielkeywords mit GSC-Positionen verfolgen, Chancen finden | **Sichtbarkeit → Ranktracker** |
+| KI-Zugang, llms.txt und CDN-Sperren prüfen | **Sichtbarkeit → GEO-Check** |
 | Suchergebnisse vergleichen | **Sichtbarkeit → SERP-Analyse** (Suchanbieter nötig) |
 | Themen und echte Fragen dokumentieren | **Content → SEO-Research** |
 | Einzeltext mit Wettbewerbern vergleichen | **Content → Content-Optimierung** oder **WDF*IDF** |
@@ -73,10 +80,12 @@ Diese Funktionen sind bewusst **nicht** Teil des Pflicht-Schnellstarts. Sie nutz
 | Besuchsdaten ansehen | **Conversion → Matomo** (Zugangsdaten nötig) |
 | Funnel- und Vertrauenshinweise erfassen | **Content → SEO-Research**, dann **Conversion → Conversion & Trust** |
 | Fallstudien-Entwürfe planen | **Content → SEO-Research**, dann **Content Studio** |
-| Regelmäßige Prüfungen anlegen | **Maßnahmen → Monitoring** |
+| Erreichbarkeit und Antwortzeit überwachen | **Maßnahmen → Website Health** |
+| Regelmäßige Prüfungen und E-Mail-/Webhook-Meldungen | **Maßnahmen → Monitoring**, **System → Einstellungen** |
 | PDFs, CSVs und Excel-Berichte holen | **Maßnahmen → Berichte** |
+| Anleitung zu einem Bildschirm finden | **System → Hilfe & Handbuch** |
 
-## G. Typische Probleme
+## H. Typische Probleme
 
 - **Leeres Dashboard:** Meist fehlt der erste Crawl, ein GSC-Import oder die richtige Websiteauswahl.
 - **Kein SERP-Ergebnis:** Unter **System → Einstellungen → SERP-Anbieter** den Anbieter prüfen; SearXNG kann von Suchmaschinen blockiert werden.
@@ -86,6 +95,8 @@ Diese Funktionen sind bewusst **nicht** Teil des Pflicht-Schnellstarts. Sie nutz
 - **Tracking & Rendering ohne Browser:** Playwright/Chromium ist eine zusätzliche Installation; die reinen Bildhinweise benötigen nur einen abgeschlossenen Crawl.
 - **Keine Relaunch-Daten:** Zwei abgeschlossene Crawls derselben Website auswählen.
 - **Keine Verzeichnis-/KI-Quellenbewertung:** Zuerst Research-Einträge bzw. tatsächlich beobachtete KI-Zitationen dokumentieren.
+- **CSV-Import bricht ab:** Im Fenster **Spalten zuordnen** fehlt ein Pflichtfeld; die passende Spalte von Hand wählen.
+- **Ranktracker ohne Gerätedaten:** Search Console einmal neu synchronisieren.
 - **Keine Wirkung erkennbar:** Auf denselben Zeitraum, dieselbe Datenquelle und ausreichende Impressionen achten; Veränderungen beweisen keine Kausalität.
 
 Mehr Details, sämtliche Menüpunkte, Datengrenzen, Berechtigungen und Fehlerbehebung: **[Benutzerhandbuch](BENUTZERHANDBUCH.md)**. 

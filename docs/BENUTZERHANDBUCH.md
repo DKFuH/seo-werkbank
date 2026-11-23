@@ -1,6 +1,6 @@
 # SEO-Werkbank – Benutzerhandbuch
 
-**Version:** für den Stand des GitHub-Hauptbranches vom 22. November 2026, einschließlich der gemergten PRs #25–#27  
+**Stand:** Hauptbranch vom 23. November 2026  
 **Zielgruppe:** Websitebetreiber, SEO-Redakteure, Agenturen und Administratoren  
 **Projekt:** https://github.com/DKFuH/seo-werkbank  
 **Lizenz:** MIT · Basierend auf OpenSEOSuite
@@ -78,13 +78,13 @@ Die Oberfläche ist deutschsprachig. Die Menübereiche lauten **Übersicht, Anal
 
 ### 2.1 Zusätzliche Diagnosen nach dem ersten Crawl
 
-Wenn du bereits einen Crawl hast, sind drei neue Arbeitswege besonders nützlich:
+Wenn du bereits einen Crawl hast, sind drei weitere Arbeitswege besonders nützlich:
 
 - **Analyse → Tracking & Rendering:** Eine **URL deiner ausgewählten Website** eingeben und Roh-HTML mit dem JavaScript-Rendering vergleichen; bei installiertem Playwright und entsprechender Berechtigung optional Consent-Abläufe ausdrücklich testen. Bildwarnungen nutzen den letzten Crawl (Kapitel 7.4 und 7.5).
 - **Analyse → Crawler → einen Crawl anzeigen → Relaunch:** Zwei abgeschlossene Crawls derselben Website vor und nach einer Umstellung auswählen (Kapitel 6.4).
 - **Sichtbarkeit → SERP-Analyse → Zwei Keywords vergleichen:** Gemeinsame Ergebnis-URLs zweier Keywords vergleichen, entweder über einen konfigurierten Anbieter oder zwei manuelle URL-Listen (Kapitel 9.4).
 
-Im weiteren Verlauf findest du auch die Paginierung, die neue Schema-Prüfung, die Verzeichnisbewertung und wiederholte KI-Zitationsquellen – jeweils im passenden Fachmodul.
+Im weiteren Verlauf findest du auch die Paginierung, die Schema-Prüfung, die Verzeichnisbewertung und wiederholte KI-Zitationsquellen – jeweils im passenden Fachmodul. Für den laufenden Betrieb lohnen sich außerdem **Maßnahmen → Website Health** (Erreichbarkeit und Antwortzeit, Kapitel 15.1) und das **Portfolio im Ranktracker** (echte GSC-Positionen der Zielkeywords, Kapitel 9.2).
 
 ## 3. Installation und erster Administrator
 
@@ -150,6 +150,8 @@ Detaillierte Betriebsanleitung: [Docker-Gesamtausgabe](DOCKER_FULL.md).
 **Links:** Die Funktionsgruppen. **Oben:** Auswahl der aktuell bearbeiteten Website, Crawl-Status, Meldungen sowie Konto-/Darstellungsaktionen. **Mitte:** Der jeweils gewählte Arbeitsbereich.
 
 Die Navigation bleibt trotz vieler Unterseiten kompakt: Ein Klick auf eine Gruppe klappt sie auf; der Bereich der aktiven Seite ist automatisch geöffnet.
+
+**System → Hilfe & Handbuch** führt von jedem Thema direkt zum passenden Bildschirm und zur ausführlichen Anleitung.
 
 ### 4.2 Was zeigt das Dashboard?
 
@@ -228,7 +230,9 @@ Im geöffneten Crawl stehen unter anderem folgende Reiter zur Verfügung:
 - **Weiterleitungen:** Weiterleitungsketten und Zielstatus.
 - **Duplikate:** Auffälligkeiten bei Title, Description, H1 und Inhalt.
 - **Struktur:** Klicktiefe, HTTP-Statusklassen, Inhaltstypen und Gründe fehlender Indexierbarkeit.
-- **Relaunch:** Zwei abgeschlossene Crawls mit optionalen alten/neuen URL-Zuordnungen abgleichen; der neue Reiter erscheint im geöffneten Crawl.
+- **Relaunch:** Zwei abgeschlossene Crawls mit optionalen alten/neuen URL-Zuordnungen abgleichen (Kapitel 6.4).
+
+**Nummerierung:** Crawls werden pro Website gezählt, „Crawl 1“ bis „Crawl n“; Wettbewerber-Crawls haben eine eigene Zählung. Wird ein Crawl gelöscht, rücken die späteren nach, die Zählung bleibt lückenlos. Dieselbe Nummer steht in Exporten und im PDF-Bericht.
 
 **Export:** Aus dem Crawler können unter anderem Seiten, Befunde und Links als CSV exportiert werden. Wenn zwei Durchläufe vorhanden sind, kannst du im Audit die Entwicklung vergleichen.
 
@@ -256,7 +260,7 @@ Im geöffneten Crawl stehen unter anderem folgende Reiter zur Verfügung:
 
 ## 7. Technische Ergebnisse richtig bearbeiten
 
-### 7.1 Website-Audit und neue Template-Prüfung
+### 7.1 Website-Audit und Template-Prüfung
 
 **Wo:** `Analyse → Website-Audit`
 
@@ -287,7 +291,7 @@ Ein Linkvorschlag ändert die Website noch nicht.
 
 **Strukturierte Daten:** `Analyse → Strukturierte Daten`. Unter **Validator** eine URL oder JSON-LD eingeben und prüfen; unter **Generator** einen Schema-Typ auswählen, Felder ausfüllen, Markup erzeugen und anschließend **selbst** in die Website einbauen. Der zusätzliche Reiter **Rich-Result-Potenzial** wertet JSON-LD des letzten Crawls aus (siehe 7.7).
 
-**PageSpeed:** `Analyse → PageSpeed`. URL und Gerät auswählen, Quelle festlegen, **Test starten**. Feldwerte echter Chrome-Nutzer (wenn vorhanden) von Lighthouse-Labormesswerten unterscheiden.
+**PageSpeed:** `Analyse → PageSpeed`. URL und Gerät auswählen, Quelle festlegen, **Test starten**. Feldwerte echter Chrome-Nutzer (wenn vorhanden) von Lighthouse-Labormesswerten unterscheiden. Unter **Top-Seiten im Batch prüfen** lassen sich die 3, 5 oder 10 am besten verlinkten Seiten des letzten Crawls auf einmal mobil testen; die **Felddaten-Abdeckung** zeigt, für welche Seiten echte LCP-, INP- und CLS-Werte vorliegen. Fehlen Chrome-UX-Report-Daten, bleibt der echte Wert unbekannt. Details: [Monitoring und Batch-PageSpeed](NOTIFICATIONS_PAGESPEED.md).
 
 **Internationales SEO:** `Analyse → Internationales SEO`. Hreflang-Angaben, HTML-Sprache und Sprach-/Länderverzeichnisse kontrollieren.
 
@@ -413,6 +417,18 @@ Dasselbe Zuordnungsfenster gibt es bei allen CSV-Importen: Backlinks, Branchenve
 
 GSC-Positionen sind **impressionsgewichtete Durchschnittswerte**, keine neutralen, einzelnen Platzierungen bei einer beliebigen Suche.
 
+### 8.4 Eine URL bei Google auf Indexierung prüfen
+
+**Wo:** `Sichtbarkeit → Search Console`, Bereich **Google URL Inspection**
+
+**Voraussetzung:** Search Console per OAuth verbunden (8.1) und die zur Website gehörende Property gespeichert.
+
+1. Eine URL derselben Website eintragen.
+2. **URL bei Google prüfen** anklicken.
+3. Den von Google gemeldeten Indexierungsstatus, den letzten Google-Crawl und die Canonical-Angaben ansehen.
+
+Die Abfrage nutzt die **Google URL Inspection API**. Sie führt **keinen Live-Test** aus, ändert nichts an Googles Index und unterliegt Googles Kontingent. Details: [Google URL Inspection](GSC_URL_INSPECTION.md).
+
 ## 9. Keywords, Rankings und SERP-Analyse
 
 ### 9.1 Keyword-Recherche
@@ -423,41 +439,38 @@ GSC-Positionen sind **impressionsgewichtete Durchschnittswerte**, keine neutrale
 2. Autocomplete-Vorschläge abrufen und passende Begriffe **speichern**.
 3. Unter **Gespeicherte Keywords** die Liste pflegen oder eine CSV aus dem Keyword-Planer importieren.
 4. Unter **Seitenzuordnung & Kannibalisierung** prüfen, welche Seiten zu den gespeicherten Keywords passen.
-5. Im **Cluster-Werkzeug** mehrere Begriffe anhand gemeinsamer Begriffe gruppieren.
+5. Im **Cluster-Werkzeug** mehrere Begriffe anhand gemeinsamer Wörter gruppieren (lexikalisch).
+6. Alternativ im Cluster-Werkzeug **SERP-Overlap-Clustering** wählen: 2–15 Keywords zeilenweise eintragen, einen SERP-Anbieter nutzen oder für **alle** Keywords Ergebnislisten einfügen, Überschneidungsschwelle wählen und **SERP-Cluster berechnen**. Gruppen auf die tatsächliche Suchintention prüfen; Cluster können transitiv sein, nicht jedes Keyword-Paar einer Gruppe ist zwingend ähnlich. Details: [SERP-Keyword-Clustering](KEYWORD_SERP_CLUSTERING.md).
 
 **Keine erfundenen Suchvolumina:** Wenn weder ein gemessener Wert noch ein geeigneter Import vorliegt, darf eine Nachfragezahl fehlen.
 
 ### 9.2 Ranktracking
 
-**Wo:** `Sichtbarkeit → Ranktracker`
+**Wo:** `Sichtbarkeit → Ranktracker`, Tabs **Portfolio (GSC)**, **Alle GSC-Keywords** und **Anbieter-Messungen**
 
-Der Ranktracker hat drei Tabs.
+**Portfolio (GSC)** zeigt die echten Positionen deiner Zielkeywords aus der Search Console, also dort, wo Google die Website tatsächlich ausgespielt hat.
 
-**Portfolio (GSC):** echte Positionen der Zielkeywords aus der Search Console, also dort, wo Google die Website
-tatsächlich ausgespielt hat.
+1. Unter **Zielkeyword hinzufügen** Keyword, **Label** (frei, z. B. „lokal“), **Ziel-URL**, **Messart** (National, Lokal, Marke) und **Priorität** (P1–P3) eintragen. Vorhandene GSC-Historie ist sofort sichtbar.
+2. Oben **Zeitraum** (7 Tage bis 12 Monate), **Gerät** und **Label** wählen. Verglichen wird immer mit dem gleich langen Zeitraum direkt davor.
+3. Die Kacheln zeigen die **Ø Position** (nach Impressionen gewichtet, kleinere Zahl ist besser) mit Bewegung, die Verteilung auf 1–3, 4–10, 11–20, 21–50 und 51+, die Zahl verbesserter und verschlechterter Keywords und die reale Nachfrage (Impressionen, Klicks, CTR).
+4. In der Tabelle zeigt **Ranking-URL**, welche Seite Google ausspielt. Weicht sie von der Ziel-URL ab, steht die Ziel-URL orange darunter. **„kleine Stichprobe“** heißt: weniger als 10 Impressionen im Zeitraum.
+5. Ein Klick auf das Keyword öffnet die **Detailseite** mit Positionsverlauf und **Änderungsjournal**. Maßnahmen mit Datum notieren; sie erscheinen als orange Linie im Diagramm.
 
-1. Unter **Zielkeyword hinzufügen** Keyword, Label (frei, z. B. „lokal“), Ziel-URL, Messart (National, Lokal, Marke) und
-   Priorität (P1–P3) eintragen. Vorhandene GSC-Historie ist sofort sichtbar.
-2. Oben Zeitraum (7 Tage bis 12 Monate), Gerät und Label wählen. Verglichen wird immer mit dem gleich langen Zeitraum davor.
-3. Die Kacheln zeigen Ø Position (nach Impressionen gewichtet, kleinere Zahl ist besser) mit Bewegung, die Verteilung auf
-   1–3, 4–10, 11–20, 21–50 und 51+, die Zahl verbesserter und verschlechterter Keywords und die reale Nachfrage.
-4. In der Tabelle zeigt **Ranking-URL**, welche Seite Google ausspielt. Weicht sie von der Ziel-URL ab, steht die Ziel-URL
-   orange darunter. „kleine Stichprobe“ heißt: weniger als 10 Impressionen im Zeitraum.
-5. Ein Klick auf das Keyword öffnet den **Verlauf** mit **Änderungsjournal**: Maßnahmen mit Datum notieren, sie erscheinen
-   als orange Linie im Diagramm.
+**Alle GSC-Keywords** listet jede Suchanfrage, für die Google die Website gezeigt hat, mit Trackingstatus:
 
-**Alle GSC-Keywords:** jede Suchanfrage, für die Google die Website gezeigt hat, mit Trackingstatus.
-**Top-3-Fund** = nicht getrackt, Position bis 3, ab 10 Impressionen. **Chance** = nicht getrackt, Position 4–20, ab
-10 Impressionen. **Ins Monitoring** übernimmt eine Suchanfrage samt vorhandener Historie ins Portfolio.
+- **Top-3-Fund:** nicht getrackt, Position bis 3, ab 10 Impressionen.
+- **Chance:** nicht getrackt, Position 4–20, ab 10 Impressionen.
+- **Ins Monitoring** übernimmt eine Suchanfrage samt vorhandener Historie ins Portfolio.
 
-Der Gerätefilter braucht Daten aus dem Search-Console-Abruf (einmal neu synchronisieren); CSV-Exporte enthalten
-Suchanfrage und Gerät nicht zusammen.
+Über der Tabelle stehen Filter für Trackingstatus, Ranking-Bereich und Mindest-Impressionen; jede Spalte lässt sich sortieren.
 
-**Anbieter-Messungen:** Positionen von einem SERP-Anbieter oder von Hand, je Land und Gerät:
+**Gerätefilter:** braucht Daten aus dem Search-Console-Abruf; nach dem Update einmal neu synchronisieren. CSV-Exporte enthalten Suchanfrage und Gerät nicht zusammen.
+
+**Anbieter-Messungen** erfasst Positionen von einem SERP-Anbieter oder von Hand, je Land und Gerät:
 
 1. **Neues Zielkeyword**: Keyword, Land (zweistelliger ISO-Code), Sprache, Gerät und optional die gewünschte Zielseite eintragen.
 2. **Keyword hinzufügen**.
-3. Entweder eine tatsächlich selbst beobachtete Position über **Manuell speichern** dokumentieren oder **SERP-Anbieter abfragen** bewusst auslösen.
+3. Entweder eine selbst beobachtete Position über **Manuell speichern** dokumentieren oder **SERP-Anbieter abfragen** bewusst auslösen.
 4. Bei weiteren Beobachtungen die Positionshistorie und den Vergleich **gleicher Anbieter** ansehen.
 
 Bei mobilen oder stadtspezifischen Suchen sind die automatischen Anbieterabfragen eingeschränkt; solche Beobachtungen werden ggf. nur manuell erfasst. Ein nicht gefundener Treffer innerhalb der abgerufenen Ergebnistiefe beweist **keine** Nichtindexierung.
@@ -674,51 +687,20 @@ Bei Bedarf kann ein freigegebener, noch nicht publizierter Entwurf zur weiteren 
 
 **Wo:** `Sichtbarkeit → GEO-Check`
 
-1. Öffentliche URL eingeben.
-2. **Prüfen**.
-3. Hinweise zu robots.txt, KI-Crawlern, llms.txt, strukturierten Daten, Autor-/Entitätsinformationen und Antwortstruktur betrachten.
-   Die Gruppe **Integrität** zeigt Snippet-Grenzen, mögliche versteckte Anweisungen an KI-Systeme, nicht sichtbare
-   strukturierte Daten, widersprüchliche Datumsangaben und einen uneinheitlichen Markennamen.
-4. Auffälligkeiten redaktionell/technisch prüfen und ggf. als Maßnahme dokumentieren.
+1. Öffentliche URL eingeben und **Prüfen** anklicken.
+2. Die Ergebnisse nach Gruppen durchgehen:
+   - **Zugang:** KI-Crawler in robots.txt, Indexierbarkeit, Snippet-Grenzen (`max-snippet`, `data-nosnippet`), Text ohne JavaScript, **KI-Signale in robots.txt** (ein von Cloudflare eingefügter Abschnitt mit KI-Sperren und `Content-Signal`-Werte), **KI-Sperren per Meta-Tag oder Header** (z. B. `<meta name="GPTBot" content="noindex">` oder `noai`) sowie **llms.txt** nach llmstxt.org samt `/llms-full.txt`.
+   - **Integrität:** mögliche versteckte Anweisungen an KI-Systeme, strukturierte Daten, die nicht sichtbar auf der Seite stehen, widersprüchliche Datumsangaben und ein uneinheitlicher Markenname.
+   - **Entität, Struktur, Belege:** Organisation/Person, sameAs, Autor, Aktualität, Antwort am Anfang, Frage-Überschriften, Listen und Tabellen, Zahlen und Quellen.
+3. Auffälligkeiten redaktionell oder technisch prüfen und ggf. als Maßnahme dokumentieren.
 
-**Sperrt das CDN KI-Crawler?** Die Karte ruft eine Seite der ausgewählten Website einmal mit Browser- und dann mit der
-Kennung von elf KI-Crawlern ab (OAI-SearchBot, ClaudeBot, PerplexityBot, Googlebot, Applebot …). „gesperrt“ oder
-„Prüfseite“ heißt: Cloudflare oder eine Firewall weist diese Kennung ab, obwohl robots.txt sie vielleicht erlaubt.
-Die Anfragen kommen von diesem Server, nicht aus den Netzen der Anbieter. CDNs, die Crawler über ihre IP prüfen,
-behandeln echte Crawler unter Umständen anders. Das Ergebnis ist ein starker Hinweis, kein Beweis.
+Bei `Content-Signal` gilt: `search=no` oder `ai-input=no` hält die Website aus KI-Antworten heraus, `ai-train=no` betrifft nur das Training. Dieselben Zugangs- und Integritätsprüfungen laufen bei jedem Crawl als Audit-Regeln mit (Kategorie **GEO / KI-Suche**).
 
-Dieselben Integritätsprüfungen laufen bei jedem Crawl als Audit-Regeln mit (Kategorie GEO / KI-Suche).
+**Sperrt das CDN KI-Crawler?** Die Karte ruft eine Seite der ausgewählten Website einmal mit Browser- und dann mit der Kennung von elf KI-Crawlern ab (OAI-SearchBot, ClaudeBot, PerplexityBot, Googlebot, Applebot …). „gesperrt“ oder „Prüfseite“ heißt: Cloudflare oder eine Firewall weist diese Kennung ab, obwohl robots.txt sie vielleicht erlaubt. Die Anfragen kommen von diesem Server, nicht aus den Netzen der Anbieter; CDNs, die Crawler über ihre IP prüfen, behandeln echte Crawler unter Umständen anders. Das Ergebnis ist ein starker Hinweis, kein Beweis.
 
-Unter **Zugang** prüft der GEO-Check außerdem:
-- **KI-Signale in robots.txt:** ob Cloudflare einen eigenen Abschnitt („Cloudflare Managed content“) mit Sperren für
-  KI-Crawler eingefügt hat und welche `Content-Signal`-Werte gesetzt sind. `search=no` oder `ai-input=no` hält die
-  Website aus KI-Antworten heraus, `ai-train=no` betrifft nur das Training.
-- **KI-Sperren per Meta-Tag oder Header:** etwa `<meta name="GPTBot" content="noindex">` oder `noai`.
-- **llms.txt gegliedert:** Titel, Kurzbeschreibung, Abschnitte und Linkliste nach llmstxt.org, dazu `/llms-full.txt`.
-
-**llms.txt-Entwurf:** Die Karte erzeugt aus dem letzten Crawl einen Entwurf: Abschnitte nach dem ersten Pfadteil, am
-besten verlinkte Seiten zuerst, Titel und Meta-Description der Seiten als Text. Kopieren oder als Datei laden, prüfen,
-kürzen und dann als `/llms.txt` ins Wurzelverzeichnis der Website legen.
+**llms.txt-Entwurf:** Die Karte erzeugt aus dem letzten Crawl einen Entwurf: Abschnitte nach dem ersten Pfadteil, am besten verlinkte Seiten zuerst, Titel und Meta-Description der Seiten als Text. Kopieren oder als Datei laden, prüfen, kürzen und dann als `/llms.txt` ins Wurzelverzeichnis der Website legen.
 
 Die Erfüllung solcher Kriterien garantiert keine Aufnahme in KI-Antworten.
-
-### 13.1a Website Health
-
-**Wo:** `Maßnahmen → Website Health`
-
-1. Website auswählen und **Überwachung starten**. Geprüft wird die Website-URL alle 15 Minuten.
-2. Oben stehen der aktuelle Status (UP, LANGSAM, DOWN) und die Verfügbarkeit im gewählten Zeitraum (24 Stunden, 7 oder 30 Tage).
-3. Die **Statusleiste** zeigt je Zeitabschnitt, ob alle Prüfungen in Ordnung waren, langsam oder fehlerhaft.
-4. Das **Kerzendiagramm** zeigt die Antwortzeit je Zeitabschnitt: erste und letzte Prüfung als Kerzenkörper, schnellste
-   und langsamste als Linie. Die gestrichelte Linie ist der Alert-Grenzwert, rote Marken unten zeigen Ausfälle.
-5. **Vorfälle** listet jeden Ausfall und jede Phase mit hoher Antwortzeit mit Beginn, Dauer und Ursache. Suchen,
-   filtern und sortieren ist möglich.
-6. **Einstellungen** am Diagramm: Grenzwert in ms (Standard 2.000), nach wie vielen langsamen Prüfungen in Folge ein
-   Vorfall entsteht (Standard 2) und das Prüfintervall (ab 15 Minuten). Weitere URLs lassen sich unter Monitoring
-   eintragen.
-
-Jeder neue und jeder behobene Vorfall erzeugt eine Meldung (Glocke oben rechts) und geht über eingerichtete
-Benachrichtigungskanäle raus. Geprüft wird von dem Server aus, auf dem SEO-Werkbank läuft.
 
 ### 13.2 KI-Erwähnungen
 
@@ -808,20 +790,36 @@ Das Modul ist kein automatisierter Screenshot-/UX-Test und kein Ranking- oder Pr
 
 ## 15. Monitoring, Berichte und Exporte
 
-### 15.1 Wiederkehrende Monitore
+### 15.1 Website Health
+
+**Wo:** `Maßnahmen → Website Health`
+
+1. Website auswählen und **Überwachung starten**. Geprüft wird die Website-URL alle 15 Minuten.
+2. Oben stehen der aktuelle Status (**UP**, **LANGSAM**, **DOWN**) und die Verfügbarkeit im gewählten Zeitraum (24 Stunden, 7 oder 30 Tage).
+3. Die **Statusleiste** zeigt je Zeitabschnitt, ob alle Prüfungen in Ordnung waren, langsam oder fehlerhaft.
+4. Das **Kerzendiagramm** zeigt die Antwortzeit je Zeitabschnitt: erste und letzte Prüfung als Kerzenkörper, schnellste und langsamste als Linie. Die gestrichelte Linie ist der Alert-Grenzwert, rote Marken unten zeigen Ausfälle.
+5. **Vorfälle** listet jeden Ausfall und jede Phase mit hoher Antwortzeit mit Beginn, Dauer und Ursache, z. B. „HTTP Status Code 200 (Hohe Antwortzeit)“, „Timeout“ oder „SSL-Fehler“. Suchen, filtern und sortieren ist möglich.
+6. Die **Monitoring-Übersicht** zeigt die geprüften Fehlerklassen und zählt die Vorfälle im Zeitraum: Weiterleitungen, Seite nicht gefunden, Serverfehler, Verbindungsstatus, Ladezeit, Timeouts, SSL, DNS, Content-Encoding, unvollständige Ladevorgänge, zu große Inhalte.
+7. **Einstellungen** am Diagramm: Grenzwert in ms (Standard 2.000), nach wie vielen langsamen Prüfungen in Folge ein Vorfall entsteht (Standard 2) und das Prüfintervall (ab 15 Minuten). Weitere URLs lassen sich unter **Monitoring** im Erreichbarkeits-Monitor eintragen.
+
+Jeder neue und jeder behobene Vorfall erzeugt eine Meldung (Glocke oben rechts) und geht über eingerichtete Benachrichtigungskanäle raus (15.2). Geprüft wird von dem Server aus, auf dem die SEO-Werkbank läuft: Ein Netzproblem zwischen diesem Server und der Website sieht wie ein Ausfall aus. Die Prüfungen laufen nur, solange die Anwendung läuft.
+
+### 15.2 Wiederkehrende Monitore und Benachrichtigungen
 
 **Wo:** `Maßnahmen → Monitoring`
 
 1. Reiter **Monitore** öffnen.
 2. **Neuer Monitor** wählen.
-3. Monitorart, optionalen Namen, Prüfintervall und ggf. zu prüfende URLs angeben.
+3. Monitorart (Erreichbarkeit, Audit, Sitemap, Metadaten, Wettbewerber, Search Console), optionalen Namen, Prüfintervall und ggf. zu prüfende URLs angeben.
 4. Je nach Typ URL-Limit oder Positionsänderungsschwelle setzen.
-5. Monitor anlegen; falls vorhanden mit **Jetzt ausführen** manuell testen.
+5. Monitor anlegen; mit **Jetzt ausführen** manuell testen.
 6. Unter **Meldungen** die Ergebnisse prüfen und bearbeitete Meldungen als gelesen markieren.
 
-Ein Rangpositions-Monitor benötigt geeignete Daten und ist nicht gleichzusetzen mit dem getrennten, manuell bzw. anbieterbasiert geführten Ranktracker.
+**Benachrichtigungen per E-Mail oder Webhook:** Als Administrator unter **System → Einstellungen → Monitor-Benachrichtigungen** einen SMTP-Server (STARTTLS) mit Absender und Empfänger und/oder einen HTTPS-Webhook eintragen, die Mindestschwere wählen und den Versand **ausdrücklich aktivieren**. Pro Monitorlauf gibt es einen gebündelten Versandversuch. Der Versand ist „best effort“; eine dauerhafte Wiederholungswarteschlange gibt es nicht.
 
-### 15.2 Berichte
+Die Positionsmeldungen eines Search-Console-Monitors sind etwas anderes als das Portfolio im Ranktracker (9.2): Der Monitor meldet Änderungen, das Portfolio zeigt Stand und Verlauf.
+
+### 15.3 Berichte
 
 **Wo:** `Maßnahmen → Berichte`
 
@@ -830,7 +828,7 @@ Ein Rangpositions-Monitor benötigt geeignete Daten und ist nicht gleichzusetzen
 3. Datei herunterladen.
 4. Bei fehlendem Crawl oder fehlender Datenquelle zunächst die entsprechende Analyse durchführen.
 
-Je nach Bereich stehen PDF-, CSV- und Excel-Exporte zur Verfügung. Ein Bericht ersetzt nicht die manuelle Prüfung besonders wichtiger Befunde.
+Je nach Bereich stehen PDF-, CSV- und Excel-Exporte zur Verfügung. Dateinamen und PDF-Kopf tragen die Crawl-Nummer des Projekts („Crawl 3“). Ein Bericht ersetzt nicht die manuelle Prüfung besonders wichtiger Befunde.
 
 ## 16. Administratoreinstellungen
 
@@ -843,7 +841,8 @@ Je nach Bereich stehen PDF-, CSV- und Excel-Exporte zur Verfügung. Ein Bericht 
 | PageSpeed Insights | Optionaler API-Schlüssel | Für höhere/verlässlichere API-Kontingente sinnvoll |
 | Matomo | URL und API-Token mit Leserechten | Für Besucher- und Zielauswertungen |
 | KI-Anbieter | Ollama oder OpenAI-kompatible API, Modellkennung und ggf. Schlüssel | Nur für optionale KI-Funktionen |
-| Google Search Console | OAuth-Client-ID und Client-Secret | Für Google-API-Verbindung; CSV-Import geht ohne |
+| Google Search Console | OAuth-Client-ID und Client-Secret | Für Google-API-Verbindung und URL Inspection; CSV-Import geht ohne |
+| Monitor-Benachrichtigungen | SMTP (STARTTLS) und/oder HTTPS-Webhook, Mindestschwere, Aktivierung | Für Meldungen per E-Mail/Webhook (15.2) |
 | Über | Version, Backend-Status, Sicherheitsstatus | Information |
 
 **Nur Administratoren** ändern die instanzweiten Integrationen. Der Zugriff auf instanzweit konfigurierte KI-Modellaufrufe und Matomo-Referral-Abfragen ist ebenfalls administrativ beschränkt. Benutzer verwalten ihre jeweils eigenen Websites; es existiert nicht automatisch eine gemeinsame Mandantenverwaltung für alle Projekte.
@@ -851,6 +850,8 @@ Je nach Bereich stehen PDF-, CSV- und Excel-Exporte zur Verfügung. Ein Bericht 
 **SearXNG in Docker:** Normalerweise ist `http://searxng:8080` intern bereits eingestellt. Eine selbst eingetragene andere SERP-Konfiguration überschreibt diese Voreinstellung.
 
 **Bei externer KI-API:** Prompts und ggf. Seiteninhalte können den eigenen Server verlassen. Vorher Kosten, Datenschutz, Zweck und Nutzungsrechte prüfen.
+
+Alle hier gespeicherten Geheimnisse (API-Schlüssel, Passwörter, OAuth-Tokens) liegen **verschlüsselt** in der Datenbank. Zum Schlüssel siehe Kapitel 21.3.
 
 ## 17. Vollständige Menü- und Funktionsübersicht
 
@@ -861,7 +862,7 @@ Diese Tabelle ist zugleich ein **„Wo finde ich was?“**-Nachschlagewerk.
 | Übersicht | **Dashboard** (`/`) | Lagebild zu Technik, Google, KI und Maßnahmen |
 | Übersicht | **Websites** (`/sites`) | Website anlegen, wählen, Crawl-Standards ändern |
 | Analyse | **Website-Audit** (`/audit`) | Regelbasierte Fehler und Hinweise je Crawl |
-| Analyse | **Crawler** (`/crawler`) | Crawls starten, Fortschritt, Seiten, Links, Duplikate und **Relaunch**-Reiter | 
+| Analyse | **Crawler** (`/crawler`) | Crawls starten, Fortschritt, Seiten, Links, Duplikate und **Relaunch**-Reiter |
 | Analyse | **Tracking & Rendering** (`/diagnostics`) | Consent-Zeitfolge, Roh-/JS-Rendering und Bildhinweise |
 | Analyse | **Interne Verlinkung** (`/internal-links`) | Linkstruktur, verwaiste Seiten, Linkchancen und **Paginierung** |
 | Analyse | **Sitemaps & Indexierung** (`/sitemaps`) | Sitemap-/robots-/Canonical-Abgleich |
@@ -870,12 +871,12 @@ Diese Tabelle ist zugleich ein **„Wo finde ich was?“**-Nachschlagewerk.
 | Analyse | **Internationales SEO** (`/international`) | Sprach- und Länderangaben |
 | Analyse | **Lokales SEO** (`/local`) | LocalBusiness, NAP, Standortdaten |
 | Sichtbarkeit | **Search Console** (`/search-console`) | Google-Messwerte per API oder CSV |
-| Sichtbarkeit | **Ranktracker** (`/rank-tracking`) | GSC-Portfolio, alle GSC-Keywords mit Chancen, Anbieter-Messungen |
+| Sichtbarkeit | **Ranktracker** (`/rank-tracking`) | GSC-Portfolio, alle GSC-Keywords mit Chancen, Anbieter-Messungen; Keyword-Detail unter `/rank-tracking/keywords/…` |
 | Sichtbarkeit | **Keyword-Recherche** (`/keywords`) | Vorschläge, Keywords, Zuordnung, Cluster |
 | Sichtbarkeit | **SERP-Analyse** (`/serp`) | Suchergebnisse und **Keyword-SERP-Überschneidungen** analysieren |
 | Sichtbarkeit | **KI-Erwähnungen** (`/ai-visibility`) | Manuelle KI-Antworten und **wiederkehrende Zitationsquellen** |
 | Sichtbarkeit | **KI-Empfehlungen & Referrals** (`/ai-intelligence`) | Prompttests und Matomo-KI-Referrals |
-| Sichtbarkeit | **GEO-Check** (`/geo`) | KI-bezogene technische Hinweise |
+| Sichtbarkeit | **GEO-Check** (`/geo`) | KI-Zugang, Integrität, CDN-Test für KI-Crawler, llms.txt-Entwurf |
 | Sichtbarkeit | **SEO-Verlauf & GEO** (`/research-monitoring`) | Änderungshistorie, SERP-/Index-/KI-Notizen |
 | Sichtbarkeit | **Wettbewerber** (`/competitors`) | Konkurrenten hinzufügen und crawlen |
 | Sichtbarkeit | **Themenradar** (`/competitor-radar`) | Themenindikatoren aus Wettbewerber-Crawls |
@@ -892,11 +893,13 @@ Diese Tabelle ist zugleich ein **„Wo finde ich was?“**-Nachschlagewerk.
 | Conversion | **Wirtschaftliche Chancen** (`/opportunity-value`) | Eigene DB-Szenarien je SEO-Chance |
 | Maßnahmen | **SEO-Maßnahmen** (`/seo-work`) | Aufgaben-/Veröffentlichungsstatus, Messung |
 | Maßnahmen | **Lokale Nachweise** (`/seo-evidence`) | Verzeichnisse, **Verzeichnisqualität**, Bewertungen und Publikationen |
+| Maßnahmen | **Website Health** (`/health`) | Erreichbarkeit, Antwortzeit, Vorfälle |
 | Maßnahmen | **Monitoring** (`/monitoring`) | Regelmäßige Prüfungen und Meldungen |
 | Maßnahmen | **Berichte** (`/reports`) | Export und Auswertung |
-| System | **Einstellungen** (`/settings`) | Konto und optionale Integrationen |
+| System | **Einstellungen** (`/settings`) | Konto, Integrationen, Benachrichtigungen |
+| System | **Hilfe & Handbuch** (`/help`) | Themen mit Direktlink zum Bildschirm und zur Anleitung |
 
-**Die vier Advanced-SEO-Prüfungen sowie Verzeichnisqualität und KI-Quellenstabilität sind in bestehende Fachbildschirme integriert.** Für sie gibt es bewusst keine zusätzlichen eigenständigen Menüpunkte; nur **Tracking & Rendering** ist eine neue Navigationsseite.
+Viele Spezialprüfungen haben keinen eigenen Menüpunkt, sondern sitzen im passenden Fachbildschirm: Relaunch im Crawler, Paginierung in der internen Verlinkung, Rich-Result-Potenzial bei den strukturierten Daten, SERP-Überschneidung in der SERP-Analyse, Verzeichnisqualität bei den lokalen Nachweisen und wiederkehrende KI-Quellen bei den KI-Erwähnungen.
 
 **Hinweis zu den Links:** Die relativen Pfade in dieser Tabelle sind **Anwendungsrouten**, keine GitHub-Seiten. In deiner laufenden Installation lauten sie etwa `http://localhost:8000/search-console`.
 
@@ -910,18 +913,19 @@ Die folgende Routine ist eine **Arbeitsorganisation**, keine eingebaute vollauto
 - GSC per API oder CSV bereitstellen.
 - Optional Matomo, SERP-Anbieter und KI-Anbieter konfigurieren.
 - Relevante Keywords und Wettbewerber erfassen.
-- Bei Bedarf Monitore aktivieren.
+- **Website Health** starten und bei Bedarf weitere Monitore und Benachrichtigungen einrichten.
 
 ### Jede Woche (z. B. Montag)
 
 1. **Dashboard**: technische Änderungen, Google-Suchdaten, neue Meldungen, offene Maßnahmen.
-2. **Search Console**: rückläufige Suchanfragen, neue Chancen und auffällige Seiten.
-3. **Content-Refresh**: zwei bis drei nachvollziehbare Kandidaten für redaktionelle Prüfung auswählen.
-4. **Website-Audit**: neue wichtige Probleme kontrollieren; nicht blind jede Warnung beseitigen.
-5. **SEO-Maßnahmen**: Status aktualisieren und neue Vorgänge anlegen.
-6. **Content-Entwürfe**: bei Bedarf prüfen und freigeben.
-7. **Monitoring**: Meldungen und technische Erreichbarkeit durchsehen.
-8. **Berichte**: nur für benötigte Stakeholder exportieren.
+2. **Ranktracker → Portfolio**: Bewegungen der Zielkeywords; unter **Alle GSC-Keywords** neue Top-3-Funde und Chancen.
+3. **Search Console**: rückläufige Suchanfragen und auffällige Seiten.
+4. **Content-Refresh**: zwei bis drei nachvollziehbare Kandidaten für redaktionelle Prüfung auswählen.
+5. **Website-Audit**: neue wichtige Probleme kontrollieren; nicht blind jede Warnung beseitigen.
+6. **SEO-Maßnahmen**: Status aktualisieren und neue Vorgänge anlegen; umgesetzte Änderungen im Änderungsjournal des Keywords notieren.
+7. **Content-Entwürfe**: bei Bedarf prüfen und freigeben.
+8. **Website Health** und **Monitoring**: Vorfälle der Woche und offene Meldungen durchsehen.
+9. **Berichte**: nur für benötigte Stakeholder exportieren.
 
 ### Einmal monatlich
 
@@ -931,7 +935,7 @@ Die folgende Routine ist eine **Arbeitsorganisation**, keine eingebaute vollauto
 - Bei vorhandenen Matomo-Daten die besucherstarken Einstiegsseiten und Conversions prüfen.
 - Gewählte KI-Prompts unter identischen Rahmenbedingungen wiederholen, falls KI-Sichtbarkeit Teil der Strategie ist.
 
-### Prüfpfade für die neuen Module
+### Hinweise zu einzelnen Prüfungen
 
 **Tracking & Rendering:** Bei verdächtigen Drittanfragen zunächst die **initiale Sitzung** beobachten. Danach allenfalls mit ausdrücklicher Berechtigung getrennt **Akzeptieren** und **Ablehnen** testen. Die Protokolle sind keine automatische Einwilligungsprüfung.
 
@@ -960,7 +964,7 @@ Die folgende Routine ist eine **Arbeitsorganisation**, keine eingebaute vollauto
 | SERP-Overlap nicht möglich | Entweder einen SERP-Anbieter einrichten oder **beide** manuellen Ergebnislisten ausfüllen; Keywords müssen vorhanden sein. |
 | Keine Verzeichnisqualitätsdaten | Unter **Content → SEO-Research → Verzeichnisqualität** zuerst einen Eintrag anlegen und Pflichtfelder (Relevanz, redaktioneller Wert) ausfüllen. |
 | Keine wiederkehrenden KI-Quellen | Dieselbe Frage auf derselben Plattform an **mindestens zwei verschiedenen Tagen** mit Quellen-URL dokumentieren. |
-| Keine SERP-Treffer || Keine SERP-Treffer | Anbieter konfiguriert? SearXNG intern erreichbar? Externe Engines durch CAPTCHA/Sperre beeinträchtigt? |
+| Keine SERP-Treffer | Anbieter konfiguriert? SearXNG intern erreichbar? Externe Engines durch CAPTCHA/Sperre beeinträchtigt? |
 | KI-Test kann nicht starten | Als Administrator angemeldet? KI-Modell konfiguriert und erreichbar? |
 | Matomo liefert keine Daten | Matomo-URL, Token, Site-Auswahl, Zeitraum und Rechte prüfen |
 | Kein Content-Refresh | Query-URL-Paare statt getrennter Standardexporte bereitstellen |
@@ -970,6 +974,13 @@ Die folgende Routine ist eine **Arbeitsorganisation**, keine eingebaute vollauto
 | Daten nach Docker-Neustart weg | Wurde mit `down -v` gearbeitet? Volumes und Datenpfad prüfen; Backup zurückspielen |
 | Andere Webadresse im Docker-Netz nicht erreichbar | `searxng` ist der interne Docker-Dienstname, nicht der Hostname des Browsers |
 | MCP kann nicht zugreifen | Backend lokal erreichbar? Gültiger Benutzer-Token? Nur Loopback-URL? |
+| CSV-Import: „Pflichtfeld ohne Spalte“ | Im Fenster **Spalten zuordnen** die fehlende Spalte von Hand zuordnen; Zahlenformat prüfen |
+| Ranktracker: Gerätefilter ohne Daten | Search Console einmal neu synchronisieren; CSV-Importe enthalten Suchanfrage und Gerät nicht zusammen |
+| Ranktracker: Keyword ohne Position | Hat Google die Website im Zeitraum für genau diese Schreibweise ausgespielt? Zeitraum vergrößern |
+| Website Health zeigt keine Prüfungen | Überwachung gestartet und Monitor aktiv? Die Anwendung muss laufen; mit **Jetzt prüfen** testen |
+| Website Health meldet Ausfälle, die Website ist aber erreichbar | Netzverbindung des Servers prüfen, auf dem die Werkbank läuft; ggf. Firewall/CDN des Zielservers |
+| Anwendung startet nach Update nicht (Schlüsselfehler) | `SEO_MASTER_KEY` bzw. Schlüsseldatei aus dem Backup wiederherstellen (Kapitel 21.3) |
+| Neue Bildschirme fehlen nach Update (ohne Docker) | Im Ordner `frontend` `npm run build` ausführen, Anwendung neu starten, Browser mit Strg+F5 neu laden |
 
 Zum Prüfen des Docker-Stacks:
 
@@ -994,8 +1005,9 @@ python scripts/full_stack.py logs
 
 - Kein eigener weltweiter Index für Suchvolumen, Rankings oder Backlinks.
 - SearXNG ersetzt keine kommerzielle SEO-Datenbank.
-- Der Ranktracker erhebt nicht automatisch täglich/ortsgenau neutrale Google-Positionen.
-- Kein Live-Google-URL-Inspection-Status allein aus dem Crawler.
+- Ranktracker-Positionen aus der Search Console sind Durchschnittswerte über alle Impressionen, keine Einzelplatzierung an einem Ort; Anbieter-Messungen folgen der Reihenfolge des jeweiligen Anbieters.
+- Die URL Inspection zeigt Googles gespeicherten Stand, keinen Live-Test.
+- Website Health und der CDN-Test für KI-Crawler prüfen von einem einzigen Standort aus, dem Server der Werkbank.
 - Kein automatischer Zugriff auf alle ChatGPT-/Perplexity-Antworten.
 - Ein KI-Modell ohne verbundene Websuche liefert keine belastbaren Live-Suchergebnisse.
 - Content-Vorschläge und Fallstudien werden nicht automatisch im CMS veröffentlicht.
@@ -1019,9 +1031,11 @@ Normale Benutzer verwalten ihre eigenen Websites. Instanzweite Integrationen dü
 Vor einem Update:
 
 1. Aktuellen Stand/Version und verfügbare Änderungen prüfen.
-2. Datenbank **und** App-Daten sichern.
+2. Datenbank, App-Daten **und** den Schlüssel für verschlüsselte Zugangsdaten (21.3) sichern.
 3. Bei Bedarf Rückspielbarkeit testen.
 4. Images/Code aktualisieren und nach der Änderung einen kurzen Funktionstest durchführen: Anmeldung, Websiteauswahl, Crawl-Verlauf, Einstellungen, GSC/Matomo und optional SearXNG.
+
+Datenbank-Migrationen laufen beim Start automatisch. Bei einer Installation ohne Docker nach einem Update im Ordner `backend` die Abhängigkeiten aktualisieren (`.venv\Scripts\pip install -e ".[dev]"`) und im Ordner `frontend` einmal `npm run build` ausführen, sonst fehlen neue Pakete oder Bildschirme.
 
 Der Docker-Launcher baut die App beim Start. Für reproduzierbare produktive Installationen die Version des SearXNG-Images bewusst festlegen, statt dauerhaft ungeprüft `latest` zu verwenden.
 
@@ -1031,7 +1045,17 @@ In der Docker-Gesamtausgabe sind insbesondere **PostgreSQL-Daten** und **Anwendu
 
 Speichere Zugangsdaten/Secrets getrennt vom öffentlich freigegebenen Quellcode und schütze alle Datenbank-Backups. Ein Passwortwechsel darf nicht blind an einem bestehenden PostgreSQL-Volume vorbeigehen.
 
-### 21.3 Optionaler MCP-Lesezugang
+### 21.3 Verschlüsselte Zugangsdaten und Schlüssel
+
+Gespeicherte API-Schlüssel, Passwörter und OAuth-Tokens sind in der Datenbank verschlüsselt.
+
+1. In verwalteten Installationen einen Fernet-Schlüssel über die Umgebungsvariable `SEO_MASTER_KEY` sicher hinterlegen. Ohne diese Variable erzeugt eine Einzelplatzinstallation die Datei `SEO_DATA_DIR/.integration_master_key`.
+2. Den Schlüssel **getrennt vom Datenbank-Backup** aufbewahren. Ohne Schlüssel sind gespeicherte Zugangsdaten nicht mehr lesbar.
+3. Ein nicht entschlüsselbarer Eintrag verhindert den Start der Anwendung. Dann den passenden Schlüssel aus dem Backup wiederherstellen.
+
+**Keine Schlüsselrotation durch bloßes Ersetzen von `SEO_MASTER_KEY`.** Details: [Verschlüsselte Zugangsdaten](SECURE_INTEGRATIONS.md).
+
+### 21.4 Optionaler MCP-Lesezugang
 
 Für kompatible KI-Desktopclients gibt es einen optionalen schreibgeschützten MCP-Server.
 
@@ -1047,54 +1071,6 @@ python -m app.mcp_server
 Die Umgebungsvariablen heißen `SEO_MCP_API_URL` und `SEO_MCP_API_TOKEN`. Nur lokale Loopback-Adressen werden akzeptiert, keine beliebigen externen Server. Zugangstoken nicht im Git-Repository speichern. Der Server liest ausgewählte SEO-Daten; **er veröffentlicht und bearbeitet keine Seiten**.
 
 Vollständige Einrichtung: [MCP-Server](MCP_SERVER.md).
-
-## 21.4 Neue Arbeitsabläufe für Version 0.2
-
-Diese Funktionen werden in den vier 0.2-Entwicklungs-PRs eingeführt. **Solange diese nicht in main übernommen sind, funktionieren die Klickwege nur auf einer Version, die die betreffenden Änderungen enthält.**
-
-### Integration-Schlüssel und Update
-
-**Wo:** Administration/Serverinstallation und **System → Einstellungen**.
-
-1. Vor dem Update **Datenbank und Anwendungsdaten sichern**.
-2. In verwalteten Installationen einen gültigen Fernet-Master-Key mit der Umgebungsvariable `SEO_MASTER_KEY` sicher hinterlegen. Auf Einzelplatzinstallationen wird andernfalls unter `SEO_DATA_DIR/.integration_master_key` eine Schlüsseldatei erzeugt.
-3. Die neue Version starten. Der Startvorgang verschlüsselt ältere Klartext-Integrationseinstellungen; ein nicht entschlüsselbarer Datensatz verhindert den Start.
-4. Das Schlüsselmaterial getrennt vom Datenbank-Backup aufbewahren. Verlust bedeutet Verlust des Zugriffs auf gespeicherte API-Secrets und OAuth-Tokens.
-
-**Keine Schlüsselrotation durch bloßes Ersetzen von `SEO_MASTER_KEY` durchführen.** Details: [Verschlüsselte Zugangsdaten](SECURE_INTEGRATIONS.md).
-
-### Eine URL bei Google auf Indexierung prüfen
-
-**Wo:** **Sichtbarkeit → Search Console → Google URL Inspection**.
-
-1. Search Console mit einem eigenen autorisierten Google-OAuth-Client verbinden.
-2. In der Werkbank die zur Website gehörende GSC-Property auswählen.
-3. Im neuen URL-Inspection-Feld eine URL derselben Website eintragen und **URL bei Google prüfen** anklicken.
-4. Den von Google berichteten Status, gegebenenfalls den letzten Crawl und Canonical-Angaben ansehen.
-
-Die Abfrage nutzt die **Google URL Inspection API**. Sie führt **keinen Live-URL-Test** aus, verändert nichts an Googles Index und kann Kontingentgrenzen unterliegen. Eine echte OAuth-Verbindung muss mit einem eigenen Google-Konto geprüft werden; die automatisierten Tests simulieren Google-Antworten. [Anleitung](GSC_URL_INSPECTION.md).
-
-### Benachrichtigungen und PageSpeed-Batches
-
-**Wo:** **System → Einstellungen → Monitor-Benachrichtigungen** sowie **Analyse → PageSpeed**.
-
-1. Als Administrator SMTP-Server (STARTTLS), Absender/Empfänger und/oder einen HTTPS-Webhook eintragen, Mindestschwere wählen und den Versand **ausdrücklich aktivieren**.
-2. Einen Monitor unter **Maßnahmen → Monitoring** betreiben. Neue Meldungen werden im Programm gespeichert; bei passender Konfiguration wird **ein gebündelter Versandversuch pro Monitorlauf** durchgeführt.
-3. Unter **Analyse → PageSpeed** zunächst einen Crawl für die Website abschließen.
-4. In **Top-Seiten im Batch prüfen** die Anzahl 3, 5 oder 10 auswählen und den Mobile-Batch starten.
-5. Ergebnisse und **Felddaten-Abdeckung** für LCP, INP und CLS getrennt von Lighthouse-Labordaten betrachten.
-
-Versand erfolgt best effort; es existiert keine garantierte persistente Wiederholungswarteschlange. Bei fehlenden Chrome-UX-Report-Felddaten bleibt ein echter CWV-Wert unbekannt. Details: [Monitoring und Batch-PageSpeed](NOTIFICATIONS_PAGESPEED.md).
-
-### SERP-Cluster und Hilfe
-
-**Wo:** **Sichtbarkeit → Keyword-Recherche → Cluster-Werkzeug → SERP-Overlap-Clustering**.
-
-1. 2–15 Keywords zeilenweise eintragen.
-2. Einen konfigurierten SERP-Anbieter nutzen oder für **alle** Keywords vollständige Ergebnislisten im angegebenen Format erfassen.
-3. Überschneidungsschwelle auswählen, **SERP-Cluster berechnen** und Gruppen auf tatsächliche Suchintention prüfen.
-
-Der vorhandene **lexikalische Clusterer** bleibt separat verfügbar. SERP-Cluster können **transitiv** sein; eine automatisch berechnete Gruppe garantiert nicht, dass jede Keyword-Paarung ähnlich ist. Unter **System → Hilfe & Handbuch** sind die passenden Dokumente erreichbar. Für echte Screenshots/Demo benötigt das Projekt eine gestartete Testinstallation; der Aufnahmehelfer ist [dokumentiert](KEYWORD_SERP_CLUSTERING.md).
 
 ## 22. Weiterführende Dokumentation
 
