@@ -10,6 +10,16 @@ mit getrennten Feldern für **Bing** und **Brave** bereit.
 - `not_evaluated`: Keine ausreichend konkrete öffentliche Zuordnung im Katalog
   hinterlegt. **Nicht** als fehlende Unterstützung des Suchdienstes interpretieren.
 - Google wird über `classification` und `google_documentation` separat dargestellt.
+- `profiles` weist Regeln den Score- und Filterprofilen zu: Google erhält
+  technische Anforderungen und Google-Empfehlungen, Bing/Brave ausschließlich
+  Regeln mit `related_guidance`, GEO die als `geo_experiment` klassifizierten
+  Regeln. Nicht zugeordnete SEO-Heuristiken bleiben in „Alle Befunde“ sichtbar.
+- Die zusätzlichen Scores verwenden die bisherigen Schweregrad-Abzüge; der
+  bestehende Gesamtscore und die Crawl-Ausführung bleiben unverändert; die
+  Profil-Scores werden ergänzend gespeichert. Aufgrund der unterschiedlichen
+  Regelabdeckung sind Profil-Scores nicht direkt vergleichbar und keine
+  Rankingprognose. Der GEO-Crawlscore ist getrennt vom bestehenden
+  Einzelseiten-GEO-Check.
 
 ## Microsoft Bing
 
@@ -50,5 +60,5 @@ Brave-SEO-Regelliste aus allgemeinen Heuristiken ableiten.
    Module planen und entwickeln.
 3. Brave-Check auf nachweisbare Crawl-Sperren und `noindex` beschränken;
    Indexierungsstatus als unbekannt kennzeichnen, sofern keine Quelle vorliegt.
-4. UI und Exporte um Suchmaschinenfilter und `not_evaluated` ergänzen;
-   erst dann ein getrenntes, kontextbezogenes Scoring testen.
+4. Die konkrete Quellenzuordnung pro Regel weiter präzisieren; `not_evaluated`
+   bleibt sichtbar und wird nicht in Bing-/Brave-Scores eingerechnet.

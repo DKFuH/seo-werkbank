@@ -10,6 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import and_, case, delete, func, or_, select
 from sqlalchemy.orm import Session
 
+from ..audit.analysis import calculate_profile_scores
 from ..audit.hreflang import locale_from_path
 from ..audit.rules import RULES, SEVERITIES, rule_dict
 from ..audit.schema_validator import LOCAL_TYPES, all_types, recommend_types, validate_jsonld
@@ -162,7 +163,12 @@ def issue_summary(crawl_id: int, user: User = Depends(current_user), db: Session
     rows = db.execute(select(Issue.rule_id, func.count()).where(Issue.crawl_id == crawl.id).group_by(Issue.rule_id)).all()
     order = {s: i for i, s in enumerate(SEVERITIES)}
     groups = sorted(({**rule_dict(r), "count": c} for r, c in rows if r in RULES), key=lambda g: (order[g["severity"]], -g["count"]))
-    return {"crawl": crawl_out(crawl), "groups": groups,
+    profile_scores = (crawl.stats or {}).get("profile_scores")
+    if profile_scores is None:
+        pages = db.scalars(select(Page).where(Page.crawl_id == crawl.id)).all()
+        issue_rows = db.execute(select(Issue.page_id, Issue.rule_id, Issue.severity).where(Issue.crawl_id == crawl.id))
+        profile_scores = calculate_profile_scores(pages, issue_rows)
+    return {"crawl": crawl_out(crawl), "groups": groups, "profile_scores": profile_scores,
             "by_severity": {s: sum(g["count"] for g in groups if g["severity"] == s) for s in SEVERITIES},
             "by_category": {c: sum(g["count"] for g in groups if g["category"] == c) for c in sorted({g["category"] for g in groups})},
             "scoring": "Jede Seite startet bei 100 und verliert je ausgelöster kritischer/hoher/mittlerer/niedriger Regel 25/10/4/1 Punkte. "

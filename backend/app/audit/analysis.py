@@ -14,7 +14,7 @@ from ..crawler.sitemaps import SitemapReport
 from ..db import session_scope
 from ..models import Crawl, Issue, Link, Page
 from .hreflang import language_of, locale_from_path
-from .rules import PAGE_PENALTY, RULES, SITE_PENALTY
+from .rules import PAGE_PENALTY, PROFILE_RULE_IDS, RULES, SITE_PENALTY
 from .schema_validator import all_types
 
 DEEP = 4
@@ -29,6 +29,36 @@ POST_RULES = {  # rules produced by this module; cleared before re-analysis
     "canonical_broken", "canonical_chain", "hreflang_no_return", "hreflang_broken", "intl_duplicate",
     "sitemap_non_indexable", "not_in_sitemap",
 } | SITE_RULE_IDS
+
+
+def _calculate_profile_scores(pages, page_rules, site_rules) -> dict[str, dict[str, int | float | None]]:
+    scored_pages = [
+        page for page in pages
+        if (page.is_html or page.status_code is None or (page.status_code or 0) >= 400)
+        and not page.blocked_by_robots
+    ]
+    result = {}
+    for profile, rule_ids in PROFILE_RULE_IDS.items():
+        page_scores = [
+            max(0.0, 100.0 - sum(PAGE_PENALTY[severity] for rule_id, severity in page_rules.get(page.id, ())
+                                 if rule_id in rule_ids))
+            for page in scored_pages
+        ]
+        site_penalty = sum(SITE_PENALTY[severity] for rule_id, severity in site_rules if rule_id in rule_ids)
+        score = round(max(0.0, sum(page_scores) / len(page_scores) - site_penalty), 1) if page_scores else None
+        result[profile] = {"score": score, "rule_count": len(rule_ids)}
+    return result
+
+
+def calculate_profile_scores(pages, issue_rows) -> dict[str, dict[str, int | float | None]]:
+    page_rules: dict[int, set[tuple[str, str]]] = defaultdict(set)
+    site_rules: list[tuple[str, str]] = []
+    for page_id, rule_id, severity in issue_rows:
+        if page_id is None:
+            site_rules.append((rule_id, severity))
+        else:
+            page_rules[page_id].add((rule_id, severity))
+    return _calculate_profile_scores(pages, page_rules, site_rules)
 
 
 def is_broken_external(status: int | None, error: str | None) -> bool:
@@ -445,12 +475,14 @@ def analyse_crawl(crawl_id: int, *, sitemap: SitemapReport | None = None, site_c
         page_rules: dict[int, set[tuple[str, str]]] = defaultdict(set)
         sev_counts, rule_counts, cat_counts = Counter(), Counter(), Counter()
         site_penalty = 0.0
+        site_rules: list[tuple[str, str]] = []
         for pid, rule_id, sev, cat in db.execute(select(Issue.page_id, Issue.rule_id, Issue.severity, Issue.category).where(Issue.crawl_id == crawl_id)):
             sev_counts[sev] += 1
             rule_counts[rule_id] += 1
             cat_counts[cat] += 1
             if pid is None:
                 site_penalty += SITE_PENALTY[sev]
+                site_rules.append((rule_id, sev))
             else:
                 page_rules[pid].add((rule_id, sev))
         updates, scored = [], []
@@ -466,6 +498,7 @@ def analyse_crawl(crawl_id: int, *, sitemap: SitemapReport | None = None, site_c
         for i in range(0, len(updates), 2000):
             db.execute(update(Page), updates[i : i + 2000])
         site_score = round(max(0.0, (sum(scored) / len(scored) if scored else 0.0) - site_penalty), 1) if scored else None
+        profile_scores = _calculate_profile_scores(pages, page_rules, site_rules)
 
         # ---------------------------------------------------------------- statistics
         status_classes = Counter()
@@ -482,6 +515,7 @@ def analyse_crawl(crawl_id: int, *, sitemap: SitemapReport | None = None, site_c
         types = Counter((p.content_type or "unknown").split("/")[-1] if p.status_code else "n/a" for p in pages)
         stats = {
             "score": site_score,
+            "profile_scores": profile_scores,
             "total_urls": n,
             "html_pages": len(html_ok),
             "indexable_pages": len(indexable),

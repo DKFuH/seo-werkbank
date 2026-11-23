@@ -392,6 +392,7 @@ RULE_CLASSIFICATIONS = (
 TECHNICAL_REQUIREMENT_IDS = frozenset({
     "http_5xx", "http_4xx", "fetch_error", "redirect_loop",
     "redirect_broken", "broken_internal_link", "broken_image",
+    "noindex", "blocked_by_robots",
     "robots_blocks_site", "robots_unreachable", "canonical_invalid",
     "canonical_broken", "not_https", "mixed_content", "insecure_form",
     "schema_invalid_json", "sitemap_invalid",
@@ -434,6 +435,7 @@ CLASSIFICATION_LABELS = {
     "seo_heuristic": "SEO-Heuristik (keine Google-Vorgabe)",
     "geo_experiment": "GEO-Hypothese (nicht als Rankingfaktor belegt)",
 }
+PROFILE_IDS = ("google", "bing", "brave", "geo")
 
 
 def classify_rule(rule_id: str) -> str:
@@ -461,6 +463,28 @@ def rule_provenance(rule_id: str) -> dict:
     }
 
 
+def rule_profiles(rule_id: str) -> tuple[str, ...]:
+    """Return profiles with a documented or explicitly classified relationship to this rule."""
+    classification = classify_rule(rule_id)
+    profiles = []
+    if classification in ("technical_requirement", "google_recommendation"):
+        profiles.append("google")
+    evidence = engine_guidance(rule_id)
+    profiles.extend(
+        engine for engine in ("bing", "brave")
+        if evidence[engine]["status"] == "related_guidance"
+    )
+    if classification == "geo_experiment":
+        profiles.append("geo")
+    return tuple(profiles)
+
+
+PROFILE_RULE_IDS = {
+    profile: frozenset(rule_id for rule_id in RULES if profile in rule_profiles(rule_id))
+    for profile in PROFILE_IDS
+}
+
+
 CATEGORIES = sorted({r.category for r in RULES.values()})
 
 
@@ -469,4 +493,5 @@ def rule_dict(rule_id: str) -> dict:
     return {"id": r.id, "title": r.title, "severity": r.severity, "category": r.category,
             "description": r.description, "fix": r.fix, "scope": r.scope,
             **rule_provenance(rule_id),
-            "search_engines": engine_guidance(rule_id)}
+            "search_engines": engine_guidance(rule_id),
+            "profiles": list(rule_profiles(rule_id))}

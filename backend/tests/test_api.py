@@ -73,6 +73,11 @@ def test_crawl_summary_and_scoring(client, auth, crawled):
     summary = client.get(f"/api/crawls/{crawled['crawl_id']}/issues", headers=auth).json()
     ids = {g["id"] for g in summary["groups"]}
     assert set(SITE_RULES) <= ids
+    assert set(summary["profile_scores"]) == {"google", "bing", "brave", "geo"}
+    assert summary["profile_scores"]["brave"]["rule_count"] == 3
+    assert summary["profile_scores"]["geo"]["rule_count"] > 0
+    assert all(0 <= score["score"] <= 100 for score in summary["profile_scores"].values())
+    assert next(g for g in summary["groups"] if g["id"] == "geo_llms_missing")["profiles"] == ["geo"]
     sev = [g["severity"] for g in summary["groups"]]
     assert sev == sorted(sev, key=["critical", "high", "medium", "low"].index)  # ordered by priority
     assert all(g["description"] and g["fix"] for g in summary["groups"])

@@ -23,10 +23,16 @@ konservativer Metadaten-Schritt, **keine offizielle Google-Zertifizierung**.
 - Ein allgemeiner Link zu Googles Dokumentation belegt **keine** individuelle
   Schwelle; deshalb sind heuristische und GEO-Regeln nicht mit solchen Links
   ausgezeichnet.
-- Das bestehende vierstufige Scoring bleibt in diesem PR unverändert. **Ein
-  Compliance-Score wird damit ausdrücklich noch nicht eingeführt.** Dafür
-  braucht es ein separates, getestetes Scoring-Modell und Anpassungen in UI,
-  Exporten und historischen Vergleichen.
+- Der bisherige Gesamtscore bleibt unverändert. Zusätzlich berechnet die
+  Audit-Ansicht Google-, Bing-, Brave- und GEO-Profil-Scores mit denselben
+  Schweregrad-Abzügen, aber jeweils nur aus den zugeordneten Regeln.
+- Die Suchmaschinen-Scores sind keine Rankingschätzung und kein Compliance-
+  Score. Bing und Brave berücksichtigen nur Regeln mit hinterlegter
+  thematischer Dokumentation; `not_evaluated`-Regeln werden nicht eingerechnet.
+- Wegen der unterschiedlichen Zahl zugeordneter Regeln sind die Profil-Scores
+  nicht direkt zwischen Suchmaschinen vergleichbar. Der GEO-Crawlscore nutzt
+  GEO-Befunde des gemeinsamen Crawls und ist nicht identisch mit dem separaten
+  GEO-Check für eine einzelne URL.
 
 Offizielle Anlaufstellen:
 - https://developers.google.com/search/docs/essentials
@@ -41,9 +47,8 @@ Offizielle Anlaufstellen:
    Prüfmethodik dokumentieren.
 2. Bewusst gesetzte `noindex`-, `canonical`-, `robots`- und
    Sprachvarianten gegen die gewünschte Indexierungsstrategie prüfen.
-3. UI-Filter für die vier Klassifizierungen einführen und die Erläuterungen
-   in Berichten/Exporten anzeigen.
+3. Die Quellen und Zuordnungen jeder einzelnen Regel weiter präzisieren.
 4. Optional einen separaten technischen Google-Indexierungsstatus bilden –
    aber keinen scheinbar offiziellen Google-Compliance-Score behaupten.
-5. Erst danach die Gewichtung und den Score inklusive Migration historischer
-   Werte und Vergleichstests überarbeiten.
+5. Die Profil-Scores bei Bedarf nach gesonderter Validierung um eigene
+   Gewichtungen oder historische Vergleiche erweitern.
