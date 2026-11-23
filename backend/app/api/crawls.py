@@ -22,7 +22,7 @@ from ..reports.exports import audit_pdf, to_csv, to_xlsx
 from ..security.auth import current_user, get_site_for
 from ..text import content_tokens, is_question, stem
 from .deps import download, get_crawl_for, page_params
-from .sites import crawl_out, start_crawl
+from .sites import crawl_number, crawl_out, start_crawl
 
 router = APIRouter(tags=["crawls"])
 _SEV_ORDER = case({s: i for i, s in enumerate(SEVERITIES)}, value=Issue.severity)
@@ -526,7 +526,7 @@ def _dataset(db: Session, crawl: Crawl, dataset: str, limit: int = 200_000) -> l
 def export_crawl(crawl_id: int, dataset: str = "pages", format: str = "csv", user: User = Depends(current_user), db: Session = Depends(get_db)):
     crawl = get_crawl_for(db, user, crawl_id)
     site = db.get(Site, crawl.site_id)
-    name = f"{site.domain}-crawl{crawl.id}"
+    name = f"{site.domain}-crawl{crawl_number(db, crawl)}"
     if format == "xlsx" and dataset == "all":
         summary = [{"metric": k, "value": json.dumps(v) if isinstance(v, dict | list) else v} for k, v in (crawl.stats or {}).items()
                    if k not in ("sitemap", "site_checks", "issues_by_rule")]
@@ -555,9 +555,9 @@ def audit_report(crawl_id: int, user: User = Depends(current_user), db: Session 
         if rule_id in RULES:
             urls = db.scalars(select(Issue.url).where(Issue.crawl_id == crawl.id, Issue.rule_id == rule_id).order_by(Issue.url).limit(15)).all()
             groups.append({"rule_id": rule_id, "count": count, "urls": urls})
-    pdf = audit_pdf(site.name, site.url, {"id": crawl.id, "finished_at": crawl.finished_at.strftime("%Y-%m-%d %H:%M") if crawl.finished_at else None,
+    pdf = audit_pdf(site.name, site.url, {"id": crawl.id, "number": crawl_number(db, crawl), "finished_at": crawl.finished_at.strftime("%Y-%m-%d %H:%M") if crawl.finished_at else None,
                                           "score": crawl.score, "stats": crawl.stats}, groups)
-    return download(pdf, f"seo-audit-{site.domain}-crawl{crawl.id}.pdf", "application/pdf")
+    return download(pdf, f"seo-audit-{site.domain}-crawl{crawl_number(db, crawl)}.pdf", "application/pdf")
 
 
 @router.get("/crawls/{crawl_id}/link-opportunities/context")
