@@ -8,11 +8,13 @@ SEO-Werkbank ist eine Weiterentwicklung von [OpenSEOSuite](https://github.com/Su
 (MIT-Lizenz, © The OpenSEOSuite contributors). Die ursprüngliche Dokumentation liegt unter
 [docs/UPSTREAM_README.md](docs/UPSTREAM_README.md); Architektur, Sicherheit und Installation gelten unverändert.
 
-## Neue SEO-Operations-Werkzeuge
+## SEO-Operations-Werkzeuge (PRs #41–#45)
 
-- **Weiterleitungen** (`/redirects`): Vorschläge, Simulation, menschliche Freigabe, Apache-/Nginx-/CSV-Konfigurationsexporte ([Details](docs/REDIRECTS.md)).
-- **Logfile & 404** (`/logs`): begrenzter Apache-/Nginx-Import ohne persistente IPs und Rohlogs; 404-Redirect-Vorschläge ([Details](docs/LOG_ANALYSIS.md)).
-- **Schema-Management** (Reiter unter `/schema`): Daten aus Crawls vorbefüllen, JSON-LD-Diff, Vorlagen und Freigabe-Workflow ([Details](docs/STRUCTURED_DATA.md)).
+- **Weiterleitungen** (`/redirects`): Crawl-Vorschläge, Simulation, manuelle Freigabe und **nur Konfigurationsentwürfe** für Apache `.htaccess`, Nginx und CSV. Ein eindeutiger Index verhindert pro Website doppelte Quell-URLs; der Import existierender Daten kann bei alten Dubletten eine manuelle Bereinigung erfordern ([Details](docs/REDIRECTS.md)).
+- **Logfile & 404** (`/logs`): Apache-/Nginx-Common-/Combined-Logs (auch gzip, bis zu zwei zusätzliche quoted-Felder) in begrenzten Jobs verarbeiten; IP und komplette Logzeilen werden nicht dauerhaft gespeichert. Bots werden nur über **nicht verifizierte User-Agent-Angaben** eingeordnet. Fehlerhafte und unterbrochene Imports lassen sich bereinigen ([Details](docs/LOG_ANALYSIS.md)).
+- **Schema-Management** (Reiter unter `/schema`): JSON-LD aus Crawl-Daten vorbefüllen, Diff und Vorlagenvorschau erstellen und Entwürfe separat freigeben. Die Content-Freigabe zeigt neben **reinem JSON** einen **sicheren HTML-Einbettungsblock**. Weder Freigabe noch Export veröffentlichen Schema-Markup automatisch ([Details](docs/STRUCTURED_DATA.md)).
+
+**Betriebsgrenzen:** Kein automatisches Deployment von Redirects/JSON-LD, keine garantierte Indexierung oder Rich-Result-Ausspielung. Siehe [Projektstatus](PROJECT_STATUS.md) und [bekannte Grenzen](KNOWN_LIMITATIONS.md).
 
 ## Hilfe, Keyword-Clustering und Demo
 
