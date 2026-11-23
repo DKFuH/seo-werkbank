@@ -5,12 +5,14 @@ All input is supplied by a user. No AI-generated copy, remote CMS write, or publ
 from __future__ import annotations
 
 import difflib
+import json
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from ..audit.schema_validator import validate_jsonld
 from ..db import get_db
 from ..models import SeoContentProposal, SeoWorkItem, User, utcnow
 from ..security.auth import current_user, get_site_for
@@ -40,7 +42,8 @@ def _out(p: SeoContentProposal) -> dict:
     diff = list(difflib.unified_diff(p.original_text.splitlines(), p.proposed_text.splitlines(),
                                      fromfile="Vom Nutzer eingegebener Ausgangstext", tofile="Entwurf", lineterm=""))
     return {"exists": True, "id": p.id, "work_item_id": p.work_item_id, "original_text": p.original_text,
-            "proposed_text": p.proposed_text, "rationale": p.rationale, "status": p.status,
+            "proposed_text": p.proposed_text, "rationale": p.rationale,
+            "content_type": p.content_type, "status": p.status,
             "approved_at": p.approved_at.isoformat() if p.approved_at else None,
             "marked_published_at": p.marked_published_at.isoformat() if p.marked_published_at else None,
             "created_at": p.created_at.isoformat(), "updated_at": p.updated_at.isoformat(),
@@ -67,6 +70,13 @@ def save_proposal(site_id: int, item_id: int, body: ProposalIn, user: User = Dep
         raise HTTPException(409, "Freigegebene Entwürfe sind unveränderlich. Zum Bearbeiten zuerst wieder öffnen.")
     if work.status == "published":
         raise HTTPException(409, "Bereits veröffentlichte Vorgänge nicht überschreiben; neuen Vorgang anlegen.")
+    if current is not None and current.content_type == "application/ld+json":
+        try:
+            doc = json.loads(body.proposed_text)
+        except json.JSONDecodeError as exc:
+            raise HTTPException(422, "Ungültiges JSON-LD") from exc
+        if not isinstance(doc, dict) or doc.get("@context") != "https://schema.org" or not doc.get("@type"):
+            raise HTTPException(422, "Schema-Entwurf braucht @context und @type")
     if current is None:
         current = SeoContentProposal(work_item_id=item_id, **body.model_dump(), status="draft")
         db.add(current)
@@ -89,6 +99,13 @@ def approve_proposal(site_id: int, item_id: int, user: User = Depends(current_us
     p = _proposal(db, item_id)
     if p is None or p.status != "draft":
         raise HTTPException(409, "Nur ein gespeicherter Entwurf kann separat freigegeben werden.")
+    if p.content_type == "application/ld+json":
+        try:
+            doc = json.loads(p.proposed_text)
+        except json.JSONDecodeError as exc:
+            raise HTTPException(409, "JSON-LD ist ungültig") from exc
+        if not isinstance(doc, dict) or validate_jsonld([doc])["errors"]:
+            raise HTTPException(409, "Schema-Prüfung enthält Fehler; erst Entwurf korrigieren")
     p.status = "approved"
     p.approved_at = utcnow()
     p.updated_at = utcnow()
