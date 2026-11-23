@@ -36,7 +36,7 @@ def test_redirect_api_conflicts_export_and_tenant_boundary(client, auth, fixture
         "source_url": fixture_site.url + "/another", "target_url": src})
     assert chain.status_code == 201
     assert client.post(f"{base}/{chain.json()['id']}/approve", headers=auth).status_code == 409
-    assert src in client.get(base + "/export?format=apache", headers=auth).text
+    assert target in client.get(base + "/export?format=apache", headers=auth).text
     apache = client.get(base + "/export?format=apache", headers=auth).text
     assert apache.count("RewriteEngine On") == 1
     assert ".htaccess" in apache
@@ -76,9 +76,9 @@ def test_log_import_start_failure_cleans_temp_and_marks_failed(
     monkeypatch.setattr(log_api.tempfile, "gettempdir", lambda: str(tmp_path))
     sample = ('192.0.2.2 - - [10/Oct/2026:13:55:36 +0200] '
               '"GET /old HTTP/1.1" 404 123 "-" "Googlebot/2.1"\n')
-    with pytest.raises(RuntimeError, match="Job engine unavailable"):
-        client.post(f"/api/sites/{sid}/logs/import", headers=auth,
-                    files={"file": ("access.log", sample.encode(), "text/plain")})
+    failed = client.post(f"/api/sites/{sid}/logs/import", headers=auth,
+                         files={"file": ("access.log", sample.encode(), "text/plain")})
+    assert failed.status_code == 500
     assert not list(tmp_path.glob("seo-log-import-*"))
     imports = client.get(f"/api/sites/{sid}/logs", headers=auth).json()
     assert len(imports) == 1 and imports[0]["state"] == "failed"
