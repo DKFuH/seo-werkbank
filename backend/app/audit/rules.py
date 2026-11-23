@@ -376,10 +376,82 @@ _R = [
 ]
 
 RULES: dict[str, Rule] = {r[0]: Rule(*r) for r in _R}
+
+# Provenance is deliberately separate from severity. A warning may be useful
+# without representing a Google requirement or a proven ranking signal.
+# Keep this mapping explicit so a newly introduced rule cannot silently
+# become a claimed Google policy.
+RULE_CLASSIFICATIONS = (
+    "technical_requirement",
+    "google_recommendation",
+    "seo_heuristic",
+    "geo_experiment",
+)
+TECHNICAL_REQUIREMENT_IDS = frozenset({
+    "http_5xx", "http_4xx", "fetch_error", "redirect_loop",
+    "redirect_broken", "broken_internal_link", "broken_image",
+    "robots_blocks_site", "robots_unreachable", "canonical_invalid",
+    "canonical_broken", "not_https", "mixed_content", "insecure_form",
+    "schema_invalid_json", "sitemap_invalid",
+})
+SEO_HEURISTIC_IDS = frozenset({
+    "slow_response", "html_too_large", "redirect_temporary",
+    "nofollow_internal", "orphan_page", "deep_page", "single_inlink",
+    "robots_missing", "canonical_missing", "pagination_canonical",
+    "title_too_long", "title_too_short", "description_missing",
+    "description_too_long", "description_too_short",
+    "h1_missing", "h1_multiple", "h1_duplicate", "heading_skipped",
+    "thin_content", "template_content", "near_duplicate_content",
+    "url_too_long", "url_uppercase", "url_underscores",
+    "url_many_params", "url_non_ascii", "url_double_slash",
+    "hsts_missing", "img_no_dimensions", "img_legacy_format",
+    "render_blocking", "favicon_missing", "og_missing",
+    "og_incomplete", "twitter_card_missing", "schema_none",
+    "hreflang_no_self", "hreflang_no_x_default", "sitemap_missing",
+    "sitemap_not_in_robots", "not_in_sitemap", "lang_missing",
+})
+GOOGLE_DOCUMENTATION = {
+    "technical_requirement": "https://developers.google.com/search/docs/essentials/technical",
+    "google_recommendation": "https://developers.google.com/search/docs/fundamentals/seo-starter-guide",
+}
+# A category-level documentation link is a starting point, NOT evidence
+# that Google mandates a particular threshold or recommendation.
+CLASSIFICATION_LABELS = {
+    "technical_requirement": "Technisches Problem (kontextabhängig)",
+    "google_recommendation": "Google-Empfehlung / Best Practice",
+    "seo_heuristic": "SEO-Heuristik (keine Google-Vorgabe)",
+    "geo_experiment": "GEO-Hypothese (nicht als Rankingfaktor belegt)",
+}
+
+
+def classify_rule(rule_id: str) -> str:
+    """Return provenance; does not change the existing score or severity."""
+    if rule_id not in RULES:
+        raise KeyError(rule_id)
+    if rule_id.startswith("geo_"):
+        return "geo_experiment"
+    if rule_id in TECHNICAL_REQUIREMENT_IDS:
+        return "technical_requirement"
+    if rule_id in SEO_HEURISTIC_IDS:
+        return "seo_heuristic"
+    return "google_recommendation"
+
+
+def rule_provenance(rule_id: str) -> dict:
+    classification = classify_rule(rule_id)
+    return {
+        "classification": classification,
+        "classification_label": CLASSIFICATION_LABELS[classification],
+        "google_documentation": GOOGLE_DOCUMENTATION.get(classification),
+        "google_requirement": False if classification != "technical_requirement" else None,
+    }
+
+
 CATEGORIES = sorted({r.category for r in RULES.values()})
 
 
 def rule_dict(rule_id: str) -> dict:
     r = RULES[rule_id]
     return {"id": r.id, "title": r.title, "severity": r.severity, "category": r.category,
-            "description": r.description, "fix": r.fix, "scope": r.scope}
+            "description": r.description, "fix": r.fix, "scope": r.scope,
+            **rule_provenance(rule_id)}
