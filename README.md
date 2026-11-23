@@ -8,6 +8,12 @@ SEO-Werkbank ist eine Weiterentwicklung von [OpenSEOSuite](https://github.com/Su
 (MIT-Lizenz, © The OpenSEOSuite contributors). Die ursprüngliche Dokumentation liegt unter
 [docs/UPSTREAM_README.md](docs/UPSTREAM_README.md); Architektur, Sicherheit und Installation gelten unverändert.
 
+## Neue SEO-Operations-Werkzeuge
+
+- **Weiterleitungen** (`/redirects`): Vorschläge, Simulation, menschliche Freigabe, Apache-/Nginx-/CSV-Konfigurationsexporte ([Details](docs/REDIRECTS.md)).
+- **Logfile & 404** (`/logs`): begrenzter Apache-/Nginx-Import ohne persistente IPs und Rohlogs; 404-Redirect-Vorschläge ([Details](docs/LOG_ANALYSIS.md)).
+- **Schema-Management** (Reiter unter `/schema`): Daten aus Crawls vorbefüllen, JSON-LD-Diff, Vorlagen und Freigabe-Workflow ([Details](docs/STRUCTURED_DATA.md)).
+
 ## Hilfe, Keyword-Clustering und Demo
 
 - **Integrierte Hilfe** unter `/help`: direkte Verweise zu Werkzeugen und passenden Handbuchkapiteln.
