@@ -10,7 +10,7 @@ import {
 import { RelaunchPanel } from "../components/AdvancedSeoPanels";
 import { api } from "../lib/api";
 import { type CrawlSummary, useSite } from "../lib/context";
-import { fmtBytes, fmtDateTime, fmtInt, fmtMs, fmtNum, scoreColor, shortUrl, timeAgo, titleCase } from "../lib/format";
+import { crawlName, fmtBytes, fmtDateTime, fmtInt, fmtMs, fmtNum, scoreColor, shortUrl, timeAgo, titleCase } from "../lib/format";
 
 /* ------------------------------------------------------------------ crawl configuration form (shared with the Websites page) */
 export type CrawlCfg = Record<string, any>;
@@ -470,7 +470,7 @@ export default function Crawler() {
   const exportPath = `/crawls/${inspectedId}/export`;
 
   const historyColumns: Column<CrawlSummary>[] = [
-    { key: "id", header: "Crawl", render: (c) => <span className="font-medium text-slate-900 dark:text-slate-100">#{c.id}</span> },
+    { key: "id", header: "Crawl", render: (c) => <span className="font-medium text-slate-900 dark:text-slate-100" title={`Interne ID ${c.id}`}>{crawlName(c)}</span> },
     { key: "status", header: "Status", render: (c) => (
       <span className="inline-flex items-center gap-1.5">
         <CrawlStatusBadge status={c.status} />
@@ -509,7 +509,7 @@ export default function Crawler() {
 
       <div className="space-y-4">
         {activeId !== null ? (
-          <Card title={`Crawl #${activeId} läuft`} description="Du kannst die Seite verlassen. Der Crawl läuft auf dem Server weiter."
+          <Card title={`${crawlName(site?.active_crawl)} läuft`} description="Du kannst die Seite verlassen. Der Crawl läuft auf dem Server weiter."
             actions={<Button size="sm" variant="danger" icon={<Square className="h-3.5 w-3.5" />} loading={cancel.isPending} onClick={() => cancel.mutate(activeId)}>Crawl abbrechen</Button>}>
             <ProgressBar value={job?.progress ?? 0} label={job?.message ?? (live.data?.status === "queued" || !live.data ? "Wartet auf Start…" : "Crawlt…")} />
             {live.error && <div className="mt-3"><ErrorBox error={live.error} onRetry={() => live.refetch()} /></div>}
@@ -544,7 +544,7 @@ export default function Crawler() {
         {inspectedId !== null && (
           <section>
             <div className="mb-3 flex flex-wrap items-center gap-2">
-              <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Crawl #{inspectedId}</h2>
+              <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{site?.name} · {crawlName(inspected)}</h2>
               {inspected && <CrawlStatusBadge status={inspected.status} />}
               <span className="text-xs text-slate-500 dark:text-slate-400">{fmtInt(inspected?.pages_crawled)} URLs · {fmtDateTime(inspected?.finished_at ?? inspected?.created_at)}</span>
             </div>
@@ -572,7 +572,7 @@ export default function Crawler() {
         )}
       </div>
 
-      <Modal open={toDelete !== null} onClose={() => setToDelete(null)} title={`Crawl #${toDelete?.id ?? ""} löschen?`}
+      <Modal open={toDelete !== null} onClose={() => setToDelete(null)} title={`${crawlName(toDelete)} löschen?`}
         footer={<>
           <Button onClick={() => setToDelete(null)}>Crawl behalten</Button>
           <Button variant="danger" loading={remove.isPending} onClick={() => toDelete && remove.mutate(toDelete.id)}>Crawl löschen</Button>

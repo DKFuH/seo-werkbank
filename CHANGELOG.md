@@ -5,6 +5,11 @@ uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased] - SEO-Werkbank
 
+### Changed (crawl numbering)
+- Crawls are numbered per project: "Crawl 1" to "Crawl n" for each website (competitor crawls separately), instead of
+  the global database id. The number is gap-free after a deletion; the internal id stays in URLs and as a tooltip.
+  Exports and the PDF report use the run number in file name and header.
+
 ### Added (GEO)
 - robots.txt AI signals: detection of the Cloudflare-managed section that blocks AI crawlers (`geo_cloudflare_ai_block`)
   and of `Content-Signal` lines with `search=no` or `ai-input=no` (`geo_content_signal_restrictive`; `ai-train=no` is

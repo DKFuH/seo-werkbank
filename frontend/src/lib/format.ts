@@ -81,3 +81,9 @@ export const LABELS: Record<string, string> = {
   pass: "ok", warn: "prüfen", fail: "Problem",
 };
 export const titleCase = (s: string) => LABELS[s] ?? s.replace(/[_-]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+
+/** "Crawl 3": the run number within the project instead of the global database id. */
+export function crawlName(c: { id: number; number?: number | null } | null | undefined): string {
+  if (!c) return "Crawl";
+  return `Crawl ${c.number ?? c.id}`;
+}

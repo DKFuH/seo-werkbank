@@ -8,7 +8,7 @@ import AreaCards from "../components/AreaCards";
 import { Badge, Button, Card, chartColors, EmptyState, ErrorBox, PageHeader, ProgressBar, ScoreRing, SeverityBadge, Spinner, Stat } from "../components/ui";
 import { api } from "../lib/api";
 import { type Site, useSite } from "../lib/context";
-import { fmtDate, fmtInt, fmtNum, SEVERITIES, SEVERITY_COLOR, timeAgo, titleCase } from "../lib/format";
+import { crawlName, fmtDate, fmtInt, fmtNum, SEVERITIES, SEVERITY_COLOR, timeAgo, titleCase } from "../lib/format";
 
 const tooltipStyle = { background: "#0f172a", border: "none", borderRadius: 8, color: "#f1f5f9", fontSize: 12 };
 const axisTick = { fontSize: 11, fill: "#94a3b8" };
@@ -66,7 +66,7 @@ function Overview({ site }: { site: Site }) {
   const latest = q.data.latest;
   const stats: Record<string, any> = latest?.stats ?? {};
   const sev = stats.issues_by_severity ?? {};
-  const history: any[] = (q.data.history ?? []).map((h: any) => ({ ...h, label: h.date ? fmtDate(h.date) : `#${h.id}` }));
+  const history: any[] = (q.data.history ?? []).map((h: any) => ({ ...h, label: h.date ? fmtDate(h.date) : `Crawl ${h.number ?? h.id}` }));
   const statusData = Object.entries(stats.status_classes ?? {}).map(([name, value]) => ({ name, value: Number(value) })).sort((a, b) => a.name.localeCompare(b.name));
   const score: number | null = latest?.score ?? null;
 
@@ -83,7 +83,7 @@ function Overview({ site }: { site: Site }) {
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
         <Stat label="SEO-Score" value={score === null ? "–" : fmtNum(score, 0)} tone={score === null ? undefined : score >= 85 ? "good" : score >= 65 ? "warn" : "bad"}
-          hint={`Crawl #${latest.id} · ${timeAgo(latest.finished_at)}`} tooltip="Durchschnittlicher Seiten-Score abzüglich Abzügen für websiteweite Probleme. Formel siehe Website-Audit." />
+          hint={`${crawlName(latest)} · ${timeAgo(latest.finished_at)}`} tooltip="Durchschnittlicher Seiten-Score abzüglich Abzügen für websiteweite Probleme. Formel siehe Website-Audit." />
         <Stat label="Gecrawlte URLs" value={fmtInt(stats.total_urls ?? latest.pages_crawled)} hint={stats.limit_reached ? "URL-Limit erreicht" : undefined} />
         <Stat label="Indexierbare Seiten" value={fmtInt(stats.indexable_pages)} hint={`${fmtInt(stats.non_indexable_pages)} nicht indexierbar`} />
         <Stat label="Kritisch / hoch" value={`${fmtInt(sev.critical ?? 0)} / ${fmtInt(sev.high ?? 0)}`} tone={sev.critical ? "bad" : sev.high ? "warn" : "good"} hint={<Link to="/audit" className="hover:underline">Befunde ansehen</Link>} />

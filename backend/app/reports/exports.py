@@ -120,7 +120,7 @@ def audit_pdf(site_name: str, site_url: str, crawl: dict, issue_groups: list[dic
     sev = stats.get("issues_by_severity", {})
     W = A4[0] - 36 * mm
     story: list = [_p("Technical SEO Audit Report", _H1), _p(f"{site_name} - {site_url}", _P),
-                   _p(f"Crawl #{crawl['id']} completed {crawl.get('finished_at') or 'n/a'} - report generated {datetime.now():%Y-%m-%d %H:%M}", _SMALL),
+                   _p(f"Crawl {crawl.get('number') or crawl['id']} vom {crawl.get('finished_at') or 'n/a'} - Bericht erstellt {datetime.now():%Y-%m-%d %H:%M}", _SMALL),
                    Spacer(1, 8)]
     score = crawl.get("score")
     verdict = ("n/a" if score is None else "Good" if score >= 85 else "Needs attention" if score >= 65 else "Poor")

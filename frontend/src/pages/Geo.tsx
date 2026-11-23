@@ -74,7 +74,7 @@ function LlmsDraftCard() {
         {draft.error && <ErrorBox error={draft.error} />}
         {d && (
           <>
-            <p className="text-xs text-slate-500 dark:text-slate-400">{d.pages} Seiten in {d.sections.length} Abschnitten · Crawl #{d.crawl_id}</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">{d.pages} Seiten in {d.sections.length} Abschnitten · aus dem letzten Crawl</p>
             {d.summary_missing && <Notice tone="warn">Die Startseite hat keine Meta-Description. Die Zeile „&gt; Kurzbeschreibung“ fehlt deshalb und muss ergänzt werden.</Notice>}
             <Textarea readOnly rows={14} value={d.text} className="font-mono text-xs" aria-label="llms.txt-Entwurf" />
             <p className="text-xs text-slate-500 dark:text-slate-400">{d.method}</p>

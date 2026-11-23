@@ -10,6 +10,8 @@ export interface User {
 }
 export interface CrawlSummary {
   id: number;
+  /** Run number within the project (1..n, gap-free); null for very old API responses. */
+  number?: number | null;
   site_id: number;
   status: "queued" | "running" | "completed" | "failed" | "cancelled";
   start_url: string;
