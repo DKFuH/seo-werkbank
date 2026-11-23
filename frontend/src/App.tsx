@@ -11,6 +11,7 @@ const Audit = lazy(() => import("./pages/Audit"));
 const IssueDetail = lazy(() => import("./pages/IssueDetail"));
 const PageDetail = lazy(() => import("./pages/PageDetail"));
 const Crawler = lazy(() => import("./pages/Crawler"));
+const Logs = lazy(() => import("./pages/Logs"));
 const Redirects = lazy(() => import("./pages/Redirects"));
 const Diagnostics = lazy(() => import("./pages/Diagnostics"));
 const InternalLinks = lazy(() => import("./pages/InternalLinks"));
@@ -66,6 +67,7 @@ export default function App() {
             <Route path="/pages/:crawlId/:pageId" element={<PageDetail />} />
             <Route path="/crawler" element={<Crawler />} />
             <Route path="/redirects" element={<Redirects />} />
+            <Route path="/logs" element={<Logs />} />
             <Route path="/diagnostics" element={<Diagnostics />} />
             <Route path="/internal-links" element={<InternalLinks />} />
             <Route path="/sitemaps" element={<Sitemaps />} />
