@@ -6,7 +6,6 @@ from fastapi import HTTPException
 
 from app.services.redirects import export_rules, normalise_url, simulate
 
-
 SITE = SimpleNamespace(url="https://example.de/")
 
 
