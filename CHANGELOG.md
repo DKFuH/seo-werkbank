@@ -5,6 +5,12 @@ uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased] - SEO-Werkbank
 
+### Added (SEO Operations: PR #41–#43)
+- **Redirect-Management:** Crawl-basierte Vorschläge, manuelle Regeln, Schleifen-/Kettensimulation, Freigabe und sichere Apache-, Nginx- sowie CSV-Exportentwürfe; keine automatische Serveränderung. Migration `0010`.
+- **Logfile-/404-Monitor:** Apache/Nginx Common/Combined und gzip als begrenzte Importjobs, datensparsame Aggregate statt IPs/Rohlogs, UA-basierte Bot-Indizien, 404-Referrer-Hosts und Übergabe an Redirect-Entwürfe. Migration `0011`.
+- **Schema-Management:** JSON-LD-Vorbefüllung aus Crawl-Belegen, Diff, URL-Glob-Vorlagen, getrennte Freigabe mit `application/ld+json` und JSON-LD-Validierung. Keine CMS-Veröffentlichung. Migration `0012`.
+
+
 ### Added (keyword portfolio)
 - **Ranktracker → Portfolio (GSC)**: tracked target keywords with label, target URL, measurement (national/local/brand)
   and priority; impression-weighted Search Console position with movement against the previous period of equal length,
