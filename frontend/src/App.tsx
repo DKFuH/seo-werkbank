@@ -44,6 +44,7 @@ const SearchConsole = lazy(() => import("./pages/SearchConsole"));
 const Monitoring = lazy(() => import("./pages/Monitoring"));
 const Reports = lazy(() => import("./pages/Reports"));
 const Settings = lazy(() => import("./pages/Settings"));
+const Help = lazy(() => import("./pages/Help"));
 
 export default function App() {
   const { user, loading } = useAuth();
@@ -93,6 +94,7 @@ export default function App() {
             <Route path="/monitoring" element={<Monitoring />} />
             <Route path="/reports" element={<Reports />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/help" element={<Help />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Suspense>

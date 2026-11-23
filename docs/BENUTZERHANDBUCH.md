@@ -1,6 +1,6 @@
 # SEO-Werkbank – Benutzerhandbuch
 
-**Version:** für den Stand des GitHub-Hauptbranches vom 22. November 2026  
+**Version:** für den Stand des GitHub-Hauptbranches vom 22. November 2026, einschließlich der gemergten PRs #25–#27  
 **Zielgruppe:** Websitebetreiber, SEO-Redakteure, Agenturen und Administratoren  
 **Projekt:** https://github.com/DKFuH/seo-werkbank  
 **Lizenz:** MIT · Basierend auf OpenSEOSuite
@@ -75,6 +75,16 @@ Die Oberfläche ist deutschsprachig. Die Menübereiche lauten **Übersicht, Anal
 **Fertig, wenn:** Ein abgeschlossener Crawl vorliegt, die ersten Befunde gesichtet sind und mindestens eine konkrete Maßnahme mit Verantwortlichkeit außerhalb oder innerhalb der Teamorganisation geplant ist.
 
 **Noch nicht nötig:** Matomo, ein KI-Anbieter, MCP oder ein kostenpflichtiger SERP-Dienst. Grundlegende Crawls und Audits funktionieren ohne sie.
+
+### 2.1 Zusätzliche Diagnosen nach dem ersten Crawl
+
+Wenn du bereits einen Crawl hast, sind drei neue Arbeitswege besonders nützlich:
+
+- **Analyse → Tracking & Rendering:** Eine **URL deiner ausgewählten Website** eingeben und Roh-HTML mit dem JavaScript-Rendering vergleichen; bei installiertem Playwright und entsprechender Berechtigung optional Consent-Abläufe ausdrücklich testen. Bildwarnungen nutzen den letzten Crawl (Kapitel 7.4 und 7.5).
+- **Analyse → Crawler → einen Crawl anzeigen → Relaunch:** Zwei abgeschlossene Crawls derselben Website vor und nach einer Umstellung auswählen (Kapitel 6.4).
+- **Sichtbarkeit → SERP-Analyse → Zwei Keywords vergleichen:** Gemeinsame Ergebnis-URLs zweier Keywords vergleichen, entweder über einen konfigurierten Anbieter oder zwei manuelle URL-Listen (Kapitel 9.4).
+
+Im weiteren Verlauf findest du auch die Paginierung, die neue Schema-Prüfung, die Verzeichnisbewertung und wiederholte KI-Zitationsquellen – jeweils im passenden Fachmodul.
 
 ## 3. Installation und erster Administrator
 
@@ -218,10 +228,31 @@ Im geöffneten Crawl stehen unter anderem folgende Reiter zur Verfügung:
 - **Weiterleitungen:** Weiterleitungsketten und Zielstatus.
 - **Duplikate:** Auffälligkeiten bei Title, Description, H1 und Inhalt.
 - **Struktur:** Klicktiefe, HTTP-Statusklassen, Inhaltstypen und Gründe fehlender Indexierbarkeit.
+- **Relaunch:** Zwei abgeschlossene Crawls mit optionalen alten/neuen URL-Zuordnungen abgleichen; der neue Reiter erscheint im geöffneten Crawl.
 
 **Export:** Aus dem Crawler können unter anderem Seiten, Befunde und Links als CSV exportiert werden. Wenn zwei Durchläufe vorhanden sind, kannst du im Audit die Entwicklung vergleichen.
 
 **Grenze:** Der Crawl untersucht erreichbare Seiten zu einem bestimmten Zeitpunkt. Dynamische Zustände, nicht gerenderte Inhalte oder Loginbereiche können fehlen.
+
+### 6.4 Relaunch nach einer Website-Umstellung überprüfen
+
+**Wo:** `Analyse → Crawler → abgeschlossenen Crawl mit „Anzeigen“ öffnen → Reiter „Relaunch“`
+
+**Voraussetzungen:** Mindestens **zwei abgeschlossene Crawls derselben Website**, idealerweise einer *vor* und einer *nach* dem Relaunch. Ohne den älteren Crawl kann das Werkzeug keine historische Ausgangslage rekonstruieren.
+
+1. Den Crawler öffnen, den nach dem Relaunch erstellten Crawl mit **Anzeigen** öffnen und den Reiter **Relaunch** wählen.
+2. Im Feld **Crawl vor dem Relaunch** den älteren, im Feld **Crawl nach dem Relaunch** den neueren Durchlauf auswählen. Die Anwendung bietet die abgeschlossenen Crawls in Auswahllisten an.
+3. Falls sich URLs geändert haben, unter **Geplante URL-Zuordnungen (optional)** pro Zeile eine Zuordnung eingeben, beispielsweise:
+   ```text
+   https://example.org/alt => https://example.org/neu
+   https://example.org/ratgeber-alt → https://example.org/ratgeber-neu
+   ```
+   Auch `->` wird akzeptiert. Zeilen ohne gültigen Trenner werden ignoriert.
+4. Auf **Relaunch prüfen** klicken und die angezeigten Statusgruppen sichten.
+5. **„Ziel fehlt im neuen Crawl“** bedeutet nur: Im neueren gespeicherten Crawl nicht gefunden. **„Weiterleitung prüfen“** bedeutet, dass die notwendige Weiterleitung der alten URL im Crawl **nicht eindeutig belegt** ist. **„Ziel nicht indexierbar“**, **„Canonical weicht ab“** und **„Titel geändert“** müssen an den konkreten Seiten überprüft werden.
+6. Kritische URLs im Browser und ggf. mit einer separaten HTTP-Weiterleitungsprüfung kontrollieren, die Änderungen im CMS/Server vornehmen und danach erneut crawlen.
+
+**Ergebnis:** Eine Liste alter, geplanter neuer und beobachteter Ziel-URLs einschließlich technischer Auffälligkeiten. **Kein** automatischer Redirect-Eintrag, kein vollständiger Cross-Domain-Migrationsassistent und kein Beleg, dass eine im Crawl nicht gefundene URL tatsächlich fehlt. Für einen Domainwechsel unterstützt der aktuelle Vergleich nicht automatisch zwei getrennte Website-Projekte.
 
 ## 7. Technische Ergebnisse richtig bearbeiten
 
@@ -244,7 +275,7 @@ Im geöffneten Crawl stehen unter anderem folgende Reiter zur Verfügung:
 
 **Wo:** `Analyse → Interne Verlinkung`
 
-Unter **Top-Seiten**, **Schwache Seiten**, **Verwaist**, **Ankertexte**, **Linkchancen** und **Linkgraph** findest du verschiedene Sichten auf die internen Links.
+Unter **Top-Seiten**, **Schwache Seiten**, **Verwaist**, **Ankertexte**, **Linkchancen**, **Linkgraph** und **Paginierung** findest du verschiedene Sichten auf die internen Links.
 
 **Vorgehen:** Eine relevante Zielseite mit wenigen eingehenden Links auswählen → unter **Linkchancen** einen semantisch sinnvollen Kontext suchen → vorgeschlagene Textpassage/Anker prüfen → Link **im CMS manuell** setzen → nach erneutem Crawl kontrollieren.
 
@@ -254,13 +285,79 @@ Ein Linkvorschlag ändert die Website noch nicht.
 
 **Sitemaps & Indexierung:** `Analyse → Sitemaps & Indexierung`. Prüft Sitemap-URLs, robots.txt, fehlende indexierbare Seiten und Canonical-Abweichungen. Ein erzeugtes `sitemap.xml`-Dokument muss bei Bedarf selbst im Webauftritt bereitgestellt werden.
 
-**Strukturierte Daten:** `Analyse → Strukturierte Daten`. Unter **Validator** eine URL oder JSON-LD eingeben und prüfen; unter **Generator** einen Schema-Typ auswählen, Felder ausfüllen, Markup erzeugen und anschließend **selbst** in die Website einbauen.
+**Strukturierte Daten:** `Analyse → Strukturierte Daten`. Unter **Validator** eine URL oder JSON-LD eingeben und prüfen; unter **Generator** einen Schema-Typ auswählen, Felder ausfüllen, Markup erzeugen und anschließend **selbst** in die Website einbauen. Der zusätzliche Reiter **Rich-Result-Potenzial** wertet JSON-LD des letzten Crawls aus (siehe 7.7).
 
 **PageSpeed:** `Analyse → PageSpeed`. URL und Gerät auswählen, Quelle festlegen, **Test starten**. Feldwerte echter Chrome-Nutzer (wenn vorhanden) von Lighthouse-Labormesswerten unterscheiden.
 
 **Internationales SEO:** `Analyse → Internationales SEO`. Hreflang-Angaben, HTML-Sprache und Sprach-/Länderverzeichnisse kontrollieren.
 
 **Lokales SEO:** `Analyse → Lokales SEO`. LocalBusiness-Daten, NAP-Konsistenz (Name/Adresse/Telefon), Standortseiten und importierte Verzeichniseinträge prüfen.
+
+### 7.4 Consent- und Tracking-Zeitfolge im Browser untersuchen
+
+**Wo:** `Analyse → Tracking & Rendering`, Karte **Consent- und Tracking-Zeitfolge**
+
+**Voraussetzungen:** Die gewünschte URL gehört zur aktuell ausgewählten Website. Auf dem Backend müssen **Playwright und Chromium** installiert sein (siehe Kapitel 21 und [Browserdiagnostik](TECHNICAL_DIAGNOSTICS.md)). Standard-Docker enthält Chromium nicht. Teste nur Websites, auf denen du zu solchen Browserinteraktionen berechtigt bist.
+
+1. Website oben auswählen und im Feld **Seiten-URL der ausgewählten Website** die vollständige `https://`-URL eintragen.
+2. Für den ersten Überblick die optionalen Zustimmung-/Ablehnungsfelder **nicht** auswählen. Es wird dann nur die **erste frische Browsersitzung** untersucht.
+3. Wenn du zusätzlich die Reaktion einer Consent-Oberfläche untersuchen willst, das jeweilige Kontrollkästchen für **„Alle akzeptieren“** bzw. **„Alle ablehnen“** aktivieren. Beide Szenarien starten in **getrennten frischen Browserkontexten**.
+4. **„Ich darf die angegebene Website mit Browserinteraktionen testen.“** bestätigen.
+5. **Consent-Diagnose ausdrücklich starten** auswählen.
+6. Unter den Szenarien `initial`, `accept` oder `reject` Anzahl und zeitliche Reihenfolge der Anfragen ansehen. **„clicked_candidate_button“** bedeutet lediglich, dass ein passend beschrifteter sichtbarer Button geklickt wurde. **„not_found“** bedeutet, dass kein passender Button gefunden wurde; damit ist keine Aussage über eine CMP-Konfiguration verbunden.
+7. Auffällige **Zeitpunkte und Dritthosts** notieren und, falls nötig, mit den Browser-Entwicklertools und der tatsächlichen Consent-Plattform überprüfen.
+
+**Beispiel:** Eine Anfrage an einen Analyse-Host beim Seitenaufruf *vor* einer Nutzeraktion ist ein Anlass zur Prüfung der Einwilligungslogik. **Nicht** automatisch ein Verstoß oder ein Beweis für fehlerhaftes Tracking.
+
+**Ergebnis:** Pro Szenario bis zu **120 Anfragen** mit relative(m) Zeitpunkt, Hostname, Ressourcentyp und grobem Tracker-Hinweis. **Nicht enthalten** sind vollständige Request-URLs, Cookies, Header, Payloads oder ein rechtsverbindlicher DSGVO-/Consent-Mode-Test. Die Untersuchung erfolgt nur nach ausdrücklicher Auslösung; der tatsächliche CMP-Speicherzustand wird damit nicht verifiziert.
+
+### 7.5 Roh-HTML mit JavaScript-Rendering vergleichen und Bilder prüfen
+
+**Wo:** `Analyse → Tracking & Rendering`
+
+**Roh-HTML vs. Rendering:**
+
+1. Eine URL **der ausgewählten Website** in **Seiten-URL** eingeben.
+2. **Roh-HTML und JavaScript vergleichen** auswählen (Playwright/Chromium muss installiert sein).
+3. Die Werte für **Wörter**, **Seitentitel**, **Links** und **neue Überschriften** betrachten.
+4. Bei deutlichen Unterschieden den Quelltext der Seite und die gerenderte Ansicht prüfen. Beispielsweise kann ein bedeutender Ratgeberabschnitt erst nach JavaScript-Ausführung erscheinen.
+5. Bei Bedarf die technische Ursache im Website-Code beheben und erneut testen.
+
+Das Ergebnis ist der Vergleich zwischen HTTP-Roh-HTML und **einem** Playwright-Rendering. Er simuliert **nicht** automatisch den tatsächlichen Zugriff von ChatGPT, Perplexity, Googlebot oder anderen Crawlern und beweist keine Aufnahme in KI-Suchergebnisse.
+
+**Bild- und LCP-Hinweise:**
+
+1. Zunächst einen normalen Crawl abschließen. Für diese Teilprüfung ist **kein Playwright erforderlich**.
+2. Auf derselben Seite die Karte **Bild- und mögliche LCP-Risiken (letzter Crawl)** aufrufen.
+3. Geprüft werden die im HTML erfassten Bilder, insbesondere **fehlende `width`-/`height`-Attribute** und **frühe Bilder mit `loading="lazy"`**.
+4. Den betreffenden Bildbereich manuell prüfen. Ein fehlendes HTML-Attribut kann durch CSS kompensiert sein; ein Bild weit oben im HTML muss nicht das tatsächliche LCP-Element sein.
+5. Für echte LCP-/CLS-Messungen **Analyse → PageSpeed** und reale bzw. Lighthouse-Daten verwenden.
+
+**Grenze:** Die Bildhinweise sind Markup-Heuristiken aus den ersten untersuchten Bildern/Seiten des letzten Crawls. Weder das echte LCP-Element noch die Wirkung auf den Core Web Vitals Score wird hier gemessen.
+
+### 7.6 Paginierung und tiefe Archivseiten überprüfen
+
+**Wo:** `Analyse → Interne Verlinkung → Reiter „Paginierung“`
+
+1. Einen Crawl durchführen, der auch Kategorie- und Archivseiten einschließt.
+2. **Interne Verlinkung → Paginierung** öffnen.
+3. Bei auffälligen Blätterseiten die **Klicktiefe**, die Zahl der **eingehenden Links** und die **technische Indexierbarkeit** prüfen.
+4. Seiten mit hoher Tiefe oder wenigen Eingangslinks im realen Navigationspfad testen. Dabei kontrollieren, ob wichtige Produkt- oder Ratgeberseiten zuverlässig erreichbar sind.
+5. Im CMS ggf. Paginierungslinks und zusätzliche sinnvolle interne Pfade verbessern, dann erneut crawlen.
+
+**Ergebnis:** Hinweise zu Seiten mit typischen Paginierungs-URLs oder `rel="next"/"prev"`. Eine paginierte Seite ist nicht automatisch fehlerhaft; die `rel`-Angaben sind kein allgemeiner Google-Indexierungszwang.
+
+### 7.7 Strukturierte Daten und mögliches Rich-Result-Potenzial
+
+**Wo:** `Analyse → Strukturierte Daten → Reiter „Rich-Result-Potenzial“`
+
+1. Den jüngsten Crawl der Website abschließen.
+2. **Strukturierte Daten** öffnen und **Rich-Result-Potenzial** auswählen.
+3. Pro URL **vorhandene JSON-LD-Typen**, **mögliche Google-Suchfunktionen** sowie die Zahl der **Validator-Fehler und Hinweise** ansehen.
+4. Bei Fehlern die angezeigten konkreten Prüffunde (`level`, `path`, `message`) sichten. Zum Nachprüfen **Validator** verwenden und den betroffenen JSON-LD-Block oder die URL eingeben.
+5. Korrekturen im CMS vornehmen, neu crawlen und zusätzlich die **aktuelle Google-Search-Central-Dokumentation** für den konkreten Rich-Result-Typ konsultieren.
+
+**Ergebnis:** Eine technisch-redaktionelle Vorprüfung der im Crawl dokumentierten JSON-LD-Daten. Die Liste unterstützter Rich-Result-Typen ist **nicht vollständig**; Validierung und möglicher Typ bedeuten **nicht**, dass Google die Seite für ein Rich Result qualifiziert oder eines anzeigt.
 
 ## 8. Google Search Console verbinden oder importieren
 
@@ -348,6 +445,20 @@ Bei mobilen oder stadtspezifischen Suchen sind die automatischen Anbieterabfrage
 
 SearXNG verwendet externe Suchmaschinen. Es kann CAPTCHA/Sperren erhalten und ist kein unabhängiger Google-Rankingindex. Ein SearXNG-Resultat ist nicht automatisch ein nachgewiesener Google-Platz.
 
+### 9.4 Zwei Keywords anhand ihrer SERP-Überschneidung vergleichen
+
+**Wo:** `Sichtbarkeit → SERP-Analyse`, Karte **„Zwei Keywords vergleichen (SERP-Überschneidung)“**
+
+1. **Keyword A** und **Keyword B** eintragen, beispielsweise `günstige bürostühle` und `ergonomische bürostühle`.
+2. Entweder einen SERP-Anbieter unter **System → Einstellungen → SERP-Anbieter** eingerichtet haben **oder** für **beide** Keywords Ergebnis-URLs in die beiden optionalen URL-Felder kopieren (jeweils eine vollständige URL pro Zeile, idealerweise in der beobachteten Ranking-Reihenfolge).
+3. **Vergleichen** klicken.
+4. Auf **Anbieter** (z. B. `manual` oder `searxng`), **Anzahl beider Ergebnislisten**, **gemeinsame URLs** und **Jaccard-Wert** achten.
+5. Die gemeinsamen URLs und die tatsächliche Suchintention prüfen. Viele Überschneidungen *können* für eine gemeinsame Seite sprechen, wenige für getrennte Schwerpunkte. Die endgültige Seitenstruktur beruht aber nicht auf einem starren Schwellenwert.
+
+**Beispiel:** Liste A enthält 10 URLs, Liste B enthält 10 URLs, davon 6 identisch. Das zeigt eine Überschneidung der beiden erfassten Ergebnislisten – aber keine verbindliche Google-Empfehlung, ob du eine oder zwei Landingpages brauchst.
+
+**Grenzen:** Der Vergleich nutzt **exakt erfasste URL-Überschneidungen** und für automatische Abfragen den eingestellten Anbieter. Er liefert keine neutralen Google-Rankings, keine automatisch verifizierte KI-SERP und keine vollständige semantische Intent-Entscheidung. Das Formular verwendet die voreingestellten Länderspracheinstellungen `de`/`de`; weitere Locale-Varianten können über die zugrunde liegende API berücksichtigt werden.
+
 ## 10. Wettbewerber, Backlinks und lokale SEO
 
 ### 10.1 Wettbewerber untersuchen
@@ -379,6 +490,23 @@ Vorhandene Backlinkdaten importieren und über die Ansichten **Links**, **Verwei
 - Dokumentierte Publikationen mit vorhandenen Backlink-Daten abgleichen.
 
 Die Werkbank verschickt weder Rezensionseinladungen noch verändert sie Google-Unternehmensprofile automatisch. Bewertungsanfragen dürfen nicht ausschließlich zufriedenen Kunden vorbehalten werden.
+
+### 10.4 Branchenverzeichnisse nach Qualität statt bloßer Anzahl vergleichen
+
+**Erfassung:** `Content → SEO-Research → Funktion „Verzeichnisqualität“`  
+**Auswertung:** `Maßnahmen → Lokale Nachweise`, Karte **„Branchenverzeichnisse bewerten“**
+
+1. Zunächst tatsächlich infrage kommende Portale recherchieren. Prüfen, ob sie fachlich/örtlich zur Website passen und einen nachvollziehbaren Nutzerwert haben.
+2. In **SEO-Research** die Funktion **Verzeichnisqualität** auswählen.
+3. **Titel** sowie die Pflichtangaben **Verzeichnisname**, **Listing-URL**, **Relevanz** und **redaktioneller Nutzwert** erfassen. Für die beiden Bewertungen jeweils einen **eigenen Wert von 0 bis 3** eintragen; dies sind keine gemessenen Google-Metriken.
+4. Wenn bekannt, **Kosten in Euro**, **tatsächlich beobachtete Referral-Besuche** und eine **Quellennotiz** ergänzen. Keine geschätzten Besucher als Messwerte eingeben.
+5. Den Research-Eintrag speichern, zu **Lokale Nachweise** wechseln und die Karte **Branchenverzeichnisse bewerten** ansehen.
+6. Vorhandene **importierte Verzeichniseinträge und Backlink-Datensätze** gegen die erfasste URL vergleichen. Auch ein passender Datensatz bestätigt nicht automatisch redaktionelle Qualität oder echten Traffic.
+7. Den Eintrag bei positiven Ergebnissen separat beantragen, dessen Status dokumentieren und – falls verfügbar – echte Referral-Daten nachtragen.
+
+**Beispiel:** 120 € Kosten und **sechs tatsächlich erfasste Referral-Besuche** ergeben 20 € pro Referral-Besuch. Ohne identischen Zeitraum und saubere Quelle ist dieser Quotient nur eine Rechenhilfe; er beweist keine Conversion oder SEO-Wirkung.
+
+**Grenzen:** Die Verzeichnisbewertung ist **subjektiv**. Es werden **kein Domain-Authority-Score**, keine garantierte Linkkraft, keine Google-Rankingwirkung und keine automatisch geprüfte Reichweite erzeugt. Ein kostenpflichtiger Eintrag ist nicht automatisch schlechter oder besser als ein kostenloser.
 
 ## 11. Content recherchieren und optimieren
 
@@ -414,6 +542,7 @@ Die Werkbank verschickt weder Rezensionseinladungen noch verändert sie Google-U
 | Echte Kundenfrage | Anonymisierte Frage, Kontext, Zielgruppe | **Content Studio** |
 | Externe Markenaussage | Aussage, Quelle, erwarteter Wortlaut | **Content Studio** |
 | Marketing-Experiment | Hypothese, Kennzahl, Einheit, Datumswerte | **Content Studio** |
+| Verzeichnisqualität | Verzeichnis, Listing-URL, eigene Relevanz 0–3, eigener redaktioneller Nutzwert 0–3, optional Kosten und Besuche | **Maßnahmen → Lokale Nachweise** |
 
 **Hinweis:** Research-Einträge sind überwiegend **manuell dokumentierte Angaben**, keine live ermittelten Google-Fakten.
 
@@ -518,7 +647,17 @@ Bei Bedarf kann ein freigegebener, noch nicht publizierter Entwurf zur weiteren 
 1. Öffentliche URL eingeben.
 2. **Prüfen**.
 3. Hinweise zu robots.txt, KI-Crawlern, llms.txt, strukturierten Daten, Autor-/Entitätsinformationen und Antwortstruktur betrachten.
+   Die Gruppe **Integrität** zeigt Snippet-Grenzen, mögliche versteckte Anweisungen an KI-Systeme, nicht sichtbare
+   strukturierte Daten, widersprüchliche Datumsangaben und einen uneinheitlichen Markennamen.
 4. Auffälligkeiten redaktionell/technisch prüfen und ggf. als Maßnahme dokumentieren.
+
+**Sperrt das CDN KI-Crawler?** Die Karte ruft eine Seite der ausgewählten Website einmal mit Browser- und dann mit der
+Kennung von elf KI-Crawlern ab (OAI-SearchBot, ClaudeBot, PerplexityBot, Googlebot, Applebot …). „gesperrt“ oder
+„Prüfseite“ heißt: Cloudflare oder eine Firewall weist diese Kennung ab, obwohl robots.txt sie vielleicht erlaubt.
+Die Anfragen kommen von diesem Server, nicht aus den Netzen der Anbieter. CDNs, die Crawler über ihre IP prüfen,
+behandeln echte Crawler unter Umständen anders. Das Ergebnis ist ein starker Hinweis, kein Beweis.
+
+Dieselben Integritätsprüfungen laufen bei jedem Crawl als Audit-Regeln mit (Kategorie GEO / KI-Suche).
 
 Die Erfüllung solcher Kriterien garantiert keine Aufnahme in KI-Antworten.
 
@@ -545,6 +684,20 @@ Ein normales Sprachmodell, das einen Prompt beantwortet, ist **keine verifiziert
 **Wo:** `Sichtbarkeit → SEO-Verlauf & GEO`
 
 Hier werden zuvor unter **SEO-Research** erfasste Änderungsevents, SERP-Merkmale, Indexierungsnotizen und KI-Zitationsstichproben zusammengeführt. Eine Kombination von zeitlich nahen Veränderungen ist noch keine Ursache-Wirkung-Beziehung.
+
+### 13.5 Stabilität beobachteter KI-Quellen prüfen
+
+**Wo:** `Sichtbarkeit → KI-Erwähnungen`, Karte **„Wiederkehrende KI-Quellen“**
+
+1. Eine für deine Zielgruppe relevante Frage auswählen und sie **auf derselben KI-Plattform** an verschiedenen Tagen unter möglichst vergleichbaren Bedingungen erneut stellen.
+2. Jede tatsächliche Beobachtung unter **KI-Erwähnungen** mit **Plattform**, **exaktem Prompt**, bei Bedarf **Modell/Version**, **tatsächlich angegebener Quellen-URL** und Datum erfassen; bei Bedarf alternativ passende `geo_sample`-Einträge unter **Content → SEO-Research** pflegen.
+3. Die Karte **Wiederkehrende KI-Quellen** öffnen. Sie gruppiert Beobachtungen nach **Plattform und gleichlautender, normalisierter Frage**.
+4. Unter den Quellen die Anzahl **unterschiedlicher Tage** ansehen, an denen eine bestimmte URL dokumentiert wurde. **„wiederholt“** bedeutet: mindestens an zwei unterschiedlichen Tagen beobachtet.
+5. Auffällige Quellen als Rechercheanlass nutzen; einen Link oder eine Erwähnung nicht ohne Quellenprüfung als echte Empfehlung bewerten.
+
+**Beispiel:** Dieselbe URL wird auf derselben Plattform bei identischer Frage am Montag und Donnerstag dokumentiert. Das wird als **zwei beobachtete Tage** gezählt. Zwei Wiederholungen am Montag allein belegen **keine zeitliche Stabilität**.
+
+**Grenzen:** Es handelt sich um manuell dokumentierte Stichproben, nicht um vollständige Live-KI-Suche, verifizierte Zitationsanteile, Marktanteile, Sichtbarkeitsgarantien oder eine repräsentative Statistik. Modelländerungen und schwankende Antworten sind möglich.
 
 ## 14. Conversion, Matomo und Wirtschaftlichkeit
 
@@ -649,18 +802,19 @@ Diese Tabelle ist zugleich ein **„Wo finde ich was?“**-Nachschlagewerk.
 | Übersicht | **Dashboard** (`/`) | Lagebild zu Technik, Google, KI und Maßnahmen |
 | Übersicht | **Websites** (`/sites`) | Website anlegen, wählen, Crawl-Standards ändern |
 | Analyse | **Website-Audit** (`/audit`) | Regelbasierte Fehler und Hinweise je Crawl |
-| Analyse | **Crawler** (`/crawler`) | Crawls starten, Fortschritt, Seiten, Links, Duplikate |
-| Analyse | **Interne Verlinkung** (`/internal-links`) | Linkstruktur, verwaiste Seiten, Linkchancen |
+| Analyse | **Crawler** (`/crawler`) | Crawls starten, Fortschritt, Seiten, Links, Duplikate und **Relaunch**-Reiter | 
+| Analyse | **Tracking & Rendering** (`/diagnostics`) | Consent-Zeitfolge, Roh-/JS-Rendering und Bildhinweise |
+| Analyse | **Interne Verlinkung** (`/internal-links`) | Linkstruktur, verwaiste Seiten, Linkchancen und **Paginierung** |
 | Analyse | **Sitemaps & Indexierung** (`/sitemaps`) | Sitemap-/robots-/Canonical-Abgleich |
-| Analyse | **Strukturierte Daten** (`/schema`) | JSON-LD prüfen und Markup erstellen |
+| Analyse | **Strukturierte Daten** (`/schema`) | JSON-LD prüfen, Markup erstellen und **Rich-Result-Potenzial** prüfen |
 | Analyse | **PageSpeed** (`/pagespeed`) | Performance- und Web-Vitals-Prüfung |
 | Analyse | **Internationales SEO** (`/international`) | Sprach- und Länderangaben |
 | Analyse | **Lokales SEO** (`/local`) | LocalBusiness, NAP, Standortdaten |
 | Sichtbarkeit | **Search Console** (`/search-console`) | Google-Messwerte per API oder CSV |
 | Sichtbarkeit | **Ranktracker** (`/rank-tracking`) | Zielkeywords und Positionsbeobachtungen |
 | Sichtbarkeit | **Keyword-Recherche** (`/keywords`) | Vorschläge, Keywords, Zuordnung, Cluster |
-| Sichtbarkeit | **SERP-Analyse** (`/serp`) | Ergebnisse eines Suchanbieters analysieren |
-| Sichtbarkeit | **KI-Erwähnungen** (`/ai-visibility`) | Manuelle KI-Antwort-Beobachtungen |
+| Sichtbarkeit | **SERP-Analyse** (`/serp`) | Suchergebnisse und **Keyword-SERP-Überschneidungen** analysieren |
+| Sichtbarkeit | **KI-Erwähnungen** (`/ai-visibility`) | Manuelle KI-Antworten und **wiederkehrende Zitationsquellen** |
 | Sichtbarkeit | **KI-Empfehlungen & Referrals** (`/ai-intelligence`) | Prompttests und Matomo-KI-Referrals |
 | Sichtbarkeit | **GEO-Check** (`/geo`) | KI-bezogene technische Hinweise |
 | Sichtbarkeit | **SEO-Verlauf & GEO** (`/research-monitoring`) | Änderungshistorie, SERP-/Index-/KI-Notizen |
@@ -678,10 +832,12 @@ Diese Tabelle ist zugleich ein **„Wo finde ich was?“**-Nachschlagewerk.
 | Conversion | **Conversion & Trust** (`/conversion-trust`) | Funnel-/Nachweisprüfung |
 | Conversion | **Wirtschaftliche Chancen** (`/opportunity-value`) | Eigene DB-Szenarien je SEO-Chance |
 | Maßnahmen | **SEO-Maßnahmen** (`/seo-work`) | Aufgaben-/Veröffentlichungsstatus, Messung |
-| Maßnahmen | **Lokale Nachweise** (`/seo-evidence`) | Verzeichnisse, Bewertungen, Publikationen |
+| Maßnahmen | **Lokale Nachweise** (`/seo-evidence`) | Verzeichnisse, **Verzeichnisqualität**, Bewertungen und Publikationen |
 | Maßnahmen | **Monitoring** (`/monitoring`) | Regelmäßige Prüfungen und Meldungen |
 | Maßnahmen | **Berichte** (`/reports`) | Export und Auswertung |
 | System | **Einstellungen** (`/settings`) | Konto und optionale Integrationen |
+
+**Die vier Advanced-SEO-Prüfungen sowie Verzeichnisqualität und KI-Quellenstabilität sind in bestehende Fachbildschirme integriert.** Für sie gibt es bewusst keine zusätzlichen eigenständigen Menüpunkte; nur **Tracking & Rendering** ist eine neue Navigationsseite.
 
 **Hinweis zu den Links:** Die relativen Pfade in dieser Tabelle sind **Anwendungsrouten**, keine GitHub-Seiten. In deiner laufenden Installation lauten sie etwa `http://localhost:8000/search-console`.
 
@@ -716,6 +872,16 @@ Die folgende Routine ist eine **Arbeitsorganisation**, keine eingebaute vollauto
 - Bei vorhandenen Matomo-Daten die besucherstarken Einstiegsseiten und Conversions prüfen.
 - Gewählte KI-Prompts unter identischen Rahmenbedingungen wiederholen, falls KI-Sichtbarkeit Teil der Strategie ist.
 
+### Prüfpfade für die neuen Module
+
+**Tracking & Rendering:** Bei verdächtigen Drittanfragen zunächst die **initiale Sitzung** beobachten. Danach allenfalls mit ausdrücklicher Berechtigung getrennt **Akzeptieren** und **Ablehnen** testen. Die Protokolle sind keine automatische Einwilligungsprüfung.
+
+**Relaunch:** Vor einer Änderung den Crawl sichern; nach der Änderung erneut crawlen und die **alten/neuen URLs explizit zuordnen**. Fehlende URLs im neuen Crawl separat live prüfen.
+
+**SERP-Overlap:** Falls kein Suchanbieter erreichbar ist, **für beide Keywords** die manuell recherchierten Ergebnis-URLs einfügen. Die Positionen sollten aus derselben Quelle und einem vergleichbaren Zeitpunkt stammen.
+
+**KI-Quellen:** Mindestens **dieselbe Frage auf derselben Plattform an zwei unterschiedlichen Tagen** dokumentieren, sonst kann keine Wiederholung über Tage erscheinen.
+
 ## 19. Fehlerbehebung
 
 | Problem | Was du zuerst prüfst |
@@ -726,7 +892,16 @@ Die folgende Routine ist eine **Arbeitsorganisation**, keine eingebaute vollauto
 | Kein GSC-Vergleich | Datumsspalte vorhanden? Ausreichend Tage? Daten für Suchanfrage UND URL in derselben Zeile? |
 | API-Verbindung zu Google fehlt | OAuth-Client gespeichert? Exakte Redirect-URI? Richtiges Google-Konto? Berechtigte Property? |
 | Ziel-URL wird falsch zugeordnet | Gewünschte Zielseite und die tatsächlich GSC-dominante Query-URL prüfen; Datenfenster beachten |
-| Keine SERP-Treffer | Anbieter konfiguriert? SearXNG intern erreichbar? Externe Engines durch CAPTCHA/Sperre beeinträchtigt? |
+| Browserdiagnose meldet Playwright/Chromium nicht verfügbar | Die optionalen Pakete und den Chromium-Browser auf dem **Backend-Server** installieren; Standard-Docker enthält ihn nicht. Bilder aus Crawls funktionieren separat. |
+| Consent-Button wird nicht gefunden | Die UI erkennt nur eindeutig beschriftete sichtbare „Alle akzeptieren“-/„Alle ablehnen“-Buttons. Eine andere CMP-Oberfläche nicht durch automatisches Klicken ersetzen; manuell prüfen. |
+| Roh-/JS-Vergleich schlägt fehl | URL muss der ausgewählten Website gehören, HTML erreichbar sein und Playwright/Chromium auf dem Server laufen. Private Netzwerke sind für Browserdiagnosen gesperrt. |
+| Keine Bildhinweise | Zuerst einen Crawl abschließen; fehlende Hinweise bedeuten nicht, dass echte LCP-/CLS-Messungen erfolgreich waren. |
+| Relaunch zeigt kein Ergebnis | Zwei **abgeschlossene** Crawls derselben Website wählen; nach der Umstellung erneut crawlen; URL-Zuordnungen auf vollständige URLs prüfen. |
+| Paginierung zeigt keine Seiten | Im letzten Crawl wurden keine URLs/`rel`-Signale mit den unterstützten Paginierungsmustern erkannt; URL-Tiefe und Crawl-Limits prüfen. |
+| SERP-Overlap nicht möglich | Entweder einen SERP-Anbieter einrichten oder **beide** manuellen Ergebnislisten ausfüllen; Keywords müssen vorhanden sein. |
+| Keine Verzeichnisqualitätsdaten | Unter **Content → SEO-Research → Verzeichnisqualität** zuerst einen Eintrag anlegen und Pflichtfelder (Relevanz, redaktioneller Wert) ausfüllen. |
+| Keine wiederkehrenden KI-Quellen | Dieselbe Frage auf derselben Plattform an **mindestens zwei verschiedenen Tagen** mit Quellen-URL dokumentieren. |
+| Keine SERP-Treffer || Keine SERP-Treffer | Anbieter konfiguriert? SearXNG intern erreichbar? Externe Engines durch CAPTCHA/Sperre beeinträchtigt? |
 | KI-Test kann nicht starten | Als Administrator angemeldet? KI-Modell konfiguriert und erreichbar? |
 | Matomo liefert keine Daten | Matomo-URL, Token, Site-Auswahl, Zeitraum und Rechte prüfen |
 | Kein Content-Refresh | Query-URL-Paare statt getrennter Standardexporte bereitstellen |
@@ -767,6 +942,12 @@ python scripts/full_stack.py logs
 - Content-Vorschläge und Fallstudien werden nicht automatisch im CMS veröffentlicht.
 - „Veröffentlichung markiert“ bedeutet eine **manuelle Statusangabe**.
 - Weder semantische Rankings noch Conversion-Erfolge sollten aus simplen Worttreffern abgeleitet werden.
+- Consent-Antwortzeiten und Hostnamen beweisen keine rechtswirksame Einwilligung; eine erfolgreich geklickte CMP-Schaltfläche bestätigt keinen Speicherzustand.
+- Der Roh-/Rendering-Vergleich ist kein offizieller KI-Crawler-Test; Bild-Attribute sind keine realen LCP- oder CLS-Messwerte.
+- SERP-Overlap ist ein Vergleich der jeweiligen Ergebnislisten, keine Regel über die Zahl benötigter Landingpages.
+- Ein neues Relaunch-Ziel mit HTTP 200 beweist **nicht**, dass die alte URL korrekt per 301/308 weiterleitet.
+- „Rich-Result-Potenzial“ ist keine Zusage einer tatsächlichen Google-Suchdarstellung.
+- Verzeichnisbewertungen und wiederholte KI-Zitationen beruhen auf dokumentierten Angaben bzw. Stichproben, nicht auf extern verifizierter Reichweite.
 
 ### 20.3 Mehrbenutzer- und Admin-Rechte
 
@@ -808,10 +989,65 @@ Die Umgebungsvariablen heißen `SEO_MCP_API_URL` und `SEO_MCP_API_TOKEN`. Nur lo
 
 Vollständige Einrichtung: [MCP-Server](MCP_SERVER.md).
 
+## 21.4 Neue Arbeitsabläufe für Version 0.2
+
+Diese Funktionen werden in den vier 0.2-Entwicklungs-PRs eingeführt. **Solange diese nicht in main übernommen sind, funktionieren die Klickwege nur auf einer Version, die die betreffenden Änderungen enthält.**
+
+### Integration-Schlüssel und Update
+
+**Wo:** Administration/Serverinstallation und **System → Einstellungen**.
+
+1. Vor dem Update **Datenbank und Anwendungsdaten sichern**.
+2. In verwalteten Installationen einen gültigen Fernet-Master-Key mit der Umgebungsvariable `SEO_MASTER_KEY` sicher hinterlegen. Auf Einzelplatzinstallationen wird andernfalls unter `SEO_DATA_DIR/.integration_master_key` eine Schlüsseldatei erzeugt.
+3. Die neue Version starten. Der Startvorgang verschlüsselt ältere Klartext-Integrationseinstellungen; ein nicht entschlüsselbarer Datensatz verhindert den Start.
+4. Das Schlüsselmaterial getrennt vom Datenbank-Backup aufbewahren. Verlust bedeutet Verlust des Zugriffs auf gespeicherte API-Secrets und OAuth-Tokens.
+
+**Keine Schlüsselrotation durch bloßes Ersetzen von `SEO_MASTER_KEY` durchführen.** Details: [Verschlüsselte Zugangsdaten](SECURE_INTEGRATIONS.md).
+
+### Eine URL bei Google auf Indexierung prüfen
+
+**Wo:** **Sichtbarkeit → Search Console → Google URL Inspection**.
+
+1. Search Console mit einem eigenen autorisierten Google-OAuth-Client verbinden.
+2. In der Werkbank die zur Website gehörende GSC-Property auswählen.
+3. Im neuen URL-Inspection-Feld eine URL derselben Website eintragen und **URL bei Google prüfen** anklicken.
+4. Den von Google berichteten Status, gegebenenfalls den letzten Crawl und Canonical-Angaben ansehen.
+
+Die Abfrage nutzt die **Google URL Inspection API**. Sie führt **keinen Live-URL-Test** aus, verändert nichts an Googles Index und kann Kontingentgrenzen unterliegen. Eine echte OAuth-Verbindung muss mit einem eigenen Google-Konto geprüft werden; die automatisierten Tests simulieren Google-Antworten. [Anleitung](GSC_URL_INSPECTION.md).
+
+### Benachrichtigungen und PageSpeed-Batches
+
+**Wo:** **System → Einstellungen → Monitor-Benachrichtigungen** sowie **Analyse → PageSpeed**.
+
+1. Als Administrator SMTP-Server (STARTTLS), Absender/Empfänger und/oder einen HTTPS-Webhook eintragen, Mindestschwere wählen und den Versand **ausdrücklich aktivieren**.
+2. Einen Monitor unter **Maßnahmen → Monitoring** betreiben. Neue Meldungen werden im Programm gespeichert; bei passender Konfiguration wird **ein gebündelter Versandversuch pro Monitorlauf** durchgeführt.
+3. Unter **Analyse → PageSpeed** zunächst einen Crawl für die Website abschließen.
+4. In **Top-Seiten im Batch prüfen** die Anzahl 3, 5 oder 10 auswählen und den Mobile-Batch starten.
+5. Ergebnisse und **Felddaten-Abdeckung** für LCP, INP und CLS getrennt von Lighthouse-Labordaten betrachten.
+
+Versand erfolgt best effort; es existiert keine garantierte persistente Wiederholungswarteschlange. Bei fehlenden Chrome-UX-Report-Felddaten bleibt ein echter CWV-Wert unbekannt. Details: [Monitoring und Batch-PageSpeed](NOTIFICATIONS_PAGESPEED.md).
+
+### SERP-Cluster und Hilfe
+
+**Wo:** **Sichtbarkeit → Keyword-Recherche → Cluster-Werkzeug → SERP-Overlap-Clustering**.
+
+1. 2–15 Keywords zeilenweise eintragen.
+2. Einen konfigurierten SERP-Anbieter nutzen oder für **alle** Keywords vollständige Ergebnislisten im angegebenen Format erfassen.
+3. Überschneidungsschwelle auswählen, **SERP-Cluster berechnen** und Gruppen auf tatsächliche Suchintention prüfen.
+
+Der vorhandene **lexikalische Clusterer** bleibt separat verfügbar. SERP-Cluster können **transitiv** sein; eine automatisch berechnete Gruppe garantiert nicht, dass jede Keyword-Paarung ähnlich ist. Unter **System → Hilfe & Handbuch** sind die passenden Dokumente erreichbar. Für echte Screenshots/Demo benötigt das Projekt eine gestartete Testinstallation; der Aufnahmehelfer ist [dokumentiert](KEYWORD_SERP_CLUSTERING.md).
+
 ## 22. Weiterführende Dokumentation
 
 Die technische Dokumentation des Projekts enthält Details zu Methoden, Grenzwerten und Schnittstellen:
 
+- [Tracking, Rendering und Bilddiagnostik](TECHNICAL_DIAGNOSTICS.md)
+- [Advanced SEO: Overlap, Relaunch, Paginierung, Schema](ADVANCED_SEO.md)
+- [Verzeichnisqualität und KI-Quellenstabilität](AUTHORITY_INTELLIGENCE.md)
+- [Verschlüsselte Zugangsdaten](SECURE_INTEGRATIONS.md)
+- [Google URL Inspection](GSC_URL_INSPECTION.md)
+- [Benachrichtigungen und PageSpeed-Batch](NOTIFICATIONS_PAGESPEED.md)
+- [SERP-Keyword-Clustering und Demo](KEYWORD_SERP_CLUSTERING.md)
 - [Docker-Gesamtausgabe](DOCKER_FULL.md)
 - [MCP-Server](MCP_SERVER.md)
 - [SEO-Datenanbieter](SEO_DATA_PROVIDERS.md)
