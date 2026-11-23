@@ -1,6 +1,6 @@
 """Search-engine evidence must not imply undocumented requirements."""
+from app.audit.engine_guidance import ENGINE_STATES, engine_guidance
 from app.audit.rules import RULES, rule_dict
-from app.audit.engine_guidance import engine_guidance, ENGINE_STATES
 
 
 def test_all_rules_have_engine_specific_entries():

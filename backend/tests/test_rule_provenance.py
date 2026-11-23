@@ -1,6 +1,10 @@
 """Regression tests for audit rule provenance and transparent classification."""
 from app.audit.rules import (
-    RULES, RULE_CLASSIFICATIONS, classify_rule, rule_dict, rule_provenance,
+    RULE_CLASSIFICATIONS,
+    RULES,
+    classify_rule,
+    rule_dict,
+    rule_provenance,
 )
 
 
