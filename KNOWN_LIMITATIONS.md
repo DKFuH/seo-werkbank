@@ -95,6 +95,15 @@ the current implementation.
 - CTA and CRO hints are word matches in page text (for example "jetzt" or "book"); layout, forms and real conversions are not examined.
 - The new screens were tested through the API; they have not been clicked through one by one in a browser.
 
+## Website Health
+
+- Checks run from the server SEO-Werkbank runs on, from one location. A problem between that server and the website
+  looks like an outage of the website.
+- Response time is the total time of the request including redirects and the body (up to 5 MB), measured by this
+  server; it is not a browser load time or a Core Web Vital.
+- The shortest interval is 15 minutes; outages shorter than one interval can be missed.
+- Checks only run while the application runs (in-process scheduler).
+
 ## GEO integrity checks
 
 - Hidden-instruction detection uses fixed English and German phrases; other wording or languages are not found, and a

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import time
 from datetime import timedelta
 
 from sqlalchemy import func, select
@@ -16,17 +17,18 @@ from ..crawler.sitemaps import discover_sitemaps
 from ..db import session_scope
 from ..jobs import JobContext, JobLimitError, jobs
 from ..models import Alert, Competitor, Crawl, GscRow, Keyword, Monitor, Page, Site, utcnow
+from . import uptime
 
 log = logging.getLogger("seo.monitor")
 KINDS = {
-    "uptime": "Erreichbarkeit (HTTP-Status wichtiger URLs)",
+    "uptime": "Website Health (Erreichbarkeit und Antwortzeit)",
     "audit": "Wiederkehrendes technisches Audit (Crawl, Vergleich mit dem vorherigen, inkl. defekter Links)",
     "sitemap": "Sitemap-Änderungen (neue oder entfallene URLs)",
     "metadata": "Metadaten-Änderungen (Title, Description, Canonical, Robots, H1)",
     "competitor": "Wettbewerber beobachten (Metadaten der Startseite und Sitemap-Änderungen)",
     "gsc": "Keyword-Tracking über die Search Console (Positionsänderungen gespeicherter Keywords)",
 }
-DEFAULT_INTERVAL = {"uptime": 1, "audit": 168, "sitemap": 24, "metadata": 24, "competitor": 24, "gsc": 24}
+DEFAULT_INTERVAL = {"uptime": 0.25, "audit": 168, "sitemap": 24, "metadata": 24, "competitor": 24, "gsc": 24}
 
 
 async def _snapshot(fetcher: Fetcher, url: str) -> dict:
@@ -78,18 +80,25 @@ async def run_monitor(monitor_id: int, ctx: JobContext | None = None) -> dict:
         async with Fetcher(timeout_s=20, retries=1, delay_s=0.3, concurrency=4) as fetcher:
             if kind == "uptime":
                 urls = cfg.get("urls") or [site_url]
+                slow_ms = int(cfg.get("slow_ms") or uptime.DEFAULT_SLOW_MS)
+                slow_repeat = int(cfg.get("slow_repeat") or uptime.DEFAULT_SLOW_REPEAT)
+                probes = []
                 for url in urls[:50]:
-                    res = await fetcher.fetch_following(url, max_body=65_536)
-                    ok = res.status is not None and res.status < 400
-                    was_ok = state.get(url, {}).get("ok", True)
-                    if not ok:
-                        status = "problem"
-                        if was_ok:
-                            alerts.append({"severity": "critical", "title": "Page is down", "message": f"{url} answered {res.status or res.error}",
-                                           "data": {"url": url, "status": res.status, "error": res.error}})
-                    elif not was_ok:
-                        alerts.append({"severity": "low", "title": "Seite wieder erreichbar", "message": f"{url} ist wieder erreichbar (HTTP {res.status})", "data": {"url": url}})
-                    state[url] = {"ok": ok, "status": res.status, "response_ms": res.elapsed_ms, "checked": utcnow().isoformat()}
+                    started = time.monotonic()
+                    res = await fetcher.fetch_following(url, max_body=uptime.MAX_BYTES)
+                    total_ms = int((time.monotonic() - started) * 1000)
+                    outcome, description = uptime.classify(res, total_ms, slow_ms)
+                    probes.append((url, outcome, description, res, total_ms))
+                with session_scope() as db:
+                    for url, outcome, description, res, total_ms in probes:
+                        url_state = dict(state.get(url) or {})
+                        alerts += uptime.record(db, monitor_id, url, outcome, description, status=res.status,
+                                                response_ms=total_ms if res.status else None, error=res.error,
+                                                state=url_state, slow_repeat=slow_repeat)
+                        state[url] = url_state
+                        if outcome not in uptime.UP:
+                            status = "problem"
+                    uptime.prune(db, monitor_id)
             elif kind == "metadata":
                 urls = cfg.get("urls")
                 if not urls:
