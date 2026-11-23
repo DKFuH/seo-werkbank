@@ -486,3 +486,43 @@ class RedirectRule(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, onupdate=utcnow)
     __table_args__ = (Index("ix_redirect_rules_site_state", "site_id", "state"),)
+
+
+class LogImport(Base):
+    """Metadata only. Raw server logs and IP addresses are never stored."""
+    __tablename__ = "log_imports"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    site_id: Mapped[int] = mapped_column(ForeignKey("sites.id", ondelete="CASCADE"), index=True)
+    filename: Mapped[str] = mapped_column(String(255))
+    format: Mapped[str] = mapped_column(String(24))
+    state: Mapped[str] = mapped_column(String(20), default="processing")
+    lines_total: Mapped[int] = mapped_column(Integer, default=0)
+    lines_parsed: Mapped[int] = mapped_column(Integer, default=0)
+    lines_skipped: Mapped[int] = mapped_column(Integer, default=0)
+    period_start: Mapped[date | None] = mapped_column(Date, nullable=True)
+    period_end: Mapped[date | None] = mapped_column(Date, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+
+
+class LogAggregate(Base):
+    __tablename__ = "log_aggregates"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    import_id: Mapped[int] = mapped_column(ForeignKey("log_imports.id", ondelete="CASCADE"), index=True)
+    day: Mapped[date] = mapped_column(Date)
+    path: Mapped[str] = mapped_column(String(2048))
+    status: Mapped[int] = mapped_column(Integer)
+    agent_class: Mapped[str] = mapped_column(String(30))
+    count: Mapped[int] = mapped_column(Integer, default=0)
+    __table_args__ = (Index("ix_log_aggregate_day", "import_id", "day"),)
+
+
+class Log404(Base):
+    __tablename__ = "log_404"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    import_id: Mapped[int] = mapped_column(ForeignKey("log_imports.id", ondelete="CASCADE"), index=True)
+    path: Mapped[str] = mapped_column(String(2048))
+    referrer_host: Mapped[str] = mapped_column(String(255), default="")
+    agent_class: Mapped[str] = mapped_column(String(30))
+    count: Mapped[int] = mapped_column(Integer, default=0)
+    first_seen: Mapped[datetime] = mapped_column(DateTime)
+    last_seen: Mapped[datetime] = mapped_column(DateTime)

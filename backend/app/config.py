@@ -29,6 +29,7 @@ class Settings(BaseSettings):
     api_rate_limit_per_minute: int = 600
     login_rate_limit_per_minute: int = 10
     max_upload_mb: int = 20
+    max_log_upload_mb: int = 100  # compressed upload bytes; decompression independently capped
     max_json_body_kb: int = 1024  # request bodies other than file uploads
     trusted_proxies: str = ""  # comma-separated IPs/CIDRs of reverse proxies whose X-Forwarded-For is believed
     enable_api_docs: bool = True  # Swagger UI / ReDoc under /api/docs and /api/redoc
