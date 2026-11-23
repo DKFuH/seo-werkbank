@@ -431,6 +431,30 @@ GSC-Positionen sind **impressionsgewichtete Durchschnittswerte**, keine neutrale
 
 **Wo:** `Sichtbarkeit → Ranktracker`
 
+Der Ranktracker hat drei Tabs.
+
+**Portfolio (GSC):** echte Positionen der Zielkeywords aus der Search Console, also dort, wo Google die Website
+tatsächlich ausgespielt hat.
+
+1. Unter **Zielkeyword hinzufügen** Keyword, Label (frei, z. B. „lokal“), Ziel-URL, Messart (National, Lokal, Marke) und
+   Priorität (P1–P3) eintragen. Vorhandene GSC-Historie ist sofort sichtbar.
+2. Oben Zeitraum (7 Tage bis 12 Monate), Gerät und Label wählen. Verglichen wird immer mit dem gleich langen Zeitraum davor.
+3. Die Kacheln zeigen Ø Position (nach Impressionen gewichtet, kleinere Zahl ist besser) mit Bewegung, die Verteilung auf
+   1–3, 4–10, 11–20, 21–50 und 51+, die Zahl verbesserter und verschlechterter Keywords und die reale Nachfrage.
+4. In der Tabelle zeigt **Ranking-URL**, welche Seite Google ausspielt. Weicht sie von der Ziel-URL ab, steht die Ziel-URL
+   orange darunter. „kleine Stichprobe“ heißt: weniger als 10 Impressionen im Zeitraum.
+5. Ein Klick auf das Keyword öffnet den **Verlauf** mit **Änderungsjournal**: Maßnahmen mit Datum notieren, sie erscheinen
+   als orange Linie im Diagramm.
+
+**Alle GSC-Keywords:** jede Suchanfrage, für die Google die Website gezeigt hat, mit Trackingstatus.
+**Top-3-Fund** = nicht getrackt, Position bis 3, ab 10 Impressionen. **Chance** = nicht getrackt, Position 4–20, ab
+10 Impressionen. **Ins Monitoring** übernimmt eine Suchanfrage samt vorhandener Historie ins Portfolio.
+
+Der Gerätefilter braucht Daten aus dem Search-Console-Abruf (einmal neu synchronisieren); CSV-Exporte enthalten
+Suchanfrage und Gerät nicht zusammen.
+
+**Anbieter-Messungen:** Positionen von einem SERP-Anbieter oder von Hand, je Land und Gerät:
+
 1. **Neues Zielkeyword**: Keyword, Land (zweistelliger ISO-Code), Sprache, Gerät und optional die gewünschte Zielseite eintragen.
 2. **Keyword hinzufügen**.
 3. Entweder eine tatsächlich selbst beobachtete Position über **Manuell speichern** dokumentieren oder **SERP-Anbieter abfragen** bewusst auslösen.
@@ -846,7 +870,7 @@ Diese Tabelle ist zugleich ein **„Wo finde ich was?“**-Nachschlagewerk.
 | Analyse | **Internationales SEO** (`/international`) | Sprach- und Länderangaben |
 | Analyse | **Lokales SEO** (`/local`) | LocalBusiness, NAP, Standortdaten |
 | Sichtbarkeit | **Search Console** (`/search-console`) | Google-Messwerte per API oder CSV |
-| Sichtbarkeit | **Ranktracker** (`/rank-tracking`) | Zielkeywords und Positionsbeobachtungen |
+| Sichtbarkeit | **Ranktracker** (`/rank-tracking`) | GSC-Portfolio, alle GSC-Keywords mit Chancen, Anbieter-Messungen |
 | Sichtbarkeit | **Keyword-Recherche** (`/keywords`) | Vorschläge, Keywords, Zuordnung, Cluster |
 | Sichtbarkeit | **SERP-Analyse** (`/serp`) | Suchergebnisse und **Keyword-SERP-Überschneidungen** analysieren |
 | Sichtbarkeit | **KI-Erwähnungen** (`/ai-visibility`) | Manuelle KI-Antworten und **wiederkehrende Zitationsquellen** |

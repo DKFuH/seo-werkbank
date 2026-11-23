@@ -5,6 +5,18 @@ uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased] - SEO-Werkbank
 
+### Added (keyword portfolio)
+- **Ranktracker → Portfolio (GSC)**: tracked target keywords with label, target URL, measurement (national/local/brand)
+  and priority; impression-weighted Search Console position with movement against the previous period of equal length,
+  buckets 1–3 / 4–10 / 11–20 / 21–50 / 51+, improved/worsened counts, real demand (impressions, clicks, CTR), position
+  trend (daily up to 28 days, weekly beyond), ranking URL vs. target URL, small-sample flag (< 10 impressions).
+- **Alle GSC-Keywords**: every query with tracking status, top-3 discoveries (untracked, position ≤ 3, ≥ 10 impressions)
+  and opportunities (untracked, position 4–20, ≥ 10 impressions), filters, sorting, paging and "Ins Monitoring" with
+  the existing history.
+- Keyword detail page with position trend and a change journal shown as markers in the chart.
+- Device filter: the Search Console sync also fetches query × device (`query_device`). Migration `0009`.
+- The previous provider/manual rank tracker continues as tab "Anbieter-Messungen".
+
 ### Added (CSV import)
 - **Column mapping for every CSV import** (Search Console, backlinks, local listings, keywords): after choosing a file, a
   dialog shows each target field with the suggested column and sample values; any field can be reassigned or left out,

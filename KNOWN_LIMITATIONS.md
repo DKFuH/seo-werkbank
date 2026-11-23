@@ -95,6 +95,13 @@ the current implementation.
 - CTA and CRO hints are word matches in page text (for example "jetzt" or "book"); layout, forms and real conversions are not examined.
 - The new screens were tested through the API; they have not been clicked through one by one in a browser.
 
+## Keyword portfolio (GSC positions)
+
+- Positions are Search Console averages over all impressions of a query, not a single ranking at one location or time.
+- Queries Google anonymises do not appear; totals per keyword are lower than page totals.
+- The device filter needs a Search Console sync after this update; CSV imports do not combine query and device.
+- Keywords are matched by lower-cased text; spelling variants count as different keywords.
+
 ## Website Health
 
 - Checks run from the server SEO-Werkbank runs on, from one location. A problem between that server and the website

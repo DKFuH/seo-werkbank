@@ -29,6 +29,7 @@ const CompetitorRadar = lazy(() => import("./pages/CompetitorRadar"));
 const SeoEvidence = lazy(() => import("./pages/SeoEvidence"));
 const ContentProposals = lazy(() => import("./pages/ContentProposals"));
 const RankTracking = lazy(() => import("./pages/RankTracking"));
+const RankKeyword = lazy(() => import("./pages/RankKeyword"));
 const ResearchWorkspace = lazy(() => import("./pages/ResearchWorkspace"));
 const ResearchQuality = lazy(() => import("./pages/ResearchQuality"));
 const ResearchMonitoring = lazy(() => import("./pages/ResearchMonitoring"));
@@ -80,6 +81,7 @@ export default function App() {
             <Route path="/seo-evidence" element={<SeoEvidence />} />
             <Route path="/content-proposals" element={<ContentProposals />} />
             <Route path="/rank-tracking" element={<RankTracking />} />
+            <Route path="/rank-tracking/keywords/:id" element={<RankKeyword />} />
             <Route path="/research" element={<ResearchWorkspace />} />
             <Route path="/research-quality" element={<ResearchQuality />} />
             <Route path="/research-monitoring" element={<ResearchMonitoring />} />
