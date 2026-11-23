@@ -17,8 +17,8 @@ from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import mm
 from reportlab.platypus import PageBreak, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
-from ..audit.rules import CLASSIFICATION_LABELS, PROFILE_RULE_IDS, RULES, SEVERITIES, classify_rule, rule_profiles
 from ..audit.engine_guidance import engine_guidance
+from ..audit.rules import CLASSIFICATION_LABELS, PROFILE_RULE_IDS, RULES, SEVERITIES, classify_rule, rule_profiles
 from ..config import APP_NAME
 
 _FORMULA_PREFIX = ("=", "+", "-", "@", "\t", "\r")
