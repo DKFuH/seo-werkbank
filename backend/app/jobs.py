@@ -124,10 +124,12 @@ jobs = JobManager()
 
 def mark_interrupted_jobs() -> None:
     """On startup, anything still marked queued/running belonged to a previous process."""
-    from .models import Crawl  # local import to avoid a cycle
+    from .models import Crawl, LogImport  # local import to avoid a cycle
 
     with session_scope() as db:
         for job in db.query(Job).filter(Job.status.in_(("queued", "running"))):
             job.status, job.error, job.finished_at = "failed", "Durch Serverneustart unterbrochen", utcnow()
         for crawl in db.query(Crawl).filter(Crawl.status.in_(("queued", "running"))):
             crawl.status, crawl.error, crawl.finished_at = "failed", "Durch Serverneustart unterbrochen", utcnow()
+        for record in db.query(LogImport).filter(LogImport.state == "processing"):
+            record.state = "failed"  # failed imports can be deleted or uploaded again
