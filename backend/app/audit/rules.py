@@ -361,6 +361,18 @@ _R = [
     ('geo_brand_inconsistent', 'Markenname uneinheitlich', 'low', 'geo',
      'Der Markenname aus dem Organization-Schema bzw. og:site_name steht nicht im Title oder in Open Graph, oder beide Namen weichen voneinander ab. KI-Systeme ordnen die Marke dann schwerer als eine Entität zu.',
      'Denselben Markennamen in Title, og:site_name und Organization-Schema verwenden.'),
+    ('geo_ai_meta_restricted', 'KI-Crawler per Meta-Tag oder Header ausgeschlossen', 'medium', 'geo',
+     'Ein Meta-Tag oder X-Robots-Tag schließt einen KI-Such-Crawler aus (z. B. <meta name="GPTBot" content="noindex">), oder noai/noimageai ist gesetzt. noai ist kein Standard, zeigt aber den Wunsch, nicht von KI genutzt zu werden.',
+     'Crawler-spezifische Sperren und noai entfernen, wenn die Seite in KI-Antworten erscheinen soll.'),
+    ('geo_cloudflare_ai_block', 'Cloudflare sperrt KI-Crawler in robots.txt', 'medium', 'geo',
+     'robots.txt enthält einen von Cloudflare verwalteten Abschnitt („Cloudflare Managed content“), der KI-Crawler komplett ausschließt. Cloudflare fügt ihn über die KI-Crawler-Einstellungen ein, oft ohne dass die Datei bewusst bearbeitet wurde.',
+     'In Cloudflare unter Security → Bots bzw. AI Crawl Control prüfen, welche Crawler gesperrt sein sollen.', 'site'),
+    ('geo_content_signal_restrictive', 'Content-Signal schließt KI-Suche oder KI-Antworten aus', 'medium', 'geo',
+     'Eine Content-Signal-Zeile in robots.txt setzt search=no oder ai-input=no für alle oder für KI-Crawler. Das signalisiert, die Inhalte nicht für Suchergebnisse bzw. KI-Antworten zu verwenden. ai-train=no allein wird nicht gemeldet.',
+     'search=yes und ai-input=yes setzen, wenn die Website in KI-Antworten erscheinen soll; ai-train=no kann bleiben.', 'site'),
+    ('geo_llms_incomplete', 'llms.txt unvollständig', 'low', 'geo',
+     '/llms.txt ist vorhanden, folgt aber nicht dem Aufbau aus llmstxt.org: H1-Titel, Kurzbeschreibung mit „>“, Abschnitte mit „##“ und Links im Format „- [Titel](URL)“.',
+     'Datei ergänzen; einen Entwurf aus dem letzten Crawl erzeugt der GEO-Check unter „llms.txt-Entwurf“.', 'site'),
 ]
 
 RULES: dict[str, Rule] = {r[0]: Rule(*r) for r in _R}

@@ -2,7 +2,7 @@ import { useMutation } from "@tanstack/react-query";
 import { Bot } from "lucide-react";
 import { type FormEvent, useState } from "react";
 import {
-  Badge, Button, Card, type Column, DataTable, EmptyState, ErrorBox, Field, Input, Notice, PageHeader, ScoreRing, Spinner, Stat,
+  Badge, Button, Card, type Column, DataTable, EmptyState, ErrorBox, Field, Input, Notice, PageHeader, ScoreRing, Spinner, Stat, Textarea,
 } from "../components/ui";
 import { api } from "../lib/api";
 import { useSite } from "../lib/context";
@@ -53,6 +53,38 @@ function BotAccessCard() {
   );
 }
 
+/** llms.txt draft from the last crawl of the selected site: shown for review, copied or downloaded. */
+function LlmsDraftCard() {
+  const { site } = useSite();
+  const [copied, setCopied] = useState(false);
+  const draft = useMutation({ mutationFn: () => api.get(`/sites/${site!.id}/geo/llms-txt-draft`) });
+  const d = draft.data;
+  if (!site) return null;
+  const copy = async () => {
+    try { await navigator.clipboard.writeText(d.text); setCopied(true); setTimeout(() => setCopied(false), 2000); } catch { /* clipboard blocked */ }
+  };
+  return (
+    <Card title="llms.txt-Entwurf" description="Erzeugt aus den indexierbaren Seiten des letzten Crawls eine llms.txt nach llmstxt.org: Abschnitte nach Pfad, am besten verlinkte Seiten zuerst. Vor dem Hochladen prüfen und kürzen.">
+      <div className="space-y-3">
+        <div className="flex flex-wrap gap-2">
+          <Button onClick={() => draft.mutate()} loading={draft.isPending}>Entwurf erzeugen</Button>
+          {d && <Button variant="ghost" onClick={copy}>{copied ? "Kopiert" : "Kopieren"}</Button>}
+          {d && <Button variant="ghost" onClick={() => api.download(`/sites/${site.id}/geo/llms-txt-draft`, { download: true }, "llms.txt")}>Als Datei laden</Button>}
+        </div>
+        {draft.error && <ErrorBox error={draft.error} />}
+        {d && (
+          <>
+            <p className="text-xs text-slate-500 dark:text-slate-400">{d.pages} Seiten in {d.sections.length} Abschnitten · Crawl #{d.crawl_id}</p>
+            {d.summary_missing && <Notice tone="warn">Die Startseite hat keine Meta-Description. Die Zeile „&gt; Kurzbeschreibung“ fehlt deshalb und muss ergänzt werden.</Notice>}
+            <Textarea readOnly rows={14} value={d.text} className="font-mono text-xs" aria-label="llms.txt-Entwurf" />
+            <p className="text-xs text-slate-500 dark:text-slate-400">{d.method}</p>
+          </>
+        )}
+      </div>
+    </Card>
+  );
+}
+
 export default function Geo() {
   const [url, setUrl] = useState("");
   const run = useMutation({ mutationFn: () => api.post("/geo/check", { url: url.trim() }) });
@@ -81,6 +113,7 @@ export default function Geo() {
         </Card>
 
         <BotAccessCard />
+        <LlmsDraftCard />
 
         {run.isPending && <Card><Spinner label="Seite, robots.txt und llms.txt werden geladen…" /></Card>}
         {run.error && <ErrorBox error={run.error} onRetry={() => run.mutate()} />}
