@@ -154,6 +154,12 @@ def export_rules(rules: list[dict], format: str) -> str:
     if format not in ("apache", "nginx"):
         raise HTTPException(422, "Format unbekannt")
     out = ["# ENTWURF: erst in einer Testumgebung prüfen"]
+    if format == "apache":
+        out.extend([
+            "# Apache mod_rewrite, nur .htaccess im DocumentRoot; nicht fuer vHost-Konfiguration.",
+            "# In einem vHost ist der RewriteRule-Pfadkontext anders.",
+            "RewriteEngine On",
+        ])
     for r in rules:
         path = urlsplit(r["source_url"]).path
         target = r["target_url"]
@@ -161,7 +167,6 @@ def export_rules(rules: list[dict], format: str) -> str:
         # Already validated input: no spaces, quotes, control chars, regex or query parts.
         if format == "apache":
             # Redirect directive is exact/prefix matching; RewriteRule anchors the exact path.
-            out.append("RewriteEngine On")
             out.append(f"RewriteRule ^{re.escape(path.lstrip('/'))}$ {target} [R={code},L,NE]")
         else:
             out.append(f"location = {path} {{ return {code} {target}; }}")
