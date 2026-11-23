@@ -9,7 +9,7 @@ The complete, always-current reference is generated from the code:
 All endpoints live under `/api`. Most accept and return JSON; uploads use multipart form data, and exports may return files. Except for explicitly public endpoints, calls require
 `Authorization: Bearer <token>`.
 
-## SEO-Operations API (Stand: PR #45)
+## SEO-Operations API (Stand: PR #49)
 
 Sämtliche Pfade in dieser Tabelle haben das Präfix `/api`, benötigen ein authentifiziertes Bearer-Token und prüfen die Berechtigung auf die jeweilige Website. Alle URL-Prüfungen und Exporte erfolgen ohne Änderung am Webserver.
 
@@ -30,6 +30,10 @@ Sämtliche Pfade in dieser Tabelle haben das Präfix `/api`, benötigen ein auth
 | Schema | `POST /sites/{site_id}/schema-manager/proposals` | Separat freizugebende JSON-LD-Content-Maßnahme speichern |
 | Schema | `GET/POST /sites/{site_id}/schema-manager/templates` | Site-scoped JSON-LD-Templates verwalten |
 | Schema | `PUT/DELETE /sites/{site_id}/schema-manager/templates/{template_id}` | Template ändern/löschen |
+| Bing | `GET /bing/sites` | Websites des Bing-API-Schlüssels (Einstellung `bing.api_key`) |
+| Bing | `GET /sites/{site_id}/bing/overview?site_url=…` | Suchanfragen (Wochenwerte je Anfrage summiert, Position impressionsgewichtet) und Bingbot-Crawlstatistik; ohne `site_url` Zuordnung über die Domain |
+| IndexNow | `GET /sites/{site_id}/indexnow/status` | Schlüsseldatei prüfen und Kandidaten seit dem vorherigen Crawl: `new`, `changed`, `removed` (404/410, vorher indexierbar) mit Zählern |
+| IndexNow | `POST /sites/{site_id}/indexnow/submit` | Body `source`: `manual\|new\|changed\|removed\|new_changed\|all`, bei `manual` zusätzlich `urls`; nur URLs des eigenen Hosts, Antwort mit IndexNow-Status. Hinweis, keine Indexierungsgarantie |
 | Schema | `POST /sites/{site_id}/schema-manager/templates/{template_id}/preview` | Bis zu 30 passende Seiten vorbefüllt ansehen, keine Veröffentlichung |
 | Content-Freigabe | `GET/PUT /sites/{site_id}/seo-work/{item_id}/content-proposal` und `POST …/approve` | `proposed_text` ist rohes JSON; bei JSON-LD ist `safe_html` der sicher serialisierte Script-Block |
 
@@ -52,7 +56,7 @@ Sämtliche Pfade in dieser Tabelle haben das Präfix `/api`, benötigen ein auth
 | Sites | `GET/POST /sites`, `GET/PATCH/DELETE /sites/{id}`, `GET /sites/{id}/overview`, `GET /dashboard` |
 | Crawls | `POST/GET /sites/{id}/crawls`, `GET/DELETE /crawls/{id}`, `POST /crawls/{id}/cancel`, `GET /crawls/{a}/compare/{b}` |
 | Crawl data | `GET /crawls/{id}/pages` (search, filters, sort, pagination), `/pages/{page_id}`, `/links`, `/redirects`, `/duplicates` |
-| Audit | `GET /crawls/{id}/issues`, `/issues/{rule_id}`, `GET /rules` (public rule catalogue) |
+| Audit | `GET /crawls/{id}/issues`, `/issues/{rule_id}`, `GET /rules` (public rule catalogue). Regeln und Befundgruppen enthalten `classification`, `profiles` und `search_engines.{bing,brave}` mit `status`, `evidence` (`quoted`\|`topic`), `section`, `quote`, `source_status`; die Zusammenfassung zusätzlich `profile_scores` (Google, Bing, Brave, GEO) |
 | Architecture | `GET /crawls/{id}/internal-links`, `/link-opportunities`, `/graph` |
 | Sitemaps / schema / i18n / local | `GET /crawls/{id}/sitemaps`, `/sitemap.xml`, `/schema`, `/hreflang`, `/local`; `POST /sites/{id}/citations/import` |
 | Exports | `GET /crawls/{id}/export?dataset=pages|issues|links|broken_links|redirects|all&format=csv|xlsx|json`, `GET /crawls/{id}/report.pdf` |

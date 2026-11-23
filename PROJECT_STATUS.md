@@ -1,6 +1,6 @@
 # Project Status
 
-Last updated: 2026-11-23 · Version 0.1.0 (pre-release) plus SEO-Werkbank modules through PR #45 (see `CHANGELOG.md`).
+Last updated: 2026-11-23 · Version 0.1.0 (pre-release) plus SEO-Werkbank modules through PR #49 (see `CHANGELOG.md`).
 
 This file separates what has been **verified** from what is **implemented but unverified** and what is **not done**. Keep it honest.
 
@@ -12,7 +12,7 @@ This file separates what has been **verified** from what is **implemented but un
 | B | Architecture and technical design | Done: `ARCHITECTURE_DECISIONS.md`, `docs/ARCHITECTURE.md` |
 | C | Backend foundation and database | Done, tested |
 | D | Frontend foundation and dashboard | Done; verified in a browser, limited automated tests |
-| E | Technical SEO auditing | Implemented (117 rule definitions); rule execution and policy coverage are not equivalent |
+| E | Technical SEO auditing | Implemented (122 rule definitions); rule execution and policy coverage are not equivalent |
 | F | Website crawler | Done, tested |
 | G | Keyword research and SERP analysis | Done; SERP providers unverified against live services |
 | H | Competitor and backlink analysis | Done, tested |
@@ -36,6 +36,13 @@ SEO-Operations changes in PRs #41–#45:
 - Streaming access-log import from Apache/Nginx Common/Combined and gzip; limited extra trailing quoted fields, capped 64 KiB per line, privacy-focused aggregates, 404 monitor and human-reviewed redirect proposals (Alembic 0011).
 - Crawl-based JSON-LD prefill/diff, site-scoped templates, typed proposal approval, safe HTML serialization and copy-ready output (Alembic 0012).
 - Interrupted and failed log imports are recoverable; job-start errors do not leave the import stuck in `processing`.
+
+Search-engine evidence (PRs #40, #49):
+- Rule provenance (technical requirement, Google recommendation, heuristic, GEO hypothesis) and separate Google/Bing/Brave/GEO profile scores; the existing overall score is unchanged.
+- Bing and Brave mappings carry guideline section, verbatim quote or an explicit `topic` level and the source date (Bing: 43 rules, 31 quoted and 12 `topic`; Brave: 4 rules, 2 quoted and 2 `topic`). Claims from agency blogs or unconfirmed sources are not used.
+- Bing Webmaster Tools query/crawl statistics and IndexNow (new, changed, removed URLs) are implemented against mocked HTTP; **live calls with an authorised Bing account were not verified**.
+- Five engine-specific rules (Googlebot/Bingbot blocks, incomplete Bingbot group, missing `lastmod`, legacy `noarchive`/`nocache` with the Bing AI-Preferences dates).
+- Not implemented: soft-404 detection, `noindex` on robots-blocked URLs.
 
 
 - Crawl of a local website with ~50 planted problems: each expected rule fires on the expected URL, and healthy pages are not flagged.
