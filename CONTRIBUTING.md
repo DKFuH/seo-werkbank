@@ -1,6 +1,15 @@
 # Contributing
 
 Thanks for considering a contribution. This project values accuracy and maintainability over feature count.
+Contributions in German or English are welcome (issues, comments and pull requests).
+
+## Where to start
+
+- Look for issues labelled [`good first issue`](https://github.com/DKFuH/seo-werkbank/labels/good%20first%20issue) or
+  [`help wanted`](https://github.com/DKFuH/seo-werkbank/labels/help%20wanted), or pick an item from `docs/ROADMAP.md`.
+- Comment on the issue that you take it, so nobody works on it twice. For anything larger than a small fix, open an issue or
+  a [discussion](https://github.com/DKFuH/seo-werkbank/discussions) first and agree on the approach before you write code.
+- Questions are welcome in discussions. There are no bad questions about the codebase.
 
 ## Ground rules
 
@@ -28,6 +37,23 @@ npm run typecheck && npm test
 npm run dev
 ```
 
+On Windows, run the frontend tests from PowerShell with a `C:\` path, not from Git Bash: Vitest fails on the drive letter otherwise.
+The same checks run in CI (`.github/workflows/ci.yml`), so a green local run is a good predictor.
+
+## Workflow
+
+1. Fork the repository and branch from `main`. Name the branch by intent: `feat/...`, `fix/...`, `docs/...`.
+2. Make small, focused commits. Prefix messages with `feat:`, `fix:`, `docs:`, `test:` or `refactor:` and explain the *why*.
+3. Open a pull request against `main`. A draft PR is fine for early feedback.
+4. A maintainer reviews, usually within a few days. Please answer review comments by pushing further commits; the PR is merged
+   with a merge commit once CI is green.
+
+Language: user-facing texts in the app are German; code, identifiers and commit messages are English; documentation is German
+or English.
+
+AI-assisted contributions are fine. You are responsible for the result: understand the change, run the checks, and make sure no
+data or behaviour is invented.
+
 ## Project layout
 
 ```
@@ -44,9 +70,23 @@ backend/tests/    unit, security and end-to-end tests + the flawed fixture websi
 frontend/src/     components/ (UI kit, layout), lib/ (API client, context), pages/
 ```
 
+## Adding a feature area
+
+A new area (page, API, data) usually touches the same places. Use an existing one such as `api/redirects.py` as a template.
+
+1. Router in `backend/app/api/<name>.py`; register it in the import block and the router tuple in `backend/app/main.py`.
+2. Models in `backend/app/models.py` and a numbered Alembic migration (`backend/alembic/versions/00NN_*.py`, `down_revision`
+   is the previous one). A migration that could fail on existing data must check first and explain what to do, not delete silently.
+3. Every site-scoped endpoint resolves the site with `get_site_for` and has a test for the tenant boundary.
+4. Page in `frontend/src/pages/`, route in `frontend/src/App.tsx`, entry in `frontend/src/components/Layout.tsx`.
+5. A guide in `docs/` and an entry in `CHANGELOG.md`; list limitations in `KNOWN_LIMITATIONS.md`.
+
 ## Adding an audit rule
 
-1. Add an entry to `backend/app/audit/rules.py` (id, title, severity, category, description, fix).
+1. Add an entry to `backend/app/audit/rules.py` (id, title, severity, category, description, fix) **and** put the id in exactly one
+   provenance set there (`TECHNICAL_REQUIREMENT_IDS`, `GOOGLE_RECOMMENDATION_IDS` or `SEO_HEURISTIC_IDS`; `geo_*` rules are
+   classified automatically). A test fails otherwise. Do not present a heuristic as a search-engine requirement; see
+   `docs/AUDIT_PROVENANCE.md`.
 2. Emit it from `audit/page_checks.py` (needs one page) or `audit/analysis.py` (needs the whole crawl).
 3. Add a page that triggers it to `backend/tests/fixture_site.py` and list it in `EXPECTED` in `tests/test_api.py`; add a healthy page
    to `NOT_EXPECTED` if false positives are plausible.
