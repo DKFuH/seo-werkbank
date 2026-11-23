@@ -23,12 +23,38 @@ Keine automatischen Deployments, Wildcard-Regeln, Cross-Domain-Weiterleitungen o
   Bereits vorhandene Dubletten werden **nicht** automatisch gelöscht. Der
   Migrationslauf stoppt mit einer Fehlermeldung; Dubletten zuerst manuell prüfen.
 - Konkurrierende API-Anfragen bekommen bei einer Kollision `409 Conflict`.
-- Der Apache-Export setzt `RewriteEngine On` nur einmal und enthält einen
-  Hinweis auf **.htaccess im DocumentRoot**. Die Regel muss für vHost-Konfigurationen
-  gesondert an deren Rewrite-Kontext angepasst werden.
 
-## Ablauf beim Update oder bei einer Migration
+### Update auf Migration 0013
 
-Wenn das automatische Alembic-Upgrade bei `0013` abbricht, existieren möglicherweise mehrere Redirect-Zeilen mit derselben Kombination aus Website-ID und Quell-URL. **Vor Änderungen eine Datenbanksicherung anlegen.** Datensätze und Status fachlich vergleichen und die gewünschten Regeln gezielt erhalten. Danach das Upgrade erneut durchführen. Die Migration löst den Konflikt nicht durch automatisches Löschen.
+Die Migration läuft beim Start der Anwendung. Gibt es schon doppelte Quellen,
+bricht sie ab und die Anwendung startet nicht, bis die Dubletten bereinigt sind.
+Das betrifft nur Installationen mit Regeln aus der Zeit vor `0013`; mit der
+Anwendungsprüfung entstehen Dubletten normalerweise nicht.
 
-Das Importieren oder Exportieren einer Regel bedeutet **nicht**, dass sie auf dem Webserver aktiv ist. Apache-Regeln verwenden einen Pfad relativ zur `.htaccess` im DocumentRoot. Ein gleicher Ausdruck in einer vHost-Datei kann ein anderes Match-Verhalten haben; daher den Export nicht ohne Anpassung übernehmen.
+1. Anwendung gestoppt lassen, Datenbank sichern.
+2. Dubletten finden:
+
+   ```sql
+   SELECT site_id, source_url, COUNT(*) AS n
+   FROM redirect_rules
+   GROUP BY site_id, source_url
+   HAVING COUNT(*) > 1;
+   ```
+
+3. Je Quelle genau eine Regel behalten (bevorzugt die freigegebene, sonst die
+   neueste) und die übrigen löschen:
+
+   ```sql
+   SELECT id, state, target_url, updated_at
+   FROM redirect_rules
+   WHERE site_id = :site_id AND source_url = :source_url
+   ORDER BY id;
+
+   DELETE FROM redirect_rules WHERE id IN (:ids_to_remove);
+   ```
+
+4. Anwendung starten; die Migration legt den Unique-Index an.
+
+### Apache-Export und Live-Prüfung
+
+Der Apache-Export setzt `RewriteEngine On` nur einmal und enthält einen Hinweis auf **`.htaccess` im DocumentRoot**. Regeln müssen vor der Verwendung in Apache-vHost-Konfigurationen an deren Rewrite-Kontext angepasst werden. Export, Freigabe und Simulation belegen **keine** bereits auf dem Server installierte Weiterleitung; prüfen Sie die Wirkung nach manueller Installation mit HTTP-Anfragen und erneutem Crawl.

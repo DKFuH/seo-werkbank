@@ -1,121 +1,55 @@
 # SEO-Werkbank
 
-Selbst gehostetes SEO-Werkzeug mit deutscher Oberfläche: Crawler, technisches Audit, interne Verlinkung,
-Keyword-Recherche, SERP- und Content-Analyse, **WDF\*IDF**, **GEO-Check** für KI-Suchsysteme, Search Console,
-**Matomo**, PageSpeed, Monitoring und Berichte. Läuft auf dem eigenen Rechner, die Daten bleiben dort.
+[![CI](https://github.com/DKFuH/seo-werkbank/actions/workflows/ci.yml/badge.svg)](https://github.com/DKFuH/seo-werkbank/actions/workflows/ci.yml)
+[![Security](https://github.com/DKFuH/seo-werkbank/actions/workflows/security.yml/badge.svg)](https://github.com/DKFuH/seo-werkbank/actions/workflows/security.yml)
+[![Lizenz: MIT](https://img.shields.io/badge/Lizenz-MIT-green)](LICENSE)
+![Python 3.11+](https://img.shields.io/badge/Python-3.11%2B-blue)
+![Node 20](https://img.shields.io/badge/Node-20-339933)
+![Selbst gehostet](https://img.shields.io/badge/selbst%20gehostet-ja-6366f1)
+[![Mitmachen](https://img.shields.io/badge/PRs-willkommen-brightgreen)](CONTRIBUTING.md)
+
+**Selbst gehostetes SEO-Werkzeug mit deutscher Oberfläche.** Crawler, technisches Audit mit 117 Regeln,
+Search Console, Bing Webmaster Tools, Keyword- und SERP-Analyse, **WDF\*IDF**, **GEO-Check** für KI-Suchsysteme,
+Weiterleitungen, Logfile-Analyse, Schema-Management, Matomo, PageSpeed, Monitoring und Berichte.
+Läuft auf dem eigenen Rechner, die Daten bleiben dort. Kein bezahlter API-Zugang nötig.
 
 SEO-Werkbank ist eine Weiterentwicklung von [OpenSEOSuite](https://github.com/Sushang-Agnihotri/OpenSEOSuite)
-(MIT-Lizenz, © The OpenSEOSuite contributors). Die ursprüngliche Dokumentation liegt unter
-[docs/UPSTREAM_README.md](docs/UPSTREAM_README.md); Architektur, Sicherheit und Installation gelten unverändert.
+(MIT-Lizenz, © The OpenSEOSuite contributors).
 
-## SEO-Operations-Werkzeuge (PRs #41–#45)
+## Leitlinien
 
-- **Weiterleitungen** (`/redirects`): Crawl-Vorschläge, Simulation, manuelle Freigabe und **nur Konfigurationsentwürfe** für Apache `.htaccess`, Nginx und CSV. Ein eindeutiger Index verhindert pro Website doppelte Quell-URLs; der Import existierender Daten kann bei alten Dubletten eine manuelle Bereinigung erfordern ([Details](docs/REDIRECTS.md)).
-- **Logfile & 404** (`/logs`): Apache-/Nginx-Common-/Combined-Logs (auch gzip, bis zu zwei zusätzliche quoted-Felder) in begrenzten Jobs verarbeiten; IP und komplette Logzeilen werden nicht dauerhaft gespeichert. Bots werden nur über **nicht verifizierte User-Agent-Angaben** eingeordnet. Fehlerhafte und unterbrochene Imports lassen sich bereinigen ([Details](docs/LOG_ANALYSIS.md)).
-- **Schema-Management** (Reiter unter `/schema`): JSON-LD aus Crawl-Daten vorbefüllen, Diff und Vorlagenvorschau erstellen und Entwürfe separat freigeben. Die Content-Freigabe zeigt neben **reinem JSON** einen **sicheren HTML-Einbettungsblock**. Weder Freigabe noch Export veröffentlichen Schema-Markup automatisch ([Details](docs/STRUCTURED_DATA.md)).
+- **Keine erfundenen Zahlen.** Jede Angabe ist gemessen, importiert, als Schätzung mit Methode gekennzeichnet oder nicht verfügbar.
+- **Freigabe statt Automatik.** Weiterleitungen, Schema und Content-Änderungen entstehen als Entwurf, ein Mensch gibt frei.
+  Die Werkbank verändert keine fremden Server und kein CMS.
+- **Suchmaschinen getrennt betrachten.** Google, Bing und Brave haben eigene Profile; eine Regel gilt nicht automatisch für alle.
+- **Datensparsam.** Logfiles werden nur als Aggregate gespeichert, Zugangsdaten verschlüsselt.
 
-**Betriebsgrenzen:** Kein automatisches Deployment von Redirects/JSON-LD, keine garantierte Indexierung oder Rich-Result-Ausspielung. Siehe [Projektstatus](PROJECT_STATUS.md) und [bekannte Grenzen](KNOWN_LIMITATIONS.md).
+## Funktionen im Überblick
 
-## Hilfe, Keyword-Clustering und Demo
+| Bereich | Was dazugehört |
+| --- | --- |
+| **Analyse** | Site-Audit mit Herkunft je Regel und Scores für Google, Bing, Brave und GEO · Crawler (auch mit JavaScript-Rendering) · Interne Verlinkung · Sitemaps · Strukturierte Daten mit Schema-Management · PageSpeed · Internationales und Lokales SEO · **[Weiterleitungen](docs/REDIRECTS.md)** · **[Logfile und 404-Monitor](docs/LOG_ANALYSIS.md)** |
+| **Sichtbarkeit** | Search Console mit URL Inspection · **[Bing und IndexNow](docs/BING_INDEXNOW.md)** · Ranktracker · Keyword-Recherche und SERP-Clustering · SERP-Analyse · KI-Erwähnungen · GEO-Check · Wettbewerber · Backlinks |
+| **Content** | Research · Content-Optimierung · WDF\*IDF · Content-Refresh · Content-Entwürfe mit Freigabe · Content Studio · Qualität und CRO |
+| **Conversion** | Matomo · Conversion und Trust · wirtschaftliche Chancen |
+| **Maßnahmen** | SEO-Maßnahmen mit Vorher-Nachher-Messung · Lokale Nachweise · Website Health · Monitoring · Berichte (PDF, CSV, Excel) |
 
-- **Integrierte Hilfe** unter `/help`: direkte Verweise zu Werkzeugen und passenden Handbuchkapiteln.
-- **SERP-basiertes Keyword-Clustering** im Cluster-Werkzeug; 2–15 Keywords, tatsächlich erfasste SERP-URL-Listen oder ein konfigurierter Anbieter ([Anleitung](docs/KEYWORD_SERP_CLUSTERING.md)).
-- **Screenshots und kurzer Rundgang:** Mit `python scripts/capture_demo.py` auf einer gestarteten Installation aufnehmen. Das Skript erzeugt authentische PNG-Screenshots und ein WebM-Video unter `docs/media/generated/`. **Im GitHub-CI-Job `demo-capture` werden echte Screenshots und eine WebM-Aufnahme einer isolierten Testinstallation als Workflow-Artefakt erzeugt.** Die Aufnahmen werden nicht automatisch im README veröffentlicht. Vor einer Übernahme in das Repository müssen die Artefakte geprüft werden.
-- **0.2 Integrationen:** [verschlüsselte Zugangsdaten](docs/SECURE_INTEGRATIONS.md), [Google URL Inspection](docs/GSC_URL_INSPECTION.md), [SMTP/Webhooks und Batch-PageSpeed](docs/NOTIFICATIONS_PAGESPEED.md).
+Die vollständige Liste mit Erklärungen steht in [docs/FEATURES.md](docs/FEATURES.md).
 
-## Bedienung: Benutzerhandbuch und Schnellstart
+**SEO-Operations nach PR #45:** Redirects werden nur simuliert, freigegeben und als Konfigurationsentwurf exportiert; die `.htaccess`-Ausgabe ist nicht für unveränderte Übernahme in Apache-vHost-Dateien gedacht. Der Logimport verarbeitet begrenzte Common-/Combined-Formate und ermittelt nur nicht verifizierte User-Agent-Indizien. JSON-LD-Content-Entwürfe bleiben rohes JSON; zum Einbetten in HTML steht separat ein sicher serialisierter `safe_html`-Block bereit. Bei Upgrades kann Migration `0013` vorhandene doppelte Redirect-Quell-URLs zur manuellen Prüfung melden. Weitere Details: [Benutzerhandbuch Kapitel 23](docs/BENUTZERHANDBUCH.md#23-seo-operations-redirects-logfiles-und-schema) und [bekannte Grenzen](KNOWN_LIMITATIONS.md).
 
-**Neu hier?** Beginne mit dem [Schnellstart für Anwender](docs/SCHNELLSTART.md):
-Installation, erste Website, Crawl, Google Search Console und Content-Maßnahme.
+## Schnellstart
 
-Das ausführliche **[Benutzerhandbuch](docs/BENUTZERHANDBUCH.md)** erklärt Schritt für Schritt
-**wo du klickst, welche Daten benötigt werden, was das Ergebnis bedeutet und wie die
-Funktionen zusammenarbeiten** – einschließlich Admin-Einstellungen, Importen,
-Crawling, Keyword-Recherche, KI-Sichtbarkeit, Content-Freigabe, Matomo, Monitoring,
-Exporten und Fehlerbehebung.
-
-- **Browser- und Bilddiagnostik:** Consent-Request-Zeitfolgen, Roh-/JS-Rendering und Markup-Hinweise für mögliche LCP-Bilder ([Anleitung](docs/TECHNICAL_DIAGNOSTICS.md)).
-
-- **Erweiterte Audits** in den passenden Bereichen: SERP-Überschneidung (SERP-Analyse), Relaunch-Vergleich (Crawler),
-  Paginierung (Interne Verlinkung) und Rich-Result-Potenzial (Strukturierte Daten) ([Anleitung](docs/ADVANCED_SEO.md)).
-
-- **Verzeichnisse & KI-Quellen:** Verzeichnisbewertung (Lokale Nachweise) und wiederkehrende KI-Zitate
-  (KI-Erwähnungen) ([Anleitung](docs/AUTHORITY_INTELLIGENCE.md)).
-
-## Was gegenüber OpenSEOSuite dazugekommen ist
-
-- **Deutsche Oberfläche**: alle Seiten, die 117 Audit-Regeln, Hinweise und Fehlermeldungen; deutsche Zahlen- und
-  Datumsformate. KI-Antworten (optional, Ollama oder OpenAI-kompatibel) auf Deutsch.
-- **Deutsche Exporte**: Search-Console-, Keyword-Planer- und Links-CSVs mit deutschen Spaltennamen und Zahlen
-  (`1.234`, `8,47`) werden korrekt gelesen.
-- **WDF\*IDF-Analyse** (`/wdf-idf`): eigene URL oder Entwurf gegen bis zu zehn Wettbewerber-URLs,
-  WDF = log2(f+1)/log2(L+1), IDF = log10(1+N/n), deutsche Stoppwörter, optional Zweiwort-Begriffe,
-  Drittelverteilung und Überschriftenvergleich. Zusätzlich direkt in der Content-Optimierung.
-- **GEO-Check** (`/geo`): KI-Crawler in robots.txt (OAI-SearchBot, Claude-SearchBot, PerplexityBot, GPTBot …),
-  llms.txt, Entität und sameAs, Autor, Aktualität, Antwortstruktur, Listen, Zahlen und Quellen. Dazu Snippet-Grenzen,
-  versteckte Anweisungen an KI-Systeme (Prompt-Injection), sichtbare strukturierte Daten, stimmige Datumsangaben, ein
-  einheitlicher Markenname und auf Knopfdruck ein Test, ob das CDN KI-Crawler per User-Agent abweist.
-- **Matomo** (`/matomo`): Besuche, Kanäle, Einstiegsseiten, Ziele und Geräte aus der Reporting-API, verknüpft
-  mit dem letzten Crawl, inklusive indexierbarer Seiten ohne Besuch.
-- **Content-Refresh** (`/content-refresh`): GSC-Query-URL-Chancen, redaktionelle Prüfhinweise und kopierbare Briefings;
-  keine automatische Veröffentlichung. Details: [Content-Refresh](docs/CONTENT_REFRESH.md).
-- **Wirtschaftliche SEO-Chancen** (`/opportunity-value`): Nutzerdefinierte Lead-, Abschluss- und DB-Annahmen
-  sowie manuelle Seitenrelevanz; Szenarien, keine Umsatzprognosen.
-- **SEO-Maßnahmen** (`/seo-work`): manuelles Tracking für redaktionelle Inhalte, Bewertungen,
-  Veröffentlichungen, lokale SEO-Maßnahmen und Wettbewerbsbeobachtungen, GSC-Vergleichsmessungen.
-  Details: [SEO-Maßnahmen](docs/SEO_WORKFLOW.md).
-- **Linkkontext** (`/internal-links`): zu bestehenden internen Linkchancen eine echte Textpassage der Quellseite und ein
-  Ankervorschlag; keine automatische Linksetzung.
-- **KI-Erwähnungen** (`/ai-visibility`): manuelle, zeitgestempelte Beobachtungen zu Markennennungen
-  und belegten URLs; keine Live-Überwachung oder erfundene AI-Rankings.
-- **Wettbewerber-Themenradar** (`/competitor-radar`): thematische Wortpaare aus tatsächlichen
-  Wettbewerber-Crawls mit belegbaren Quellseiten; keine erfundenen Rankings oder Volumina.
-- **Lokales SEO & Nachweise** (`/seo-evidence`): Aktionsplan aus importierten NAP-Daten,
-  manuell erfassten Bewertungsanfragen und Abgleich von Publikationen mit Backlink-Datensätzen.
-- **Content-Entwürfe** (`/content-proposals`): gespeicherter Ausgangstext und Entwurf,
-  Diff, gesonderte Freigabe sowie rein manuelle Dokumentation einer Veröffentlichung.
-- **Ranktracker** (`/rank-tracking`): ausgewählte Zielkeywords, dokumentierte Positionshistorie und
-  manuelle oder anbieterbezogene SERP-Beobachtungen. Keine unabhängige Google-Messung.
-- **SEO-Research** (`/research`): mandantengetrennte Themen- und Fragenhierarchien,
-  Suchreise-Planung, belegbare Beobachtungen und Rechercheprotokolle.
-- **Qualität & CRO** (`/research-quality`): transparente Content-Nachweise, Landingpage-Textsignale,
-  Quellenprüfung für Vergleiche und QA-Checklisten für Linkable-Assets.
-- **SEO-Verlauf & GEO** (`/research-monitoring`): erfasste Ereignisse mit Positionshistorie,
-  beobachtete SERP-Features, Indexierungs-Crawl-Abgleich und KI-Zitationsstichproben.
-- **Conversion & Trust** (`/conversion-trust`): dokumentierte Funnel-Stufen, Vertrauensbelege
-  und Markenpositionierungen im Abgleich mit dem Website-Crawl.
-- **KI-Stichproben & Referrals** (`/ai-intelligence`): explizite Prompttests, manuelle oder
-  konfigurierte Chatmodellantworten und optionale Matomo-Referrals (keine garantierte KI-Suche).
-- **Content Studio** (`/content-studio`): Fallstudien aus erfassten Fakten als freizugebende
-  Entwürfe, Käuferfragen, Markenabgleich und Marketing-Experimente.
-- Deutsche Stoppwörter auch in SERP-Analyse und Content-Optimierung; deutsche Signalwörter für kommerzielle
-  Suchintention.
-
-## Docker-Gesamtausgabe mit SearXNG
-
-Mit einem Kommando SEO-Werkbank, PostgreSQL und eine **interne** SearXNG-Metasuche
-starten (Docker Compose v2 und Python 3.11+ erforderlich):
+**Mit Docker** (Docker Compose v2 und Python 3.11+): SEO-Werkbank, PostgreSQL und eine interne Metasuche in einem Kommando.
 
 ```bash
 python scripts/full_stack.py up
 ```
 
-Danach <http://localhost:8000> öffnen und den ersten Administrator anlegen.
-Passwörter/Secrets werden beim ersten Start zufällig erzeugt und in der
-ignorierten `.env` gespeichert. Die Metasuche wird nur innerhalb des Docker-Netzes
-erreichbar sein und in der App automatisch vorausgewählt, solange noch kein
-SERP-Anbieter gespeichert wurde. Das bisherige einfache Docker-Setup bleibt erhalten.
+Danach <http://localhost:8000> öffnen und den ersten Administrator anlegen. Passwörter werden beim ersten Start
+zufällig erzeugt und in der ignorierten `.env` gespeichert. Details, Updates und Backups: [Docker-Gesamtausgabe](docs/DOCKER_FULL.md).
 
-**Anleitung, Sicherheit, Updates und Backups:** [Docker-Gesamtausgabe](docs/DOCKER_FULL.md).
-
-## Lokaler MCP-Zugang (optional)
-
-Ein schreibgeschützter MCP-Server für Desktop-KI-Assistenten verbindet sich über einen
-lokal laufenden SEO-Werkbank-REST-Server und einen normalen Benutzerzugang.
-Keine freigegebenen Schreibwerkzeuge, kein öffentliches MCP-HTTP und keine Umgehung
-von Website-Berechtigungen. [Installation und Sicherheitsgrenzen](docs/MCP_SERVER.md).
-
-## Schnellstart (Windows, ohne Docker)
+**Ohne Docker (Windows):**
 
 ```bash
 cd backend
@@ -126,26 +60,46 @@ npm install
 npm run build
 ```
 
-Danach `start-seo-werkbank.cmd` ausführen und <http://localhost:8000> öffnen. Beim ersten Aufruf wird das
-Administratorkonto angelegt. Docker und PostgreSQL funktionieren wie in der
-[Originaldokumentation](docs/UPSTREAM_README.md) beschrieben.
+Danach `start-seo-werkbank.cmd` ausführen und <http://localhost:8000> öffnen. Andere Betriebssysteme und PostgreSQL:
+[Originaldokumentation](docs/UPSTREAM_README.md).
 
-Matomo: in Matomo unter *Persönlich → Sicherheit* einen Auth-Token mit Leserechten anlegen und unter
-*Einstellungen → Matomo* zusammen mit der Matomo-URL eintragen.
+**Neu hier?** Der [Schnellstart für Anwender](docs/SCHNELLSTART.md) führt durch Installation, erste Website, Crawl,
+Search Console und die erste Content-Maßnahme. Das [Benutzerhandbuch](docs/BENUTZERHANDBUCH.md) erklärt Schritt für Schritt,
+wo du klickst und was die Ergebnisse bedeuten. In der App gibt es außerdem eine integrierte Hilfe unter `/help`.
 
-## Datenanbieter-Schnittstelle (optional erweiterbar)
+## Dokumentation
 
-Ein quellennachvollziehbares, lesendes Provider-Register macht vorhandene GSC-,
-Keyword-Import- und Backlink-Daten einheitlich abrufbar. Suchvolumen, Rankings
-oder Backlink-Indizes werden **nicht** ohne Datenquelle erfunden. Erweiterung und
-Schnittstellen: [Datenanbieter](docs/SEO_DATA_PROVIDERS.md).
+| Thema | Dokument |
+| --- | --- |
+| Bedienung | [Schnellstart](docs/SCHNELLSTART.md) · [Benutzerhandbuch](docs/BENUTZERHANDBUCH.md) |
+| Audit und Suchmaschinen | [Herkunft der Regeln](docs/AUDIT_PROVENANCE.md) · [Google, Bing, Brave](docs/SEARCH_ENGINE_RULES.md) · [Technische Diagnose](docs/TECHNICAL_DIAGNOSTICS.md) |
+| Integrationen | [Search Console](docs/GSC_URL_INSPECTION.md) · [Bing und IndexNow](docs/BING_INDEXNOW.md) · [Benachrichtigungen und PageSpeed](docs/NOTIFICATIONS_PAGESPEED.md) · [Zugangsdaten](docs/SECURE_INTEGRATIONS.md) · [Datenanbieter](docs/SEO_DATA_PROVIDERS.md) |
+| Betrieb | [Docker](docs/DOCKER_FULL.md) · [Architektur](docs/ARCHITECTURE.md) · [API](docs/API.md) · [Sicherheitsprüfung](docs/SECURITY_REVIEW.md) |
+| KI und MCP | [Lokaler MCP-Server](docs/MCP_SERVER.md) (nur lesend) · [KI-Sichtbarkeit](docs/AI_VISIBILITY.md) |
+| Projekt | [Roadmap](docs/ROADMAP.md) · [Projektstatus](PROJECT_STATUS.md) · [Bekannte Grenzen](KNOWN_LIMITATIONS.md) · [Changelog](CHANGELOG.md) |
 
-## Tests
+## Mitmachen
+
+Beiträge sind willkommen, von Fehlermeldungen über Dokumentation bis zu neuen Prüfregeln.
+
+1. Lies [CONTRIBUTING.md](CONTRIBUTING.md): Grundregeln, Entwicklungsumgebung, Ablauf eines Pull Requests.
+2. Suche dir eine Aufgabe: [good first issue](https://github.com/DKFuH/seo-werkbank/labels/good%20first%20issue),
+   [help wanted](https://github.com/DKFuH/seo-werkbank/labels/help%20wanted) oder die [Roadmap](docs/ROADMAP.md).
+   Schreibe kurz in das Issue, dass du es übernimmst.
+3. Fragen und Ideen gehören in die [Diskussionen](https://github.com/DKFuH/seo-werkbank/discussions), Fehler in die
+   [Issues](https://github.com/DKFuH/seo-werkbank/issues/new/choose).
+4. Sicherheitslücken bitte nicht öffentlich melden, sondern wie in [SECURITY.md](SECURITY.md) beschrieben.
+
+Für Mitwirkende gilt der [Verhaltenskodex](CODE_OF_CONDUCT.md).
+
+Die wichtigsten Prüfungen, die auch die CI ausführt:
 
 ```bash
-cd backend && .venv\Scripts\python -m pytest -q
-cd frontend && npx vitest run
+cd backend && .venv\Scripts\python -m pytest -q && .venv\Scripts\python -m ruff check app tests
+cd frontend && npm run typecheck && npm test && npm run build
 ```
+
+Unter Windows die Frontend-Tests aus PowerShell mit einem `C:\`-Pfad starten, nicht aus Git Bash (sonst scheitert Vitest am Laufwerksbuchstaben).
 
 ## Lizenz
 

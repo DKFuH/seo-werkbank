@@ -11,6 +11,10 @@ uses [Semantic Versioning](https://semver.org/).
 - Added redirect API regression tests, Apache .htaccess guidance and single RewriteEngine directive.
 - Log parser allows up to two additional trailing quoted fields and skips overlong lines with bounded memory.
 - Schema proposal details expose a separately HTML-escaped block; raw JSON remains raw JSON.
+- **Upgrade note, migration `0013`:** it aborts, and with it the application start, if `redirect_rules` already contains
+  duplicate `(site_id, source_url)` pairs. Nothing is deleted automatically. Find them with
+  `SELECT site_id, source_url, COUNT(*) FROM redirect_rules GROUP BY site_id, source_url HAVING COUNT(*) > 1;`,
+  keep one rule per source, delete the rest and start the application again (see `docs/REDIRECTS.md`).
 
 
 ### Added (SEO Operations: PR #41–#43)
