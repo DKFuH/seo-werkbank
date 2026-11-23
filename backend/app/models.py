@@ -469,3 +469,20 @@ class KeywordNote(Base):
     title: Mapped[str] = mapped_column(String(160))
     details: Mapped[str] = mapped_column(Text, default="")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+
+
+class RedirectRule(Base):
+    """Site-scoped redirect proposal; exports never change external servers."""
+    __tablename__ = "redirect_rules"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    site_id: Mapped[int] = mapped_column(ForeignKey("sites.id", ondelete="CASCADE"), index=True)
+    source_url: Mapped[str] = mapped_column(String(2048))
+    target_url: Mapped[str] = mapped_column(String(2048))
+    status_code: Mapped[int] = mapped_column(Integer, default=301)
+    origin: Mapped[str] = mapped_column(String(20), default="manual")
+    state: Mapped[str] = mapped_column(String(20), default="proposed")
+    confidence: Mapped[float | None] = mapped_column(Float, nullable=True)
+    note: Mapped[str] = mapped_column(Text, default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, onupdate=utcnow)
+    __table_args__ = (Index("ix_redirect_rules_site_state", "site_id", "state"),)
