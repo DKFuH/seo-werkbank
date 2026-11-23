@@ -1,6 +1,6 @@
 # Project Status
 
-Last updated: 2026-11-22 · Version 0.1.0 (pre-release, not yet published) plus SEO-Werkbank modules (see `CHANGELOG.md`)
+Last updated: 2026-11-23 · Version 0.1.0 (pre-release) plus SEO-Werkbank modules through PR #45 (see `CHANGELOG.md`).
 
 This file separates what has been **verified** from what is **implemented but unverified** and what is **not done**. Keep it honest.
 
@@ -12,7 +12,7 @@ This file separates what has been **verified** from what is **implemented but un
 | B | Architecture and technical design | Done: `ARCHITECTURE_DECISIONS.md`, `docs/ARCHITECTURE.md` |
 | C | Backend foundation and database | Done, tested |
 | D | Frontend foundation and dashboard | Done; verified in a browser, limited automated tests |
-| E | Technical SEO auditing | Done, tested (95 rules) |
+| E | Technical SEO auditing | Implemented (117 rule definitions); rule execution and policy coverage are not equivalent |
 | F | Website crawler | Done, tested |
 | G | Keyword research and SERP analysis | Done; SERP providers unverified against live services |
 | H | Competitor and backlink analysis | Done, tested |
@@ -23,11 +23,20 @@ This file separates what has been **verified** from what is **implemented but un
 
 ## Verification record
 
-### Verified by automated tests (221 backend tests, 18 frontend tests, all passing on Windows 11 / Python 3.11 / Node 20)
+### Verified by automated tests
 
-Update 2026-11-22: after the SEO-Werkbank modules were merged, 265 backend tests (2 skipped) and 22 frontend tests pass on
-Windows 11 / Python 3.14; `ruff check app tests`, the TypeScript type-check and the production build are clean. The new modules are
-covered through the API (site isolation, validation, state transitions, GSC pairing rules); their screens were not clicked through.
+Update 2026-11-23 (PR #45, merge commit `a1ec8c5`): GitHub CI and Security passed; backend tests ran on
+Ubuntu (Python 3.11/3.12), Windows (3.11) and macOS (3.12), with frontend build/tests,
+browser diagnostics and Docker/Compose smoke tests. The preceding Linux test run reported
+383 passed / 2 skipped after two newly added test expectations were corrected; subsequent
+CI was green. These automated results are **not** a manual end-to-end walkthrough of the new modules.
+
+SEO-Operations changes in PRs #41–#45:
+- Redirect proposals, review, loop/chain simulation, approved-only CSV/Apache/Nginx export, per-site unique source index (Alembic 0010 and 0013) and API isolation/conflict tests.
+- Streaming access-log import from Apache/Nginx Common/Combined and gzip; limited extra trailing quoted fields, capped 64 KiB per line, privacy-focused aggregates, 404 monitor and human-reviewed redirect proposals (Alembic 0011).
+- Crawl-based JSON-LD prefill/diff, site-scoped templates, typed proposal approval, safe HTML serialization and copy-ready output (Alembic 0012).
+- Interrupted and failed log imports are recoverable; job-start errors do not leave the import stuck in `processing`.
+
 
 - Crawl of a local website with ~50 planted problems: each expected rule fires on the expected URL, and healthy pages are not flagged.
 - Redirect chains/loops, broken internal/external links, broken and oversized images, duplicates and near-duplicates, canonicals,
@@ -47,7 +56,7 @@ covered through the API (site isolation, validation, state transitions, GSC pair
   secret masking, injection payloads, upload type/size limits, login rate limiting, security headers.
 - Database migrations match the models; lint clean (ruff, incl. security rules); TypeScript strict type-check; production build.
 
-### Verified by CI (GitHub Actions run #1, commit 1f6e9fa, all jobs green)
+### Verified by CI (latest SEO-Operations PR #45, merge commit a1ec8c5)
 
 - Backend lint + test suite on Ubuntu (Python 3.11 and 3.12), Windows (3.11) and macOS (3.12). The JavaScript-rendering test is
   skipped there because Chromium is not installed in CI.
@@ -66,22 +75,29 @@ covered through the API (site isolation, validation, state transitions, GSC pair
 | Feature | Why unverified | Risk |
 |---|---|---|
 | PageSpeed Insights API call | The anonymous shared quota was exhausted (HTTP 429, handled with a clear message). Result parsing is unit-tested with a synthetic Lighthouse report. | Field names in real responses may differ in details |
-| Local Lighthouse run | Lighthouse CLI not installed on the development machine | Subprocess invocation untested |
-| Search Console OAuth, property list, API sync | No Google Cloud OAuth client available | Token exchange / API response handling untested |
+| Local Lighthouse run | Environment needs the Lighthouse CLI and Chrome | Verify invocation against the target machine and browser |
+| Search Console OAuth, property list, API sync and URL Inspection | Code/API implemented; no verified external OAuth round trip documented | Verify consent flow, permissions, actual search data and index status against an authorized property |
 | SERP providers (SearXNG, Google Programmable Search, Brave) | No instance or API keys available | Response mapping untested; manual-URL mode is tested |
 | AI providers (Ollama, OpenAI-compatible) | No model server available | Prompt construction is tested; HTTP calls are not |
 | PostgreSQL beyond a smoke test | CI proves the migrations apply and a user can be written through the API on PostgreSQL 16 in a container. The full test suite and crawls were only run on SQLite | Dialect differences in less common queries |
 | Docker on Windows/macOS and long-running use | CI runs on Linux only. A crawl, the data volume across restarts and the UI inside the container were not exercised | Volume permissions or crawl behaviour inside the container could still surprise |
 | Frontend interactions | Screens were loaded and checked for errors; forms/buttons on most screens were not clicked through one by one. The Search Console return flow was checked in the browser only with an invalid state | UI bugs in less common flows are likely |
 | Dropped capabilities and `no-new-privileges` | Applied in `docker-compose.yml` and covered by the Compose smoke test (the app starts and answers health and registration) | Anything that needs a capability at runtime would only show up in less common flows |
-| SEO-Werkbank screens (`/seo-work`, `/research`, `/rank-tracking` …) | Covered by API tests only; no browser walkthrough yet | Form or display bugs in the new screens |
+| SEO-Werkbank screens (`/seo-work`, `/research`, `/rank-tracking`, `/redirects`, `/logs`, `/schema` …) | API/frontend/CI checks exist; no comprehensive manual live-site click-through documented | Form or display bugs in less common flows remain possible |
 | Rank capture through a SERP provider | No provider configured; only the "no provider" refusal is tested | Host matching and result mapping untested against live data |
 | External penetration test | Not done; the review was code reading, scanners and regression tests | Unknown issues may remain |
 
-### Not implemented
+### Not implemented / still unverified
 
-See `KNOWN_LIMITATIONS.md` ("Not implemented") and `docs/ROADMAP.md`: log-file analysis, Bing Webmaster Tools, Google Analytics,
-Google Trends, Google Business Profile, notifications by e-mail/webhook, URL Inspection, batch page-speed runs.
+See `KNOWN_LIMITATIONS.md` and `docs/ROADMAP.md`: Google Analytics, Google Trends,
+Google Business Profile, guaranteed queued alert delivery, custom log format definitions
+and verified bot identities remain unavailable or out of scope. SMTP/HTTPS-webhooks,
+bounded batch-PageSpeed, encrypted secrets, Google URL Inspection and SERP-overlap
+clustering **are implemented**, but need relevant live-provider verification.
+**Logfile analysis, Bing Webmaster Tools/IndexNow, redirect and schema management are implemented**;
+none of their existence establishes verified results against every live search engine or production web server.
+The Google Search Console URL Inspection integration and other external API integrations must be verified
+individually against the actual live provider before claiming end-to-end readiness.
 
 ## Release acceptance criteria
 

@@ -864,15 +864,17 @@ Diese Tabelle ist zugleich ein **„Wo finde ich was?“**-Nachschlagewerk.
 | Übersicht | **Websites** (`/sites`) | Website anlegen, wählen, Crawl-Standards ändern |
 | Analyse | **Website-Audit** (`/audit`) | Regelbasierte Fehler und Hinweise je Crawl |
 | Analyse | **Crawler** (`/crawler`) | Crawls starten, Fortschritt, Seiten, Links, Duplikate und **Relaunch**-Reiter |
+| Analyse | **Weiterleitungen** (`/redirects`) | Regeln vorschlagen, simulieren, freigeben und als Apache-/Nginx-/CSV-Entwurf exportieren |
 | Analyse | **Tracking & Rendering** (`/diagnostics`) | Consent-Zeitfolge, Roh-/JS-Rendering und Bildhinweise |
 | Analyse | **Interne Verlinkung** (`/internal-links`) | Linkstruktur, verwaiste Seiten, Linkchancen und **Paginierung** |
 | Analyse | **Sitemaps & Indexierung** (`/sitemaps`) | Sitemap-/robots-/Canonical-Abgleich |
-| Analyse | **Strukturierte Daten** (`/schema`) | JSON-LD prüfen, Markup erstellen und **Rich-Result-Potenzial** prüfen |
+| Analyse | **Strukturierte Daten** (`/schema`) | JSON-LD prüfen, Markup erstellen, **Rich-Result-Potenzial** und **Schema-Management** (Vorlagen, Diff, Entwürfe) |
 | Analyse | **PageSpeed** (`/pagespeed`) | Performance- und Web-Vitals-Prüfung |
 | Analyse | **Internationales SEO** (`/international`) | Sprach- und Länderangaben |
 | Analyse | **Lokales SEO** (`/local`) | LocalBusiness, NAP, Standortdaten |
 | Sichtbarkeit | **Search Console** (`/search-console`) | Google-Messwerte per API oder CSV |
 | Sichtbarkeit | **Bing & IndexNow** (`/bing`) | Bing-Suchanfragen und -Crawling, URL-Meldung per IndexNow ([Anleitung](BING_INDEXNOW.md)) |
+| Sichtbarkeit | **Logfile & 404** (`/logs`) | Serverlog-Import, aggregierte 404-Pfade, User-Agent-Indizien und Redirect-Entwürfe |
 | Sichtbarkeit | **Ranktracker** (`/rank-tracking`) | GSC-Portfolio, alle GSC-Keywords mit Chancen, Anbieter-Messungen; Keyword-Detail unter `/rank-tracking/keywords/…` |
 | Sichtbarkeit | **Keyword-Recherche** (`/keywords`) | Vorschläge, Keywords, Zuordnung, Cluster |
 | Sichtbarkeit | **SERP-Analyse** (`/serp`) | Suchergebnisse und **Keyword-SERP-Überschneidungen** analysieren |
@@ -1107,18 +1109,48 @@ Die technische Dokumentation des Projekts enthält Details zu Methoden, Grenzwer
 
 ## 23. SEO-Operations: Redirects, Logfiles und Schema
 
-Die drei Module sind eng miteinander verbunden, nehmen aber **keine automatischen Server- oder CMS-Änderungen** vor.
+Die drei Module arbeiten zusammen, ändern jedoch **weder Webserver noch CMS automatisch**. Für einen belastbaren Nachweis gelten immer die Ergebnisse eines erneuten Crawls und einer separaten Serverprüfung.
 
-| Menü | Aktion | Ergebnis | Anleitung |
-| --- | --- | --- | --- |
-| Analyse → Weiterleitungen | Crawl-Vorschläge und manuelle Regeln, Simulation, Freigabe, Export | CSV, Apache- oder Nginx-Konfigurationsentwurf | [Redirects](REDIRECTS.md) |
-| Sichtbarkeit → Logfile & 404 | Begrenzter Import von Combined/Common/.gz, nur Aggregate | 404-Monitor, UA-basierte Bot-Indizien und Redirect-Vorschlag | [Log-Analyse](LOG_ANALYSIS.md) |
-| Analyse → Strukturierte Daten → Schema-Management | URL auswählen, JSON-LD aus Crawl vorbefüllen, Diff und Vorlagenvorschau | JSON-LD-Content-Entwurf für getrennte Freigabe | [Schema-Management](STRUCTURED_DATA.md) |
+### 23.1 Weiterleitungen prüfen und exportieren
 
-**Regel:** Nicht jede 404-Seite braucht einen Redirect. Ein Ziel muss inhaltlich passen.
-Die Aussage „Googlebot“ im Log ist nur ein User-Agent-Indiz; für eine
-verifizierte Identität ist eine zusätzliche IP-/DNS-Prüfung notwendig.
-Bei JSON-LD müssen unbestätigte Felder vor Freigabe manuell ergänzt werden.
+1. Website auswählen, einen Crawl abschließen und **Analyse → Weiterleitungen** öffnen.
+2. **Aus letztem Crawl vorschlagen** oder eine Quell- und Ziel-URL manuell eintragen. Vorschläge aus 404-URLs beruhen auf URL-Ähnlichkeit, nicht auf einem Nachweis gleicher Suchintention. Die Vorschlagsmenge ist aus Performancegründen begrenzt.
+3. Die URL-Paare redaktionell kontrollieren. Eine temporäre 302/307-Weiterleitung darf **nur bei dauerhaftem Umzug** zur 301 werden.
+4. **Simulieren** zeigt Schleifen, Ketten, doppelte Quellen und im Crawl unbekannte oder nicht indexierbare Ziele. Ungeprüfte Ziele sind nicht automatisch defekt.
+5. Regeln einzeln freigeben. Bei Konflikten blockiert die Freigabe; pro Website lässt die Datenbank dank Unique-Index `(site_id, source_url)` nur eine Regel je Quell-URL zu.
+6. **Apache**, **Nginx** oder **CSV** herunterladen. Es werden nur freigegebene Regeln exportiert; die Dateien sind **Entwürfe**. Apache-Ausgabe ist für `.htaccess` im DocumentRoot vorgesehen, **nicht** ungeprüft für vHost-Konfigurationen.
+7. Export in einer Testumgebung und nach manueller Installation anhand eines neuen Crawls prüfen.
+
+**Update-Hinweis:** Migration `0013` verweigert bei vorhandenen doppelten Quell-URLs absichtlich die Durchführung. Dubletten vor dem Datenbank-Upgrade fachlich prüfen und selbst bereinigen. Die Werkbank löscht keine Redirects ungefragt.
+
+[Ausführliche Anleitung und technische Grenzen](REDIRECTS.md)
+
+### 23.2 Logfile-Import und 404-Monitor
+
+1. Unter **Sichtbarkeit → Logfile & 404** eine Apache-/Nginx-Datei `.log`, `.txt` oder `.gz` auswählen, Format `auto`, `common` oder `combined` festlegen.
+2. Der Import läuft als Job. Unterstützt werden klassische Common-/Combined-Zeilen einschließlich **bis zu zwei zusätzlichen quoted-Feldern** hinter dem User-Agent. Beliebige eigene `log_format`-Vorlagen oder JSON-Logs werden nicht unterstützt.
+3. Nach Abschluss die Statusverteilung, User-Agent-Klassen, Zeitverläufe, Top-404 und den Abgleich mit dem letzten Crawl ansehen. **Googlebot-Claim** bezeichnet nur die Angabe im User-Agent, keinen verifizierten Bot.
+4. Bei einem 404-Pfad ein **fachlich passendes Ziel** eingeben und einen Redirect-**Entwurf** erstellen. In der Weiterleitungsverwaltung gesondert freigeben.
+5. Alte Imports im Verlauf löschen; damit werden ihre Aggregate entfernt. Bei Fehlern der Job-Erstellung wird der Import als `failed` angezeigt, die temporäre Datei bereinigt. Unterbrochene Jobs werden beim Neustart ebenfalls als fehlgeschlagen markiert.
+
+**Datenschutz und Grenzen:** IP-Adressen, Querystrings, ganze User-Agents und ganze Referrer-URLs werden nicht dauerhaft gespeichert, jedoch können unerkannte personenbezogene Informationen in URL-Pfaden verbleiben. Jede Zeile ist auf **64 KiB** begrenzt; zu lange Zeilen werden verworfen. Eine fehlende Googlebot-Anfrage im Importzeitraum beweist **keine** fehlende Indexierung. Bei einem Prozessabsturz vor der Zuordnung zum Import können temporäre Dateien bis zur manuellen/automatischen Systembereinigung verbleiben.
+
+[Ausführliche Anleitung und technische Grenzen](LOG_ANALYSIS.md)
+
+### 23.3 JSON-LD vorbefüllen, prüfen und sicher einbetten
+
+1. **Analyse → Strukturierte Daten → Schema-Management** öffnen und aus dem letzten Crawl eine Seite wählen.
+2. Schema-Typ auswählen und einen **Entwurf** erzeugen. Title, H1, Beschreibung, Canonical, Sprache und gegebenenfalls OG-Bild sind Crawl-Daten; Preise, Lagerbestände und Adressen werden nicht erfunden.
+3. Diff und Warnungen prüfen, JSON-LD bei Bedarf ändern; Vorlagen können für ausgewählte URL-Pfade als **Vorschau** angewendet werden.
+4. **Als Maßnahme speichern** und unter **Content → Content-Entwürfe** getrennt freigeben. Es erfolgt **keine automatische Veröffentlichung**.
+5. **Wichtig:** `proposed_text` bleibt reines JSON. Für die Einbettung in HTML-Script-Tags ausschließlich den in der Freigabeansicht angebotenen, sicher escaped **HTML-Block (`safe_html`)** verwenden. Ungespeicherte Änderungen erscheinen erst nach dem Speichern im sicheren Block.
+6. Nach eigenständiger Veröffentlichung die ausgelieferte Seite erneut crawlen und Markup sowie Suchmaschinenrichtlinien kontrollieren.
+
+Der integrierte Validator deckt nur ausgewählte Feldanforderungen ab. Eine erfolgreiche Prüfung bedeutet weder vollständige schema.org-Gültigkeit noch Google-Rich-Result-Berechtigung oder ein Rankingversprechen.
+
+[Ausführliche Anleitung und technische Grenzen](STRUCTURED_DATA.md)
+
+**Prüfstand:** Implementierung PRs #41–#45, 23.11.2026. Automatisierte CI-Prüfungen sind erfolgreich; eine vollständige manuelle Bedienprüfung mit realen produktiven Serverkonfigurationen steht aus.
 
 ---
 

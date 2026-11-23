@@ -36,6 +36,8 @@ SEO-Werkbank ist eine Weiterentwicklung von [OpenSEOSuite](https://github.com/Su
 
 Die vollständige Liste mit Erklärungen steht in [docs/FEATURES.md](docs/FEATURES.md).
 
+**SEO-Operations nach PR #45:** Redirects werden nur simuliert, freigegeben und als Konfigurationsentwurf exportiert; die `.htaccess`-Ausgabe ist nicht für unveränderte Übernahme in Apache-vHost-Dateien gedacht. Der Logimport verarbeitet begrenzte Common-/Combined-Formate und ermittelt nur nicht verifizierte User-Agent-Indizien. JSON-LD-Content-Entwürfe bleiben rohes JSON; zum Einbetten in HTML steht separat ein sicher serialisierter `safe_html`-Block bereit. Bei Upgrades kann Migration `0013` vorhandene doppelte Redirect-Quell-URLs zur manuellen Prüfung melden. Weitere Details: [Benutzerhandbuch Kapitel 23](docs/BENUTZERHANDBUCH.md#23-seo-operations-redirects-logfiles-und-schema) und [bekannte Grenzen](KNOWN_LIMITATIONS.md).
+
 ## Schnellstart
 
 **Mit Docker** (Docker Compose v2 und Python 3.11+): SEO-Werkbank, PostgreSQL und eine interne Metasuche in einem Kommando.

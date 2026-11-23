@@ -54,6 +54,7 @@ Anwendungsprüfung entstehen Dubletten normalerweise nicht.
    ```
 
 4. Anwendung starten; die Migration legt den Unique-Index an.
-- Der Apache-Export setzt `RewriteEngine On` nur einmal und enthält einen
-  Hinweis auf **.htaccess im DocumentRoot**. Die Regel muss für vHost-Konfigurationen
-  gesondert an deren Rewrite-Kontext angepasst werden.
+
+### Apache-Export und Live-Prüfung
+
+Der Apache-Export setzt `RewriteEngine On` nur einmal und enthält einen Hinweis auf **`.htaccess` im DocumentRoot**. Regeln müssen vor der Verwendung in Apache-vHost-Konfigurationen an deren Rewrite-Kontext angepasst werden. Export, Freigabe und Simulation belegen **keine** bereits auf dem Server installierte Weiterleitung; prüfen Sie die Wirkung nach manueller Installation mit HTTP-Anfragen und erneutem Crawl.

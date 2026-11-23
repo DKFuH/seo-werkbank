@@ -38,12 +38,12 @@ Navigation: **Sichtbarkeit → Logfile & 404**; API `/api/sites/{id}/logs`.
 - Der Parser unterstützt klassische Combined-/Common-Zeilen und Combined-Zeilen
   mit **bis zu zwei zusätzlichen, in Anführungszeichen stehenden Feldern** nach
   dem User-Agent. Die zusätzlichen Feldwerte werden ignoriert und nicht gespeichert.
-  Beliebige Nginx-\`log_format\`-Vorlagen, HTTP/3-Varianten und JSON-Logs benötigen
+  Beliebige Nginx-`log_format`-Vorlagen, HTTP/3-Varianten und JSON-Logs benötigen
   weiterhin separate Adapter.
 - Einzelne Logzeilen sind auf 64 KiB begrenzt. Längere Zeilen werden in
   begrenzten Pufferblöcken verworfen und als übersprungen gezählt.
 - Wenn die Job-Erstellung scheitert, wird die temporäre Importdatei gelöscht
-  und der Import als fehlgeschlagen markiert, statt auf \`processing\` zu bleiben.
+  und der Import als fehlgeschlagen markiert, statt auf `processing` zu bleiben.
 - Keine Live-Abfrage fremder Server, keine automatischen Redirects.
 
 ## Auswertung

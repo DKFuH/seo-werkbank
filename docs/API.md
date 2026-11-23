@@ -6,8 +6,34 @@ The complete, always-current reference is generated from the code:
 - ReDoc: `http://localhost:8000/api/redoc`
 - OpenAPI schema: `http://localhost:8000/api/openapi.json`
 
-All endpoints live under `/api`, accept and return JSON (exports return files) and, except for the few listed as public, require
+All endpoints live under `/api`. Most accept and return JSON; uploads use multipart form data, and exports may return files. Except for explicitly public endpoints, calls require
 `Authorization: Bearer <token>`.
+
+## SEO-Operations API (Stand: PR #45)
+
+Sämtliche Pfade in dieser Tabelle haben das Präfix `/api`, benötigen ein authentifiziertes Bearer-Token und prüfen die Berechtigung auf die jeweilige Website. Alle URL-Prüfungen und Exporte erfolgen ohne Änderung am Webserver.
+
+| Bereich | Methode und Pfad | Zweck / Grenze |
+|---|---|---|
+| Redirects | `GET/POST /sites/{site_id}/redirects` | Regeln anzeigen / neuen unfreigegebenen Entwurf anlegen; gleiche Website-Domain erforderlich |
+| Redirects | `PATCH /sites/{site_id}/redirects/{rule_id}` | Nur unfreigegebene Entwürfe bearbeiten |
+| Redirects | `POST /sites/{site_id}/redirects/{rule_id}/approve\|reject\|reopen` | Manuelle Entscheidung; Konflikte blockieren Freigabe |
+| Redirects | `POST /sites/{site_id}/redirects/suggest` | Vorschläge aus letztem Crawl (keine Fachentscheidung) |
+| Redirects | `POST /sites/{site_id}/redirects/simulate` | Snapshot-Prüfung ohne Live-Serverabruf |
+| Redirects | `GET /sites/{site_id}/redirects/export?format=apache\|nginx\|csv` | Nur freigegebene Regeln, als Konfigurationsentwurf |
+| Logfiles | `POST /sites/{site_id}/logs/import` | Multipart: `file` und `fmt=auto\|common\|combined`, Job-Antwort enthält `job_id` |
+| Logfiles | `GET /sites/{site_id}/logs`, `GET /sites/{site_id}/logs/summary?import_id=…` | Importverlauf und aggregierte Auswertungen |
+| Logfiles | `DELETE /sites/{site_id}/logs/{import_id}` | Gespeicherte Aggregate eines abgeschlossenen/fehlgeschlagenen Imports löschen |
+| Logfiles | `POST /sites/{site_id}/logs/404/redirect` | 404-Pfad und Ziel zu einem **nicht freigegebenen** Redirect-Entwurf zusammenführen |
+| Schema | `GET /sites/{site_id}/schema-manager/pages` | Crawl-Seiten zur Auswahl |
+| Schema | `POST /sites/{site_id}/schema-manager/prefill` | JSON-LD aus Crawl-Werten, Diff und HTML-escaped Beispiel erzeugen |
+| Schema | `POST /sites/{site_id}/schema-manager/proposals` | Separat freizugebende JSON-LD-Content-Maßnahme speichern |
+| Schema | `GET/POST /sites/{site_id}/schema-manager/templates` | Site-scoped JSON-LD-Templates verwalten |
+| Schema | `PUT/DELETE /sites/{site_id}/schema-manager/templates/{template_id}` | Template ändern/löschen |
+| Schema | `POST /sites/{site_id}/schema-manager/templates/{template_id}/preview` | Bis zu 30 passende Seiten vorbefüllt ansehen, keine Veröffentlichung |
+| Content-Freigabe | `GET/PUT /sites/{site_id}/seo-work/{item_id}/content-proposal` und `POST …/approve` | `proposed_text` ist rohes JSON; bei JSON-LD ist `safe_html` der sicher serialisierte Script-Block |
+
+**Fehlerfälle:** Redirect-Dubletten werden datenbankseitig durch Migration `0013` verhindert und ergeben `409 Conflict`. Nach unerwarteten Log-Jobstartfehlern bleibt der Import als `failed` löschbar. `404`-Vorschläge und Schema-Prüfungen sind keine Belege für eine bereits umgesetzte Änderung oder für Google-Rich-Result-Berechtigung.
 
 ## Authentication
 

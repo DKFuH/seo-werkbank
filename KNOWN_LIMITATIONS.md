@@ -13,8 +13,7 @@ the current implementation.
 - **Rank tracking** is limited to Search Console's average position for your own verified site. There is no per-location, per-device
   daily tracking of arbitrary keywords.
 - **Indexed-page counts** cannot be verified without Search Console; sitemap size and indexable crawled pages are shown instead.
-- **Google Trends** is not integrated (no official API). **Google Analytics** integration is not
-  implemented yet. Bing Webmaster Tools and IndexNow are separate optional integrations. **Google Business Profile** needs API access that Google grants per project and is not implemented.
+- **Google Trends** is not integrated. **Google Analytics 4** is not integrated. Bing Webmaster Tools, IndexNow and Google URL Inspection have implemented integrations but still depend on credentials, permissions and provider availability. **Google Business Profile** requires Google-granted API access and is not implemented.
 - **Google Ads Keyword Planner** has no direct API integration; use its CSV export.
 
 ## Estimates (always labelled in the UI)
@@ -53,6 +52,17 @@ the current implementation.
   not a full schema.org validator, does not validate value formats (dates, URLs, enumerations) and reports Microdata/RDFa types without
   validating them.
 
+## SEO-Operations (Redirects, access logs, JSON-LD)
+
+- **Redirects are planned, not deployed.** The tool proposes and simulates rules but never changes web servers or CMS configuration. Only approved rules can be exported. Apache output is specifically for `.htaccess` at document root, not a virtual-host rewrite context; Nginx uses exact-match locations. Existing server configuration can create conflicts not visible in the simulator.
+- **Database migration `0013` is deliberately strict.** If existing rows share `(site_id, source_url)`, the migration stops rather than silently deleting a redirect. Review and resolve duplicates before restarting the upgrade. Concurrent duplicate inserts are rejected with HTTP 409.
+- **404-to-redirect candidates are heuristic.** Similar path tokens do not prove equivalent search intent. Candidate comparisons are deliberately capped, so some suitable destinations may not be suggested; final selection and approval are manual.
+- **Log parser is intentionally restricted:** Apache/Nginx Common and Combined, with up to two additional trailing quoted fields. Custom `log_format`, JSON logs and arbitrary HTTP variants are not supported. A 64 KiB limit applies per line; longer lines are skipped with bounded buffering. Import and decompression limits still apply.
+- **Privacy protection is partial, not guaranteed anonymisation.** Raw log lines, IP addresses, complete User-Agents, referrer paths and query strings are not persisted, but unrecognised personal identifiers may remain in URL paths. Temporary raw files can exist during processing and until recovery after a crash. User-Agent labels such as `googlebot_claim` are not verified by DNS or IP ranges.
+- **Jobs are in-process.** On restart, interrupted imports are marked failed and their associated temporary files are removed. Job-start failures are cleaned up, but a process crash before the temporary file is assigned an import ID may leave a staging file until manual/OS cleanup. A missing Googlebot-claim hit in an imported period is not proof of non-indexing.
+- **JSON-LD proposals remain raw JSON.** They must not be pasted directly between HTML `<script>` tags. Use the separately HTML-escaped `safe_html` snippet shown for a saved proposal. The validator does not establish schema.org semantic completeness or eligibility for Google Rich Results, and no CMS publishing takes place.
+- **Automated CI coverage is not full manual validation.** API checks, Linux/Windows/macOS tests, frontend tests and Docker smoke tests have run, but production server deployments, complete UI click-throughs and every external provider scenario remain unverified.
+
 ## Content and language
 
 - Readability formulas (Flesch) and the stemmer are calibrated for English. Other languages get tokenised correctly but scores are less
@@ -69,7 +79,7 @@ the current implementation.
 - The OAuth flow needs your own Google Cloud OAuth client. The integration is implemented against the documented API and its parsing and
   reporting logic is tested with imported data, but the live OAuth round-trip was **not verified end to end** during development (no
   Google credentials were available). CSV import is fully tested.
-- URL Inspection (per-URL index status) is not implemented.
+- **URL Inspection API** is implemented at `POST /api/sites/{site_id}/gsc/inspect`. It shows Google's recorded index state, **not** a live URL test or a request for indexation. A real OAuth/Inspection round trip with a verified property remains environment-dependent and was not established by the unit tests.
 
 ## Page speed
 
@@ -78,8 +88,7 @@ the current implementation.
 
 ## Monitoring
 
-- The scheduler runs inside the API process; monitors do not run while the app is stopped. Alerts appear in the app only (no e-mail,
-  Slack or webhook delivery yet).
+- The scheduler runs inside the API process; monitors do not run while the app is stopped. SMTP (STARTTLS) and HTTPS-webhook notifications are implemented as optional best-effort delivery, disabled by default. They do **not** provide a durable delivery queue; external SMTP/webhook success depends on the deployment configuration.
 
 ## Evidence and planning modules (SEO-Werkbank)
 
@@ -127,12 +136,11 @@ the current implementation.
 
 ## Security and multi-user use
 
-- Integration secrets are stored unencrypted in the application database.
+- Integration secrets are encrypted at rest using a versioned master key (Fernet). Losing the master key prevents decryption and can prevent startup; backup the key separately from the database. Pre-upgrade backups may still contain older unencrypted secret values.
 - Rate limiting is in-memory and per process, intended for a single-instance deployment.
 - Access control is per user (each user sees only their own sites). There are no teams, roles beyond admin, or shared workspaces.
 - Access tokens cannot be revoked individually before expiry (change `SEO_SECRET_KEY` to invalidate all).
 
 ## Not implemented (roadmap)
 
-Custom log formats and verified bot identities · Google Analytics · Google Trends · e-mail/webhook notifications · batch page-speed testing
-across a crawl · SERP-overlap clustering in the UI (function exists) · encrypted secrets · distributed crawling.
+Custom log formats and verified bot identities · Google Analytics 4 · Google Trends · durable notification delivery/queues · distributed crawling · live-provider end-to-end verification for GSC/Bing/PSI, as applicable.
