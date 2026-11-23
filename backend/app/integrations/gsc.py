@@ -1,8 +1,6 @@
 """Google Search Console: OAuth 2.0 (user-supplied client), Search Analytics sync, CSV import and insights."""
 from __future__ import annotations
 
-import csv
-import io
 import secrets
 import time
 from collections import defaultdict
@@ -225,37 +223,28 @@ def _day(v: str):
     return None
 
 
-def import_csv(db: Session, site_id: int, raw: bytes, replace: bool = False) -> dict:
+def import_csv(db: Session, site_id: int, raw: bytes, replace: bool = False, mapping: str | None = None,
+               number_format: str = "auto") -> dict:
     """Import a Search Console performance export (Queries.csv, Pages.csv, Dates.csv ...) or any CSV with
-    query/page/date/clicks/impressions/position columns."""
-    text = raw.decode("utf-8-sig", "replace")
+    query/page/date/clicks/impressions/position columns. ``mapping`` (JSON {field: column}) overrides the detected
+    columns; ``number_format`` "de"/"en" overrides the detection of 1.234,5 vs 1,234.5."""
+    from ..services import csv_import
+
     try:
-        dialect = csv.Sniffer().sniff(text[:4096], delimiters=",;\t")
-    except csv.Error:
-        dialect = csv.excel
-    reader = csv.reader(io.StringIO(text), dialect)
-    header = next(reader, None)
-    if not header:
-        raise GscError("Die CSV-Datei ist leer.")
-    cols = {}
-    for i, name in enumerate(header):
-        n = name.strip().lower()
-        for field, aliases in _ALIASES.items():
-            if n in aliases and field not in cols:
-                cols[field] = i
-    if "clicks" not in cols or "impressions" not in cols:
-        raise GscError("Die CSV braucht die Spalten 'Klicks' und 'Impressionen' (bzw. 'Clicks' und 'Impressions').")
-    german = any(name.strip().lower() in _GERMAN_HEADERS for name in header)
+        header, rows, cols = csv_import.resolve(raw, "gsc", mapping)
+    except csv_import.ImportFormatError as exc:
+        raise GscError(str(exc)) from exc
+    german = number_format == "de" or (number_format == "auto" and csv_import.german_numbers(header, "gsc"))
+    reader = iter(rows)
     dims = [d for d in ("query", "page", "country", "device", "appearance", "day") if d in cols]
-    if not dims:
-        raise GscError("Die CSV braucht mindestens eine Dimensionsspalte (Suchanfrage, Seite, Land, Gerät oder Datum).")
     dataset = ("query_page" if ("query" in cols or "page" in cols) else "country" if "country" in cols
                else "device" if "device" in cols else "appearance" if "appearance" in cols else "query_page")
     if replace:
         db.execute(delete(GscRow).where(GscRow.site_id == site_id, GscRow.source == "csv", GscRow.dataset == dataset))
     payload = []
+    needed = max(cols.values()) + 1
     for row in reader:
-        if len(row) < len(header) or len(payload) >= 500_000:
+        if len(row) < needed or len(payload) >= 500_000:
             continue
         def get(f, row=row):
             return row[cols[f]].strip() if f in cols else None

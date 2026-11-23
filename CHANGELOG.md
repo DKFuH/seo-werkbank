@@ -5,6 +5,13 @@ uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased] - SEO-Werkbank
 
+### Added (CSV import)
+- **Column mapping for every CSV import** (Search Console, backlinks, local listings, keywords): after choosing a file, a
+  dialog shows each target field with the suggested column and sample values; any field can be reassigned or left out,
+  required fields are enforced, and the number format (German/English) can be set. `POST /imports/preview?kind=…`;
+  the import endpoints accept `mapping` (JSON {field: column index}) and `number_format` form fields.
+- Shared CSV reader: UTF-8, UTF-16 and Windows-1252 files, `,` `;` and tab, header found after preamble lines.
+
 ### Added (GEO)
 - robots.txt AI signals: detection of the Cloudflare-managed section that blocks AI crawlers (`geo_cloudflare_ai_block`)
   and of `Content-Signal` lines with `search=no` or `ai-input=no` (`geo_content_signal_restrictive`; `ai-train=no` is

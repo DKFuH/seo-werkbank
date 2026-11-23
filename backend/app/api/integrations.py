@@ -1,13 +1,11 @@
 """Search Console, backlinks, monitoring/alerts, settings, AI and local-SEO citation imports."""
 from __future__ import annotations
 
-import csv
-import io
 from datetime import date, timedelta
 from typing import Any, Literal
 from urllib.parse import urlencode, urlsplit
 
-from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile
+from fastapi import APIRouter, Depends, Form, HTTPException, Query, UploadFile
 from fastapi.responses import RedirectResponse
 from pydantic import BaseModel, Field
 from sqlalchemy import delete, func, or_, select
@@ -115,10 +113,12 @@ async def gsc_sync(site_id: int, body: GscSyncIn | None = None, user: User = Dep
 
 
 @router.post("/sites/{site_id}/gsc/import")
-async def gsc_import(site_id: int, file: UploadFile, replace: bool = False, user: User = Depends(current_user), db: Session = Depends(get_db)) -> dict:
+async def gsc_import(site_id: int, file: UploadFile, replace: bool = False, mapping: str | None = Form(None, max_length=2000),
+                     number_format: Literal["auto", "de", "en"] = Form("auto"),
+                     user: User = Depends(current_user), db: Session = Depends(get_db)) -> dict:
     site = get_site_for(db, user, site_id)
     try:
-        return gsc.import_csv(db, site.id, await read_upload(file), replace)
+        return gsc.import_csv(db, site.id, await read_upload(file), replace, mapping, number_format)
     except gsc.GscError as exc:
         raise HTTPException(400, str(exc)) from exc
 
@@ -172,10 +172,11 @@ def _backlink_out(b: Backlink) -> dict:
 
 @router.post("/sites/{site_id}/backlinks/import")
 async def backlink_import(site_id: int, file: UploadFile, origin: str = Query("import", max_length=20, pattern=r"^[a-z0-9_-]+$"),
+                          mapping: str | None = Form(None, max_length=2000),
                           user: User = Depends(current_user), db: Session = Depends(get_db)) -> dict:
     site = get_site_for(db, user, site_id)
     try:
-        return bl.import_csv(db, site, await read_upload(file), origin)
+        return bl.import_csv(db, site, await read_upload(file), origin, mapping)
     except ValueError as exc:
         raise HTTPException(400, str(exc)) from exc
 
@@ -210,21 +211,43 @@ def backlink_export(site_id: int, format: str = "csv", user: User = Depends(curr
 
 
 # ----------------------------------------------------------------------------- local SEO citations
+@router.post("/imports/preview")
+async def import_preview(file: UploadFile, kind: Literal["gsc", "backlinks", "citations", "keywords"] = Query(...),
+                         user: User = Depends(current_user)) -> dict:
+    """Columns, sample values and the suggested column per field, so the user can check the mapping before importing."""
+    from ..services import csv_import
+
+    try:
+        return csv_import.preview(await read_upload(file), kind)
+    except csv_import.ImportFormatError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+
 @router.post("/sites/{site_id}/citations/import")
-async def citations_import(site_id: int, file: UploadFile, user: User = Depends(current_user), db: Session = Depends(get_db)) -> dict:
+async def citations_import(site_id: int, file: UploadFile, mapping: str | None = Form(None, max_length=2000),
+                           user: User = Depends(current_user), db: Session = Depends(get_db)) -> dict:
     """CSV columns: source, url, name, address, phone (e.g. an export from a listings tool or a hand-made sheet)."""
+    from ..services import csv_import
+
     site = get_site_for(db, user, site_id)
-    reader = csv.DictReader(io.StringIO((await read_upload(file)).decode("utf-8-sig", "replace")))
+    try:
+        _, rows, cols = csv_import.resolve(await read_upload(file), "citations", mapping)
+    except csv_import.ImportFormatError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+    def get(row: list[str], field: str) -> str:
+        i = cols.get(field)
+        return row[i].strip() if i is not None and i < len(row) else ""
+
     db.execute(delete(Citation).where(Citation.site_id == site.id))
     n = 0
-    for row in reader:
-        r = {(k or "").strip().lower(): (v or "").strip() for k, v in row.items()}
-        source = r.get("source") or r.get("directory") or r.get("site") or r.get("platform")
+    for row in rows:
+        source = get(row, "source")
         if not source or n >= 5000:
             continue
-        db.add(Citation(site_id=site.id, source=source[:255], url=(r.get("url") or r.get("listing url") or "")[:2048] or None,
-                        name=(r.get("name") or r.get("business name") or "")[:255] or None,
-                        address=(r.get("address") or "")[:500] or None, phone=(r.get("phone") or r.get("telephone") or "")[:60] or None))
+        db.add(Citation(site_id=site.id, source=source[:255], url=get(row, "url")[:2048] or None,
+                        name=get(row, "name")[:255] or None, address=get(row, "address")[:500] or None,
+                        phone=get(row, "phone")[:60] or None))
         n += 1
     db.commit()
     return {"imported": n}

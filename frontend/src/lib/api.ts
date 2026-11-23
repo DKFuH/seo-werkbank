@@ -86,9 +86,10 @@ export const api = {
   put: <T = any>(path: string, body?: unknown) => request<T>("PUT", path, body ?? {}),
   patch: <T = any>(path: string, body?: unknown) => request<T>("PATCH", path, body ?? {}),
   del: <T = any>(path: string, body?: unknown) => request<T>("DELETE", path, body),
-  upload: <T = any>(path: string, file: File, query?: Query) => {
+  upload: <T = any>(path: string, file: File, query?: Query, fields?: Record<string, string>) => {
     const form = new FormData();
     form.append("file", file);
+    for (const [k, v] of Object.entries(fields ?? {})) form.append(k, v);
     return request<T>("POST", path, form, query);
   },
   /** Download an authenticated export and hand it to the browser as a file. */

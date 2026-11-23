@@ -6,7 +6,7 @@ import json
 from typing import Any, Literal
 from urllib.parse import urlsplit
 
-from fastapi import APIRouter, Depends, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, Form, HTTPException, UploadFile
 from pydantic import BaseModel, Field
 from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
@@ -120,40 +120,22 @@ def save_keywords(site_id: int, body: KeywordsIn, user: User = Depends(current_u
 
 
 @router.post("/sites/{site_id}/keywords/import")
-async def import_keywords(site_id: int, file: UploadFile, user: User = Depends(current_user), db: Session = Depends(get_db)) -> dict:
+async def import_keywords(site_id: int, file: UploadFile, mapping: str | None = Form(None, max_length=2000),
+                          number_format: Literal["auto", "de", "en"] = Form("auto"),
+                          user: User = Depends(current_user), db: Session = Depends(get_db)) -> dict:
     """Import a keyword list with metrics, e.g. a Google Ads Keyword Planner export (Keyword, Avg. monthly searches, Competition, bids)."""
-    import csv
-    import io
+    from ..services import csv_import
 
     site = get_site_for(db, user, site_id)
-    raw = await read_upload(file)
-    text = raw.decode("utf-16" if raw[:2] in (b"\xff\xfe", b"\xfe\xff") else "utf-8-sig", "replace")
-    lines = text.splitlines()
-    start = next((i for i, ln in enumerate(lines[:10]) if "keyword" in ln.lower()), 0)
     try:
-        dialect = csv.Sniffer().sniff("\n".join(lines[start : start + 5]), delimiters=",;\t")
-    except csv.Error:
-        dialect = csv.excel
-    reader = csv.DictReader(io.StringIO("\n".join(lines[start:])), dialect=dialect)
-    alias = {"keyword": ("keyword", "keywords", "search term", "query", "suchbegriff", "suchanfrage"),
-             "search_volume": ("avg. monthly searches", "search volume", "volume", "avg monthly searches",
-                               "durchschnittl. monatliche suchanfragen", "durchschn. monatliche suchanfragen", "suchvolumen", "monatliche suchanfragen"),
-             "competition": ("competition", "competition (indexed value)", "wettbewerb", "wettbewerb (indexierter wert)"),
-             "cpc_low": ("top of page bid (low range)", "gebot für obere positionen auf der seite (niedriger bereich)"),
-             "cpc_high": ("top of page bid (high range)", "cpc", "gebot für obere positionen auf der seite (hoher bereich)")}
-    german = any(
-        (h or "").strip().lower() in ("suchbegriff", "wettbewerb", "durchschnittl. monatliche suchanfragen", "durchschn. monatliche suchanfragen", "suchvolumen")
-        for h in (reader.fieldnames or []))
+        header, rows, cols = csv_import.resolve(await read_upload(file), "keywords", mapping)
+    except csv_import.ImportFormatError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    german = number_format == "de" or (number_format == "auto" and csv_import.german_numbers(header, "keywords"))
     existing = {k.keyword: k for k in db.scalars(select(Keyword).where(Keyword.site_id == site.id))}
     added = updated = 0
-    for row in reader:
-        norm = {(k or "").strip().lower(): (v or "").strip() for k, v in row.items()}
-        rec: dict[str, Any] = {}
-        for field, names in alias.items():
-            for n in names:
-                if norm.get(n):
-                    rec[field] = norm[n]
-                    break
+    for row in rows:
+        rec: dict[str, Any] = {f: row[i].strip() for f, i in cols.items() if i < len(row) and row[i].strip()}
         kw = " ".join(rec.pop("keyword", "").lower().split())[:500]
         if not kw:
             continue

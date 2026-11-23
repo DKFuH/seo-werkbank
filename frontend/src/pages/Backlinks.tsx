@@ -4,9 +4,10 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip as ChartTooltip } from "recharts";
 import {
-  Badge, Button, Card, chartColors, type Column, DataBadge, DataTable, EmptyState, ErrorBox, ExportMenu, FileButton, Modal, NeedsCrawl, Notice,
+  Badge, Button, Card, chartColors, type Column, DataBadge, DataTable, EmptyState, ErrorBox, ExportMenu, Modal, NeedsCrawl, Notice,
   PageHeader, Pagination, ProgressBar, SearchInput, Select, Spinner, Stat, StatusCode, Tabs, Url,
 } from "../components/ui";
+import { CsvImportButton, type ImportFields } from "../components/CsvImport";
 import { api } from "../lib/api";
 import { type Job, useJob, useSite } from "../lib/context";
 import { fmtDate, fmtInt, shortUrl, timeAgo } from "../lib/format";
@@ -87,7 +88,7 @@ export default function Backlinks() {
 
   const summary = useQuery({ queryKey: ["backlinks", siteId, "summary"], queryFn: () => api.get(`/sites/${siteId}/backlinks/summary`), enabled: !!siteId });
   const refresh = () => void qc.invalidateQueries({ queryKey: ["backlinks", siteId] });
-  const importCsv = useMutation({ mutationFn: (file: File) => api.upload(`/sites/${siteId}/backlinks/import`, file, { origin }), onSuccess: refresh });
+  const importCsv = useMutation({ mutationFn: ({ file, fields }: { file: File; fields: ImportFields }) => api.upload(`/sites/${siteId}/backlinks/import`, file, { origin }, fields), onSuccess: refresh });
   const verify = useMutation({
     mutationFn: () => api.post(`/sites/${siteId}/backlinks/verify`),
     onSuccess: (r) => { setVerifyResult(null); setJobId(r.job_id); },
@@ -139,7 +140,7 @@ export default function Backlinks() {
             <option value="gsc">Herkunft: Search Console</option>
             <option value="other">Herkunft: anderes Tool</option>
           </Select>
-          <FileButton label="CSV importieren" loading={importCsv.isPending} onFile={(f) => importCsv.mutate(f)} />
+          <CsvImportButton kind="backlinks" loading={importCsv.isPending} onImport={(file, fields) => importCsv.mutateAsync({ file, fields })} />
           <Button icon={<ShieldCheck className="h-4 w-4" />} loading={verifying} disabled={!total} onClick={() => verify.mutate()}>Links prüfen</Button>
           <ExportMenu formats={[
             { label: "CSV", path: `/sites/${site.id}/backlinks/export`, query: { format: "csv" } },
@@ -166,7 +167,7 @@ export default function Backlinks() {
           <Card>
             <EmptyState icon={<Link2 className="h-6 w-6" />} title="Noch keine Backlink-Daten importiert"
               description="Linkdatei importieren, um verweisende Domains, Anker und Linkziele auszuwerten und zu prüfen, welche Links noch live sind."
-              action={<FileButton label="CSV importieren" loading={importCsv.isPending} onFile={(f) => importCsv.mutate(f)} />} />
+              action={<CsvImportButton kind="backlinks" loading={importCsv.isPending} onImport={(file, fields) => importCsv.mutateAsync({ file, fields })} />} />
             <div className="mx-auto max-w-2xl border-t border-slate-100 px-2 pb-4 pt-4 text-sm text-slate-600 dark:border-slate-800 dark:text-slate-300">
               <h3 className="font-semibold text-slate-900 dark:text-slate-100">So bekommst du den Links-Export aus der Google Search Console</h3>
               <ol className="mt-2 list-decimal space-y-1 pl-5">
