@@ -112,7 +112,7 @@ def parse_file(path: str | Path, *, compressed: bool = False, fmt: str = "auto")
                 raise ValueError("Logdatei überschreitet Verarbeitungsgrenzen")
             if len(raw) > MAX_LINE_BYTES:
                 # Drain a long line in bounded chunks. Never build a 500 MB string.
-                while raw and not raw.endswith(b"\\n"):
+                while raw and not raw.endswith(b"\n"):
                     raw = fh.readline(MAX_LINE_BYTES + 1)
                     decompressed += len(raw)
                     if decompressed > MAX_DECOMPRESSED_BYTES:
