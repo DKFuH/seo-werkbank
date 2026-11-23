@@ -133,6 +133,38 @@ def gsc_insights(site_id: int, days: int = Query(28, ge=7, le=180), user: User =
     return gsc.insights(db, get_site_for(db, user, site_id).id, days)
 
 
+
+class GscInspectIn(BaseModel):
+    url: str = Field(min_length=10, max_length=2048)
+
+
+@router.post("/sites/{site_id}/gsc/inspect")
+async def gsc_inspect(site_id: int, body: GscInspectIn, user: User = Depends(current_user),
+                      db: Session = Depends(get_db)) -> dict:
+    site = get_site_for(db, user, site_id)
+    url = body.url.strip()
+    from .deps import checked_url
+    url = checked_url(url)
+    base_host = (urlsplit(site.url).hostname or "").lower().removeprefix("www.")
+    url_host = (urlsplit(url).hostname or "").lower().removeprefix("www.")
+    if base_host != url_host:
+        raise HTTPException(422, "Nur URLs der ausgewählten Website erlaubt")
+    if not site.gsc_property or not gsc.is_connected(db, user.id):
+        raise HTTPException(400, "Search Console verbinden und Property auswählen")
+    prop = site.gsc_property
+    property_host = prop.removeprefix("sc-domain:")
+    if prop.startswith("sc-domain:"):
+        valid = url_host == property_host.lower() or url_host.endswith("." + property_host.lower())
+    else:
+        valid = url.startswith(prop)
+    if not valid:
+        raise HTTPException(422, "Die URL ist nicht von der gespeicherten Google-Property abgedeckt")
+    try:
+        return await gsc.inspect_url(db, user.id, prop, url)
+    except gsc.GscError as exc:
+        raise HTTPException(502, str(exc)) from exc
+
+
 @router.delete("/sites/{site_id}/gsc/data", status_code=204)
 def gsc_clear(site_id: int, user: User = Depends(current_user), db: Session = Depends(get_db)) -> None:
     site = get_site_for(db, user, site_id)
@@ -395,6 +427,7 @@ class SettingsIn(BaseModel):
     ai: dict[str, str] | None = None
     gsc: dict[str, str] | None = None
     matomo: dict[str, str] | None = None
+    notifications: dict[str, str] | None = None
 
 
 @router.put("/settings")
@@ -404,11 +437,24 @@ def write_settings(body: SettingsIn, user: User = Depends(admin_user), db: Sessi
         raise HTTPException(422, "Unbekannter SERP-Anbieter")
     if "ai" in data and data["ai"].get("provider") not in (None, "none", "ollama", "openai_compatible"):
         raise HTTPException(422, "Unbekannter KI-Anbieter")
+    if "notifications" in data:
+        n = data["notifications"]
+        if n.get("enabled", "false") not in ("true", "false"):
+            raise HTTPException(422, "Benachrichtigungen müssen ein- oder ausgeschaltet sein")
+        if n.get("min_severity", "high") not in ("low", "medium", "high", "critical"):
+            raise HTTPException(422, "Ungültiger Schweregrad")
+        if n.get("smtp_port") and (not n["smtp_port"].isdigit() or not (1 <= int(n["smtp_port"]) <= 65535)):
+            raise HTTPException(422, "Ungültiger SMTP-Port")
+        hook = n.get("webhook_url", "")
+        if hook and hook != "********":
+            parsed = urlsplit(hook)
+            if parsed.scheme != "https" or parsed.port not in (None, 443) or parsed.username or parsed.password:
+                raise HTTPException(422, "Webhook muss HTTPS auf Port 443 ohne Credentials verwenden")
     for key, value in data.items():
         for k, v in value.items():
             if len(v) > 2048:
                 raise HTTPException(422, f"Wert für {key}.{k} ist zu lang")
-            if k.endswith("url") and v:
+            if k.endswith("url") and v and v != "********":
                 parts = urlsplit(v)
                 if parts.scheme not in ("http", "https") or not parts.hostname:
                     raise HTTPException(422, f"{key}.{k} must be an http(s) URL")

@@ -21,10 +21,28 @@ class RobotsRules:
         self.groups: list[_Group] = []
         self.errors: list[str] = []
         self.present = bool(text.strip()) and status == 200
+        # Content-Signal lines (contentsignals.org, used by Cloudflare): [(agents of the group, {key: value})]
+        self.content_signals: list[tuple[list[str], dict[str, str]]] = []
+        # Agents fully disallowed inside a "# BEGIN Cloudflare Managed content" section (added by Cloudflare's
+        # AI crawl control, often without the site owner editing robots.txt). None = no managed section.
+        self.cloudflare_managed_blocks: list[str] | None = None
         # RFC 9309: 4xx => no restrictions; 5xx/unreachable => assume complete disallow.
         self.disallow_all = status is not None and status >= 500
         if self.present:
             self._parse(text)
+            self._cloudflare_section(text)
+
+    def _cloudflare_section(self, text: str) -> None:
+        lower = text.lower()
+        marker = "# begin cloudflare managed content"
+        start = lower.find(marker)
+        if start < 0:
+            return
+        end = lower.find("# end cloudflare managed content", start)
+        # Parse only the part after the marker; the marker itself would trigger this method again.
+        section = RobotsRules(text[start + len(marker):end if end > 0 else len(text)], 200)
+        self.cloudflare_managed_blocks = sorted({a for g in section.groups for a in g.agents
+                                                 if a != "*" and any(not allow and pat == "/" for allow, pat in g.rules)})
 
     def _parse(self, text: str) -> None:
         group: _Group | None = None
@@ -67,6 +85,15 @@ class RobotsRules:
                         group.crawl_delay = float(value)
                 except ValueError:
                     self.errors.append(f"Zeile {n}: ungültiges Crawl-delay '{value}'")
+            elif key == "content-signal":
+                signals = {}
+                for part in value.split(","):
+                    if "=" in part:
+                        k, v = (x.strip().lower() for x in part.split("=", 1))
+                        if k:
+                            signals[k] = v
+                if signals:
+                    self.content_signals.append((list(group.agents) if group else ["*"], signals))
             elif key not in ("host", "clean-param", "request-rate", "visit-time", "noindex"):
                 self.errors.append(f"Zeile {n}: unbekannte Anweisung '{key}'")
 

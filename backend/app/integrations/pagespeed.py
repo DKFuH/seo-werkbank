@@ -85,7 +85,8 @@ def parse_lighthouse(lhr: dict, loading_experience: dict | None = None) -> dict:
         if aid in LAB_METRICS or aid in ("metrics", "final-screenshot"):
             continue
         items = []
-        for it in (details.get("items") or [])[:8]:
+        detail_items = details.get("items")
+        for it in (detail_items[:8] if isinstance(detail_items, list) else []):
             if isinstance(it, dict):
                 label = it.get("url") or (it.get("node") or {}).get("snippet") or it.get("entity") or it.get("label")
                 if isinstance(label, str):
@@ -162,7 +163,7 @@ async def run_local_lighthouse(url: str, strategy: str = "mobile", timeout_s: in
     parts = urlsplit(url)
     await resolve_and_check(parts.hostname or "", parts.port or (443 if parts.scheme == "https" else 80), s.allow_private_networks)
     # Chrome refuses to start as root without --no-sandbox (containers); everywhere else keep its sandbox on.
-    flags = "--headless=new" + (" --no-sandbox" if hasattr(os, "geteuid") and os.geteuid() == 0 else "")
+    flags = "--headless=new" + (" --no-sandbox" if not s.render_sandbox or (hasattr(os, "geteuid") and os.geteuid() == 0) else "")
     args = [exe, url, "--output=json", "--quiet", f"--chrome-flags={flags}",
             "--only-categories=performance,accessibility,best-practices,seo"]
     if strategy == "desktop":

@@ -82,7 +82,7 @@ def test_geo_good_page_and_robots():
     parsed = parse_html(HTML, "https://kueche.example/ratgeber/keramik/", "text/html; charset=utf-8")
     robots = "User-agent: GPTBot\nDisallow: /\n\nUser-agent: *\nAllow: /\n"
     r = analyse_geo("https://kueche.example/ratgeber/keramik/", HTML, parsed, robots_text=robots, robots_status=200,
-                    llms_status=200, llms_text="# Kueche\n> Ratgeber", ai_txt_status=404,
+                    llms_status=200, llms_text="# Kueche\n> Ratgeber\n\n## Ratgeber\n- [Keramik](https://kueche.example/ratgeber/keramik/): Pflege", ai_txt_status=404,
                     now=datetime(2026, 11, 22, tzinfo=UTC))
     c = {x["id"]: x for x in r["checks"]}
     assert c["ai_search_bots"]["status"] == "pass"

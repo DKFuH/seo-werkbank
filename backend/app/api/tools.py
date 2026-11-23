@@ -70,6 +70,52 @@ def keyword_cluster(body: ClusterIn, user: User = Depends(current_user)) -> dict
     return {"clusters": research.cluster_keywords(body.keywords, body.threshold, body.seed), "method": "Lexikalisch (gemeinsame Wortstämme, Jaccard-Ähnlichkeit)"}
 
 
+
+class SerpClusterIn(BaseModel):
+    keywords: list[str] = Field(min_length=2, max_length=15)
+    country: str = Field("de", pattern=r"^[a-z]{2}$")
+    lang: str = Field("de", pattern=r"^[a-z]{2}$")
+    min_overlap: int = Field(3, ge=1, le=10)
+    manual_results: dict[str, list[str]] | None = None
+
+
+@router.post("/keywords/serp-clusters")
+async def keyword_serp_clusters(body: SerpClusterIn, user: User = Depends(current_user),
+                                db: Session = Depends(get_db)) -> dict:
+    """Request 2–15 identical-provider SERPs, or cluster complete supplied URL sets."""
+    keywords = [" ".join(k.strip().split()) for k in body.keywords]
+    if any(not k or len(k) > 200 for k in keywords) or len(set(keywords)) != len(keywords):
+        raise HTTPException(422, "2–15 unterschiedliche Keywords mit höchstens 200 Zeichen eingeben")
+    if body.manual_results is not None:
+        if set(body.manual_results) != set(keywords):
+            raise HTTPException(422, "Manuelle SERP-Listen müssen exakt zu allen Keywords vorliegen")
+        results = {kw: urls[:10] for kw, urls in body.manual_results.items()}
+        for urls in results.values():
+            if not urls:
+                raise HTTPException(422, "Leere Ergebnisliste")
+            for url in urls:
+                parts = urlsplit(url)
+                if parts.scheme not in ("http", "https") or not parts.hostname or parts.username or parts.password:
+                    raise HTTPException(422, "Ungültige Ergebnis-URL")
+        provider = "manual"
+    else:
+        settings = get_setting(db, "serp")
+        if settings.get("provider", "none") == "none":
+            raise HTTPException(422, "SERP-Anbieter konfigurieren oder manuelle Ergebnisse liefern")
+        results = {}
+        for kw in keywords:
+            try:
+                result = await serp.search(settings, kw, country=body.country, lang=body.lang, num=10)
+            except serp.SerpError as exc:
+                raise HTTPException(502, "SERP-Anbieter konnte nicht alle Keywords abrufen") from exc
+            results[kw] = [r["url"] for r in result["results"]]
+        provider = settings["provider"]
+    return {"provider": provider, "clusters": research.cluster_by_serp(results, body.min_overlap),
+            "keywords_count": len(results), "min_overlap": body.min_overlap,
+            "method": "Identische URL-Überschneidungen in erfassten Top-10-Listen, transitive Gruppierung; "
+                      "keine bestätigten Google-Rankings und keine automatische Seitenarchitektur-Entscheidung."}
+
+
 @router.post("/keywords/intent")
 def keyword_intent(body: KeywordsIn, user: User = Depends(current_user)) -> dict:
     return {"items": [{"keyword": k, **research.classify_intent(k)} for k in body.keywords[:2000]]}
@@ -381,17 +427,19 @@ async def geo_check(body: GeoIn, user: User = Depends(current_user)) -> dict:
         res = await fetcher.fetch_following(url, max_body=5_000_000)
         if res.status != 200 or not res.is_html:
             raise HTTPException(400, f"Seite nicht ladbar: {res.error or f'HTTP {res.status}'}")
-        robots, llms, ai_txt = await asyncio.gather(
+        robots, llms, ai_txt, llms_full = await asyncio.gather(
             fetcher.fetch_following(root + "/robots.txt", max_body=500_000),
             fetcher.fetch_following(root + "/llms.txt", max_body=500_000),
             fetcher.fetch_following(root + "/.well-known/ai.txt", max_body=200_000),
+            fetcher.fetch_following(root + "/llms-full.txt", max_body=4096),
         )
     final = res.final_url or url
     parsed = await asyncio.to_thread(parse_html, res.body, final, res.headers.get("content-type", ""))
     robots_text = robots.body.decode("utf-8", "replace") if robots.status == 200 else ""
     llms_text = llms.body.decode("utf-8", "replace")[:5000] if llms.status == 200 else ""
     return analyse_geo(final, res.body, parsed, robots_text=robots_text, robots_status=robots.status,
-                       llms_status=llms.status, llms_text=llms_text, ai_txt_status=ai_txt.status, headers=res.headers)
+                       llms_status=llms.status, llms_text=llms_text, ai_txt_status=ai_txt.status, headers=res.headers,
+                       llms_full_status=llms_full.status)
 
 
 class FetchIn(BaseModel):

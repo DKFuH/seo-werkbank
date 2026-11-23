@@ -111,7 +111,7 @@ def robots_report(robots_text: str, robots_status: int | None, page_url: str) ->
 
 def analyse_geo(page_url: str, html: bytes, parsed, *, robots_text: str = "", robots_status: int | None = 404,
                 llms_status: int | None = None, llms_text: str = "", ai_txt_status: int | None = None,
-                headers: dict | None = None, now: datetime | None = None) -> dict:
+                headers: dict | None = None, now: datetime | None = None, llms_full_status: int | None = None) -> dict:
     """``parsed`` is the crawler's ParsedPage for ``html``. Returns score, grouped checks and the crawler table."""
     now = now or datetime.now(UTC)
     headers = {k.lower(): v for k, v in (headers or {}).items()}
@@ -149,10 +149,32 @@ def analyse_geo(page_url: str, html: bytes, parsed, *, robots_text: str = "", ro
     checks.append(_check("server_text", "Zugang", "Inhalt ohne JavaScript lesbar", "pass" if words >= 300 else "warn" if words >= 120 else "fail",
                          f"{words} Wörter im ausgelieferten HTML",
                          "Viele KI-Crawler führen kein JavaScript aus. Hauptinhalt serverseitig ausliefern.", 10))
-    llms_ok = llms_status == 200 and llms_text.lstrip().startswith("#")
-    checks.append(_check("llms_txt", "Zugang", "/llms.txt vorhanden", "pass" if llms_ok else "warn",
-                         "vorhanden" if llms_ok else f"nicht gefunden (HTTP {llms_status})" if llms_status != 200 else "vorhanden, aber ohne Markdown-Überschrift",
-                         "Optionaler Vorschlag (llmstxt.org): kurze Markdown-Übersicht der wichtigsten Seiten. Kein offizieller Standard der großen Anbieter.", 2))
+    robots_signals = robots_ai_signals(RobotsRules(robots_text, robots_status))
+    signal_issues = list(robots_signals["restrictive"])
+    if robots_signals["cloudflare_blocks"]:
+        signal_issues.insert(0, "Cloudflare-verwalteter Abschnitt sperrt " + ", ".join(robots_signals["cloudflare_blocks"]))
+    signal_info = [f"Content-Signal {', '.join(f'{k}={v}' for k, v in c['signals'].items())}" for c in robots_signals["content_signals"]]
+    if robots_signals["cloudflare_managed"] or robots_signals["content_signals"]:
+        checks.append(_check("robots_signals", "Zugang", "KI-Signale in robots.txt", "warn" if signal_issues else "pass",
+                             "; ".join(signal_issues or signal_info) or "Cloudflare-Abschnitt ohne KI-Sperren",
+                             "Cloudflare: unter Security → Bots bzw. AI Crawl Control prüfen, ob die Sperren gewollt sind. "
+                             "Content-Signal search=no oder ai-input=no hält die Seite aus KI-Antworten heraus.", 4))
+    meta_ai = ai_meta(_doc(html), headers.get("x-robots-tag", ""), parsed.meta_robots or "")
+    meta_issues = ai_meta_problems(meta_ai)
+    checks.append(_check("ai_meta", "Zugang", "Keine KI-Sperren per Meta-Tag oder Header",
+                         "fail" if meta_ai["blocked_search"] else "warn" if meta_issues else "pass",
+                         "; ".join(meta_issues) if meta_issues else "kein noai/noimageai, keine Crawler-spezifischen Sperren",
+                         "Crawler-spezifische noindex/none-Angaben (z. B. <meta name=\"GPTBot\" content=\"noindex\">) entfernen, wenn "
+                         "die Seite dort erscheinen soll. noai/noimageai sind kein Standard, zeigen aber eine Absicht an.", 6))
+    llms_info = llms_validate(llms_text) if llms_status == 200 else None
+    llms_ok = bool(llms_info) and not llms_info["issues"]
+    llms_detail = ("vollständig: Titel, Kurzbeschreibung, " + f"{llms_info['sections']} Abschnitt(e), {llms_info['links']} Link(s)") if llms_ok         else "; ".join(llms_info["issues"]) if llms_info else f"nicht gefunden (HTTP {llms_status})"
+    if llms_full_status is not None:
+        llms_detail += " · /llms-full.txt " + ("vorhanden" if llms_full_status == 200 else "nicht vorhanden")
+    checks.append(_check("llms_txt", "Zugang", "/llms.txt vorhanden und gegliedert", "pass" if llms_ok else "warn", llms_detail,
+                         "Optionaler Vorschlag (llmstxt.org): '# Name', '> Kurzbeschreibung', '## Abschnitte' mit "
+                         "'- [Titel](URL): Beschreibung'. Kein offizieller Standard der großen Anbieter. "
+                         "Einen Entwurf aus dem letzten Crawl erzeugt die Karte „llms.txt-Entwurf“.", 2))
     if ai_txt_status is not None:
         checks.append(_check("ai_txt", "Zugang", "/.well-known/ai.txt", "pass" if ai_txt_status == 200 else "info",
                              "vorhanden" if ai_txt_status == 200 else "nicht vorhanden", "", 0))
@@ -505,6 +527,92 @@ def brand_problems(nodes: list[dict], title: str | None, og: dict[str, str]) -> 
     return {"brand": brand, "found_in": found, "issues": issues} if issues else None
 
 
+# --------------------------------------------------------------------------- robots.txt signals, AI meta tags, llms.txt
+
+# Content-Signal values that keep a site out of AI answers. ai-train=no is a legitimate choice and not flagged.
+_RESTRICTIVE_SIGNALS = {"search": "Suche", "ai-input": "Nutzung in KI-Antworten"}
+_AI_AGENTS = {ua.lower() for ua, _, _ in AI_CRAWLERS}
+
+
+def robots_ai_signals(rules: RobotsRules | None) -> dict:
+    """Cloudflare-managed AI blocks and Content-Signal directives that apply to everyone or to AI crawlers."""
+    if rules is None:
+        return {"cloudflare_blocks": None, "content_signals": [], "restrictive": []}
+    signals, restrictive = [], []
+    for agents, values in rules.content_signals:
+        relevant = [a for a in agents if a == "*" or a in _AI_AGENTS]
+        if not relevant:
+            continue
+        signals.append({"agents": relevant, "signals": values})
+        for key, label in _RESTRICTIVE_SIGNALS.items():
+            if values.get(key) == "no":
+                restrictive.append(f"{key}=no ({label}) für {', '.join(relevant)}")
+    cf = rules.cloudflare_managed_blocks
+    return {"cloudflare_blocks": [a for a in cf if a in _AI_AGENTS] if cf is not None else None,
+            "cloudflare_managed": cf is not None, "content_signals": signals, "restrictive": restrictive}
+
+
+_BOT_HEADER = re.compile(r"([a-z][a-z0-9._-]*)\s*:\s*([a-z0-9_,:\s-]+?)(?=(?:,\s*[a-z][a-z0-9._-]*\s*:)|$)", re.I)
+
+
+def ai_meta(doc, x_robots: str, meta_robots: str) -> dict:
+    """noai/noimageai and crawler-specific robots rules for AI crawlers, from meta tags and the X-Robots-Tag header.
+
+    noai/noimageai are not part of any standard and the large providers do not document support; they are
+    reported because they signal an intent. Crawler-specific noindex/none for a search crawler is a real block.
+    """
+    general = f"{(x_robots or '').lower()} {(meta_robots or '').lower()}"
+    per_agent: dict[str, str] = {}
+    if doc is not None:
+        for el in doc.xpath("//meta[@name and @content]"):
+            name = (el.get("name") or "").strip().lower()
+            if name in _AI_AGENTS:
+                per_agent[name] = " ".join(el.get("content", "").lower().split())
+    for agent, directives in _BOT_HEADER.findall(x_robots or ""):
+        if agent.lower() in _AI_AGENTS:
+            per_agent[agent.lower()] = " ".join(directives.lower().split())
+    canonical = {ua.lower(): ua for ua, _, _ in AI_CRAWLERS}
+    blocked = sorted(canonical[a] for a, d in per_agent.items()
+                     if canonical[a] in SEARCH_CRITICAL and re.search(r"\b(noindex|none|nosnippet)\b", d))
+    return {"noai": bool(re.search(r"\bnoai\b", general)), "noimageai": "noimageai" in general,
+            "per_agent": {canonical[a]: d for a, d in per_agent.items()}, "blocked_search": blocked}
+
+
+def ai_meta_problems(meta: dict) -> list[str]:
+    out = []
+    if meta["blocked_search"]:
+        out.append("Such-Crawler per Meta/Header ausgeschlossen: " + ", ".join(
+            f"{a} ({meta['per_agent'][a]})" for a in meta["blocked_search"]))
+    if meta["noai"]:
+        out.append("noai gesetzt")
+    if meta["noimageai"]:
+        out.append("noimageai gesetzt")
+    return out
+
+
+_LLMS_LINK = re.compile(r"^\s*[-*]\s*\[[^\]]+\]\([^)\s]+\)", re.M)
+
+
+def llms_validate(text: str) -> dict:
+    """Structure of /llms.txt per llmstxt.org: H1 title, '>' summary, '##' sections, '- [title](url)' links."""
+    lines = [ln.rstrip() for ln in (text or "").splitlines()]
+    content = [ln for ln in lines if ln.strip()]
+    title = bool(content) and content[0].startswith("# ")
+    summary = any(ln.lstrip().startswith(">") for ln in content[:10])
+    sections = sum(1 for ln in content if ln.startswith("## "))
+    links = len(_LLMS_LINK.findall(text or ""))
+    issues = []
+    if not title:
+        issues.append("erste Zeile ist keine H1-Überschrift ('# Name')")
+    if not summary:
+        issues.append("keine Kurzbeschreibung ('> …')")
+    if not sections:
+        issues.append("keine Abschnitte ('## …')")
+    if not links:
+        issues.append("keine Linkliste ('- [Titel](URL): Beschreibung')")
+    return {"title": title, "summary": summary, "sections": sections, "links": links, "issues": issues}
+
+
 # --------------------------------------------------------------------------- crawl integration
 # The same signals as the standalone GEO check, as audit findings for every crawled page. Thresholds are
 # conservative so short service pages are not flagged for missing lists or sources.
@@ -566,6 +674,9 @@ def page_findings(url: str, html: bytes, parsed, *, is_start: bool = False, now:
         out.append(("geo_entity_missing", {"schema_types": sorted(types)[:20]}))
 
     doc = _doc(html)
+    meta_issues = ai_meta_problems(ai_meta(doc, headers.get("x-robots-tag", ""), parsed.meta_robots or ""))
+    if meta_issues:
+        out.append(("geo_ai_meta_restricted", {"issues": meta_issues}))
     limit_issues = snippet_problems(snippet_limits(headers.get("x-robots-tag", ""), parsed.meta_robots or "", doc))
     if limit_issues:
         out.append(("geo_snippet_limited", {"limits": limit_issues}))
@@ -593,4 +704,6 @@ def site_findings(robots: RobotsRules | None, start_url: str, llms_status: int |
     return {"blocked_search": [ua for ua in blocked if ua in SEARCH_CRITICAL],
             "blocked_user": [ua for ua in blocked if ua in USER_FETCHERS],
             "blocked_other": [ua for ua in blocked if ua not in SEARCH_CRITICAL and ua not in USER_FETCHERS],
-            "llms_status": llms_status, "llms_ok": llms_status == 200 and llms_text.lstrip().startswith("#")}
+            "llms_status": llms_status, "llms_ok": llms_status == 200 and llms_text.lstrip().startswith("#"),
+            "llms_issues": llms_validate(llms_text)["issues"] if llms_status == 200 else [],
+            **robots_ai_signals(robots)}
