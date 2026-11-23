@@ -1161,6 +1161,12 @@ Der integrierte Validator deckt nur ausgewählte Feldanforderungen ab. Eine erfo
 
 **Prüfstand:** SEO-Operations PRs #41–#45 und Suchmaschinen-Erweiterung **PR #49** (Merge-Commit `11b1a32`, 23.11.2026). Für PR #49 waren 392 Backend-Tests bestanden, 4 übersprungen, dazu Frontend-Typecheck, Build und 29 Tests sowie vor dem Merge zehn grüne CI-Checks dokumentiert. Eine manuelle Browserprüfung der neuen Detailansicht und eine Prüfung mit echten Produktionsdaten sind damit **nicht** belegt. **Noch nicht implementiert:** `noindex` auf per robots.txt gesperrten URLs erkennen (die Seite wird nicht abgerufen) sowie Soft-404-Erkennung durch gezielte Abrufe nicht existierender URLs.
 
+### PDF-Bericht des Website-Audits
+
+Der **PDF-Bericht** aus **Analyse → Website-Audit** und **Berichte → Crawl-Berichte** verwendet deutsche Bezeichnungen. Er enthält den SEO-Gesamtscore, die Google-/Bing-/Brave-/GEO-Profilwerte, die zugeordneten Regelzahlen, alle im Crawl ausgelösten Befundarten und die Einordnung der jeweiligen Regel. Für Bing und Brave werden – soweit vorhanden – die Nachweisstufen **Zitat (`quoted`)** bzw. **Themenbezug (`topic`)** mit Abschnitt, Originalzitat, Quellenstand und Primärquellenadresse im PDF dokumentiert.
+
+**Grenzen:** Das PDF bildet den zuletzt abgeschlossenen Crawl ab; es ersetzt weder eine Prüfung der Live-Seite noch die offiziellen Suchmaschinenwerkzeuge. Ein Profil-Score ist keine Rankingprognose und keine verbindliche Google-/Bing-/Brave-Bewertung. Es erscheinen die im Crawl tatsächlich ausgelösten Regeln, **nicht alle 122 Regeln**, wenn diese nicht ausgelöst wurden. Ausführliche URL-Treffer werden bei zahlreichen Befunden weiterhin im CSV-/Excel-Export vollständig angeboten.
+
 ## 24. Bing, IndexNow und Suchmaschinenprofile
 
 Im Regelkatalog sind seit PR #49 **122 Audit-Regeln** definiert. Das bedeutet **nicht**, dass 122 offizielle Suchmaschinenanforderungen vorliegen. **43 Regeln** sind dem Bing-Profil und **4 Regeln** Brave zugeordnet.
