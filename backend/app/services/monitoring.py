@@ -192,6 +192,11 @@ async def run_monitor(monitor_id: int, ctx: JobContext | None = None) -> dict:
         mon.next_run = utcnow() + timedelta(hours=mon.interval_hours)
         for a in alerts:
             db.add(Alert(site_id=site_id, monitor_id=monitor_id, **a))
+    if alerts:
+        # Delivery is deliberately opt-in; failure never invalidates the persisted alert.
+        from .notifications import deliver_alerts
+        with session_scope() as db:
+            await deliver_alerts(db, site_url, alerts)
     return {"monitor_id": monitor_id, "alerts": len(alerts), "status": status}
 
 

@@ -469,6 +469,47 @@ function MappingTab() {
 }
 
 /* ------------------------------------------------------------------ cluster tool */
+
+function SerpClusterTool() {
+  const [text, setText] = useState("");
+  const [overlap, setOverlap] = useState(3);
+  const [manual, setManual] = useState("");
+  const keywords = parseLines(text).slice(0, 16);
+  const run = useMutation({
+    mutationFn: () => {
+      const input = manual.trim() ? Object.fromEntries(parseLines(manual).map(line => {
+        const [kw, urls] = line.split(" | ");
+        return [kw, (urls || "").split(",").map(x => x.trim()).filter(Boolean)];
+      })) : null;
+      return api.post("/keywords/serp-clusters", {
+        keywords, min_overlap: overlap, country: "de", lang: "de", manual_results: input,
+      });
+    },
+  });
+  return <Card title="SERP-Overlap-Clustering" description="2–15 Keywords über dieselbe Ergebnisquelle vergleichen; transitive Gruppen aufgrund gleicher Top-10-URLs.">
+    <div className="space-y-3">
+      <Field label="Keywords (je eine Zeile, 2–15)">
+        <Textarea rows={5} value={text} onChange={e => setText(e.target.value)} placeholder={"küche kaufen\nküche planen\nmaßküche"} />
+      </Field>
+      <Field label="Gemeinsame URLs pro Keyword-Paar (mindestens)">
+        <Select value={overlap} onChange={e => setOverlap(Number(e.target.value))}>
+          {[2, 3, 4, 5, 6].map(n => <option key={n} value={n}>{n}</option>)}
+        </Select>
+      </Field>
+      <Field label="Manuelle Ergebnislisten (optional; Keyword | URL1,URL2 je Zeile)">
+        <Textarea rows={3} value={manual} onChange={e => setManual(e.target.value)} />
+      </Field>
+      <Button disabled={keywords.length < 2 || keywords.length > 15 || run.isPending} loading={run.isPending}
+        onClick={() => run.mutate()}>SERP-Cluster berechnen</Button>
+      {run.error && <ErrorBox error={run.error} />}
+      {run.data && <>
+        <Notice>Quelle: {run.data.provider}. {run.data.method}</Notice>
+        <ClusterGrid clusters={run.data.clusters || []} />
+      </>}
+    </div>
+  </Card>;
+}
+
 function ClusterTab() {
   const [text, setText] = useState("");
   const [seed, setSeed] = useState("");
@@ -496,6 +537,7 @@ function ClusterTab() {
           </div>
         </div>
       </Card>
+      <SerpClusterTool />
       {cluster.error && <ErrorBox error={cluster.error} onRetry={() => cluster.mutate()} />}
       {cluster.isPending && <Card><Spinner label="Clustere…" /></Card>}
       {cluster.data && !cluster.isPending && (

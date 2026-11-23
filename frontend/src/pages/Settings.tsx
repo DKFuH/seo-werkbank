@@ -7,7 +7,7 @@ import { api, tokenStore } from "../lib/api";
 import { useAuth } from "../lib/context";
 
 const MASK = "********";
-type Section = "serp" | "pagespeed" | "ai" | "gsc" | "matomo";
+type Section = "serp" | "pagespeed" | "ai" | "gsc" | "matomo" | "notifications";
 type Values = Record<string, string>;
 
 /** Local form state for one settings section; resets whenever the server copy changes. */
@@ -312,6 +312,30 @@ function GscSettings({ server }: { server: Values }) {
   );
 }
 
+
+function NotificationSettings({ server }: { server: Values }) {
+  const s = useSection("notifications", server);
+  return <Card title="Monitor-Benachrichtigungen" description="Optional: ein zusammengefasster Hinweis je Prüfdurchlauf über SMTP (STARTTLS) und/oder HTTPS-Webhook. Standard: deaktiviert.">
+    <div className="space-y-3">
+      <Field label="Benachrichtigung aktiv"><Select value={s.values.enabled || "false"} onChange={e => s.set("enabled", e.target.value)}>
+        <option value="false">Aus</option><option value="true">Ein</option></Select></Field>
+      <Field label="Mindestens Schweregrad"><Select value={s.values.min_severity || "high"} onChange={e => s.set("min_severity", e.target.value)}>
+        {["low", "medium", "high", "critical"].map(x => <option key={x} value={x}>{x}</option>)}</Select></Field>
+      <div className="grid gap-3 md:grid-cols-2">
+        {([["smtp_host", "SMTP-Server"], ["smtp_port", "SMTP-Port (STARTTLS)"],
+          ["smtp_user", "SMTP-Benutzer"], ["from_email", "Absenderadresse"],
+          ["to_email", "Empfängeradresse"], ["webhook_url", "Webhook (HTTPS, Port 443)"]] as const).map(([key, label]) =>
+          <Field key={key} label={label}>{key === "webhook_url"
+            ? <SecretInput value={s.values[key] || ""} onChange={v => s.set(key, v)} />
+            : <Input value={s.values[key] || ""} onChange={e => s.set(key, e.target.value)} />}</Field>)}
+      </div>
+      <Field label="SMTP-Passwort"><SecretInput value={s.values.smtp_password || ""} onChange={v => s.set("smtp_password", v)} /></Field>
+      <Notice>Die Meldung enthält Website-Namen und Befundtext; nur Ziele eintragen, die diese Angaben empfangen dürfen. Fehlende SMTP- oder Webhook-Konfiguration verhindert den Versand.</Notice>
+      <SaveBar s={s} />
+    </div>
+  </Card>;
+}
+
 function Integrations() {
   const { user } = useAuth();
   const isAdmin = !!user?.is_admin;
@@ -333,6 +357,7 @@ function Integrations() {
       <MatomoSettings server={d.matomo ?? {}} />
       <AiSettings server={d.ai ?? {}} />
       <GscSettings server={d.gsc ?? {}} />
+      <NotificationSettings server={d.notifications ?? {}} />
     </>
   );
 }
