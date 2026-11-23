@@ -6,7 +6,7 @@ import fnmatch
 import json
 from urllib.parse import urlsplit
 
-from ..audit.schema_validator import TEMPLATES, all_types, recommend_types, validate_jsonld
+from ..audit.schema_validator import TEMPLATES, all_types, jsonld_script_element, recommend_types, validate_jsonld
 
 TOKENS = {
     "title", "h1", "description", "url", "canonical",
@@ -84,7 +84,8 @@ def prefill(page, site, schema_type: str | None = None, mapping: dict[str, str] 
                 doc[field] = [value] if field == "image" else value
     doc = {k: v for k, v in doc.items() if v not in (None, "", [], {})}
     existing = (page.data or {}).get("jsonld") or []
-    return {"url": page.url, "type": selected, "jsonld": doc, "existing": existing,
+    return {"url": page.url, "type": selected, "jsonld": doc, "html": jsonld_script_element(doc),
+            "existing": existing,
             "diff": schema_diff(existing, doc),
             "validation": validate_jsonld([doc]), "recommendations": choices,
             "warnings": warnings, "rich_result_eligibility_confirmed": False,
