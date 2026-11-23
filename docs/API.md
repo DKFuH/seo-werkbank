@@ -6,7 +6,7 @@ The complete, always-current reference is generated from the code:
 - ReDoc: `http://localhost:8000/api/redoc`
 - OpenAPI schema: `http://localhost:8000/api/openapi.json`
 
-All endpoints live under `/api`, accept and return JSON (exports return files) and, except for the few listed as public, require
+All endpoints live under `/api`. Most accept and return JSON; uploads use multipart form data, and exports may return files. Except for explicitly public endpoints, calls require
 `Authorization: Bearer <token>`.
 
 ## SEO-Operations API (Stand: PR #45)
