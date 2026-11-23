@@ -29,6 +29,7 @@ export default function SchemaManagementPanel({ siteId }: { siteId: number }) {
   const [pattern, setPattern] = useState("/*");
   const [mapping, setMapping] = useState("{}");
   const [preview, setPreview] = useState<any>(null);
+  const [editingTemplateId, setEditingTemplateId] = useState<number | null>(null);
 
   const pages = useQuery<{ pages: CrawlPage[]; crawl_id: number | null }>({
     queryKey: ["schema-pages", siteId], queryFn: () => api.get(`${base}/pages`),
@@ -56,8 +57,9 @@ export default function SchemaManagementPanel({ siteId }: { siteId: number }) {
     onError: e => setMessage(errorMessage(e)),
   });
   const createTemplate = useMutation({
-    mutationFn: (value: Record<string, unknown>) => api.post(`${base}/templates`, value),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["schema-templates", siteId] }); setMessage("Vorlage gespeichert."); },
+    mutationFn: (value: Record<string, unknown>) => editingTemplateId != null
+      ? api.put(`${base}/templates/${editingTemplateId}`, value) : api.post(`${base}/templates`, value),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["schema-templates", siteId] }); setMessage("Vorlage gespeichert."); setEditingTemplateId(null); },
     onError: e => setMessage(errorMessage(e)),
   });
   const removeTemplate = useMutation({
@@ -127,7 +129,8 @@ export default function SchemaManagementPanel({ siteId }: { siteId: number }) {
       <Field label="Feldzuordnungen als JSON, z. B. {\u0022headline\u0022:\u0022{title}\u0022}">
         <Textarea rows={3} className="font-mono text-xs" value={mapping} onChange={e => setMapping(e.target.value)} />
       </Field>
-      <Button disabled={!name || createTemplate.isPending} onClick={saveTemplate}>Vorlage speichern</Button>
+      <div className="flex flex-wrap gap-2"><Button disabled={!name || createTemplate.isPending} onClick={saveTemplate}>{editingTemplateId != null ? "Vorlage aktualisieren" : "Vorlage speichern"}</Button>
+        {editingTemplateId != null && <Button variant="secondary" onClick={() => setEditingTemplateId(null)}>Bearbeitung abbrechen</Button>}</div>
       <div className="mt-4 space-y-2">{templates.isLoading ? <Spinner /> :
         templates.error ? <ErrorBox error={templates.error} onRetry={() => templates.refetch()} /> :
         !(templates.data ?? []).length ? <p className="text-sm text-slate-500">Noch keine Vorlagen.</p> :
@@ -135,6 +138,7 @@ export default function SchemaManagementPanel({ siteId }: { siteId: number }) {
           <span>{t.name} · {t.schema_type} · <code>{t.url_pattern}</code></span>
           <div className="flex gap-2">
             <Button size="sm" variant="secondary" onClick={() => testTemplate.mutate(t.id)}>Vorschau</Button>
+            <Button size="sm" variant="secondary" onClick={() => { setEditingTemplateId(t.id); setName(t.name); setPattern(t.url_pattern); setSchemaType(t.schema_type); setMapping(JSON.stringify(t.field_mapping, null, 2)); }}>Bearbeiten</Button>
             <Button size="sm" variant="danger" onClick={() => removeTemplate.mutate(t.id)}>Löschen</Button>
           </div>
         </div>)}</div>
