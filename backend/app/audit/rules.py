@@ -466,4 +466,5 @@ def rule_dict(rule_id: str) -> dict:
     r = RULES[rule_id]
     return {"id": r.id, "title": r.title, "severity": r.severity, "category": r.category,
             "description": r.description, "fix": r.fix, "scope": r.scope,
-            **rule_provenance(rule_id)}
+            **rule_provenance(rule_id),
+            "search_engines": __import__("app.audit.engine_guidance", fromlist=["engine_guidance"]).engine_guidance(rule_id)}
