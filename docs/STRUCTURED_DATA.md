@@ -67,3 +67,9 @@ Die Content-Entwurfansicht bietet dafür bei gültigem gespeichertem JSON einen
 separaten `safe_html`-Block, der `<`, `>`, `&` und Unicode-Trennzeichen
 sicher serialisiert. Der Block entspricht dem **gespeicherten** Entwurf; nach
 ungespeicherten Textänderungen muss erst gespeichert werden.
+
+## Fehlersuche bei der Freigabe
+
+- **Validierung scheitert:** Unvollständige oder strukturell falsche JSON-LD-Angaben im Entwurf korrigieren und erneut speichern; die Freigabe wird bei erkannten Fehlern verweigert.
+- **Sicherer HTML-Block fehlt:** Prüfen, ob der Entwurf als `application/ld+json` gespeichert wurde und das JSON parsebar ist. Der Block wird aus dem **gespeicherten** Text erzeugt, nicht aus ungespeicherten Editoränderungen.
+- **Code auf der Website wirkt nicht:** Die Werkbank veröffentlicht keine Änderungen. Einbau im CMS, ausgeliefertes HTML und Crawling-Ergebnis separat prüfen; Script-Escaping ist ein Sicherheitsmechanismus, keine Garantie für korrektes Markup.
