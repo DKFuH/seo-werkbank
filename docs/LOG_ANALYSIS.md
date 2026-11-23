@@ -22,8 +22,9 @@ Navigation: **Sichtbarkeit → Logfile & 404**; API `/api/sites/{id}/logs`.
   Dateien vor dem Upload datenschutzrechtlich und technisch prüfen.
 - Die Serverlogdatei existiert während des Importjobs kurzzeitig auf dem
   Server. Sie wird nach Erfolg, Fehler oder Abbruch gelöscht, sofern der
-  Prozess normal weiterläuft; bei Prozessabsturz können temporäre Dateien
-  zurückbleiben. Temporäre Verzeichnisse sollten bereinigt werden.
+  Prozess normal weiterläuft; bei Prozessabsturz werden unterbrochene Imports beim nächsten Start als
+  fehlgeschlagen markiert und ihre zugeordneten temporären Dateien gelöscht.
+  Während des Absturzes können Rohdaten bis zum nächsten Start verbleiben.
 - User-Agent-Klassifizierung ist **nicht** per Reverse-DNS oder IP-Range
   verifiziert. Auch Treffer mit `googlebot_claim` beweisen nicht, dass Google
   die URL besucht hat. Braves Suchcrawler lässt sich nicht zuverlässig
