@@ -16,3 +16,13 @@ Die Werkbank verändert niemals fremde Server oder CMS-Konfigurationen.
 - Eine temporäre Weiterleitung auf eine stabile Seite beweist **keinen** dauerhaften Umzug; ein 301-Vorschlag braucht fachliche Freigabe.
 
 Keine automatischen Deployments, Wildcard-Regeln, Cross-Domain-Weiterleitungen oder generelle Querystring-Umschreibungen.
+
+## Datenbankintegrität und Exportkontext
+
+- Migration `0013` erzwingt einen eindeutigen Schlüssel für `(site_id, source_url)`.
+  Bereits vorhandene Dubletten werden **nicht** automatisch gelöscht. Der
+  Migrationslauf stoppt mit einer Fehlermeldung; Dubletten zuerst manuell prüfen.
+- Konkurrierende API-Anfragen bekommen bei einer Kollision `409 Conflict`.
+- Der Apache-Export setzt `RewriteEngine On` nur einmal und enthält einen
+  Hinweis auf **.htaccess im DocumentRoot**. Die Regel muss für vHost-Konfigurationen
+  gesondert an deren Rewrite-Kontext angepasst werden.
