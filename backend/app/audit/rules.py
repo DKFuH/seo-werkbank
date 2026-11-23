@@ -422,6 +422,11 @@ SEO_HEURISTIC_IDS = frozenset({
     "og_incomplete", "twitter_card_missing", "schema_none",
     "hreflang_no_self", "hreflang_no_x_default", "sitemap_missing",
     "sitemap_not_in_robots", "not_in_sitemap", "lang_missing",
+    "meta_refresh", "broken_external_link", "robots_syntax",
+    "canonicalised", "title_multiple", "description_multiple",
+    "host_variants", "doctype_missing", "html_structure",
+    "duplicate_ids", "charset_missing", "hreflang_lang_mismatch",
+    "intl_duplicate",
 })
 GOOGLE_DOCUMENTATION = {
     "technical_requirement": "https://developers.google.com/search/docs/essentials/technical",

@@ -34,11 +34,24 @@ konservativer Metadaten-Schritt, **keine offizielle Google-Zertifizierung**.
   GEO-Befunde des gemeinsamen Crawls und ist nicht identisch mit dem separaten
   GEO-Check für eine einzelne URL.
 
+## Darstellung in der Oberfläche
+
+- **Site-Audit:** vier Profil-Kacheln (Google, Bing, Brave, GEO). Ein Klick
+  filtert die Befundtabelle auf das Profil, ein zweiter hebt den Filter auf.
+  Die Tabelle zeigt je Befund die Spalten „Herkunft“ (Technisch,
+  Google-Empfehlung, Heuristik, GEO-Hypothese) und „Profile“.
+- **Befund-Detailseite:** Karte „Einordnung“ mit der Klassifizierung und dem
+  Status je Suchmaschine („dokumentiert · im Score“ bzw. „nicht bewertet“)
+  samt Link zur Dokumentation.
+- Jede Nicht-GEO-Regel steht explizit in genau einer der drei Mengen in
+  `rules.py`; ein Test schlägt fehl, wenn eine neue Regel nicht eingeordnet ist.
+
 Offizielle Anlaufstellen:
-- https://developers.google.com/search/docs/essentials
-- https://developers.google.com/search/docs/fundamentals/seo-starter-guide
-- https://developers.google.com/search/docs/crawling-indexing/consolidate-duplicate-urls
-- https://developers.google.com/search/docs/appearance/structured-data/intro-structured-data
+
+- <https://developers.google.com/search/docs/essentials>
+- <https://developers.google.com/search/docs/fundamentals/seo-starter-guide>
+- <https://developers.google.com/search/docs/crawling-indexing/consolidate-duplicate-urls>
+- <https://developers.google.com/search/docs/appearance/structured-data/intro-structured-data>
 
 ## Nächste Arbeiten
 

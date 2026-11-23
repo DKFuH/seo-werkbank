@@ -3,9 +3,12 @@ from types import SimpleNamespace
 
 from app.audit.analysis import calculate_profile_scores
 from app.audit.rules import (
+    GOOGLE_RECOMMENDATION_IDS,
     PROFILE_RULE_IDS,
     RULE_CLASSIFICATIONS,
     RULES,
+    SEO_HEURISTIC_IDS,
+    TECHNICAL_REQUIREMENT_IDS,
     classify_rule,
     rule_dict,
     rule_profiles,
@@ -16,6 +19,16 @@ from app.audit.rules import (
 def test_every_rule_has_valid_provenance():
     assert len(RULES) >= 95
     assert all(classify_rule(rule_id) in RULE_CLASSIFICATIONS for rule_id in RULES)
+
+
+def test_every_non_geo_rule_is_classified_explicitly_once():
+    sets = (TECHNICAL_REQUIREMENT_IDS, GOOGLE_RECOMMENDATION_IDS, SEO_HEURISTIC_IDS)
+    for rule_id in RULES:
+        if rule_id.startswith("geo_"):
+            assert not any(rule_id in s for s in sets)
+        else:
+            assert sum(rule_id in s for s in sets) == 1, rule_id
+    assert set().union(*sets) <= set(RULES)
 
 
 def test_provenance_is_in_serialized_rule():

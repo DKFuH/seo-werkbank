@@ -8,7 +8,8 @@ import {
   SeverityBadge, Spinner, Stat,
 } from "../components/ui";
 import { api, errorMessage } from "../lib/api";
-import { type AuditProfile, matchesAuditProfile } from "../lib/auditProfiles";
+import { ClassificationBadge, ProfileChips } from "../components/AuditProvenance";
+import { type AuditProfile, matchesAuditProfile, PROFILE_LABELS } from "../lib/auditProfiles";
 import { type CrawlSummary, useSite } from "../lib/context";
 import { crawlName, fmtDateTime, fmtInt, fmtNum, SEVERITIES, titleCase } from "../lib/format";
 
@@ -19,7 +20,7 @@ const PROFILE_CARDS = [
   { id: "bing", label: "Bing" },
   { id: "brave", label: "Brave" },
   { id: "geo", label: "GEO" },
-] as const;
+] as const satisfies readonly { id: Exclude<AuditProfile, "all">; label: string }[];
 
 function Change({ value, goodWhenUp }: { value: number; goodWhenUp?: boolean }) {
   if (!value) return <span className="inline-flex items-center gap-1 text-slate-500"><Minus className="h-3.5 w-3.5" />0</span>;
@@ -140,6 +141,9 @@ export default function Audit() {
       </div>
     ) },
     { key: "category", header: "Kategorie", render: (g) => <Badge>{titleCase(g.category)}</Badge> },
+    { key: "classification", header: "Herkunft", tooltip: "Technisches Problem, Google-Empfehlung, SEO-Heuristik oder GEO-Hypothese. Ändert den Schweregrad nicht.",
+      render: (g) => <ClassificationBadge rule={g} /> },
+    { key: "profiles", header: "Profile", tooltip: "In welche Suchmaschinen-/GEO-Scores der Befund einfließt.", render: (g) => <ProfileChips profiles={g.profiles} /> },
     { key: "count", header: "Betroffen", align: "right", tooltip: "Betroffene URLs. Websiteweite Prüfungen zählen einmal.", render: (g) => <span className="font-semibold text-slate-900 dark:text-slate-100">{fmtInt(g.count)}</span> },
   ];
 
@@ -155,7 +159,7 @@ export default function Audit() {
               <div className="min-w-0 text-sm text-slate-600 dark:text-slate-300">
                 <div className="font-semibold text-slate-900 dark:text-slate-100">{site?.name ? `${site.name} · ` : ""}{crawlName(crawl)}</div>
                 <div>{fmtInt(crawl.pages_crawled)} URLs · {fmtDateTime(crawl.finished_at)}</div>
-                <div className="mt-1">{fmtInt(groups.length)} issue types found</div>
+                <div className="mt-1">{fmtInt(groups.length)} Befundarten gefunden</div>
               </div>
             </div>
             <p className="mt-4 border-t border-slate-100 pt-3 text-xs leading-relaxed text-slate-500 dark:border-slate-800 dark:text-slate-400">
@@ -189,17 +193,24 @@ export default function Audit() {
 
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {PROFILE_CARDS.map(({ id, label }) => (
-            <Card key={id} padded>
-              <div className="flex items-center gap-3">
-                <ScoreRing score={profileScores[id]?.score} size={78} label={label} />
-                <div className="min-w-0">
-                  <div className="font-semibold text-slate-900 dark:text-slate-100">{label}-Score</div>
-                  <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                    {fmtInt(profileScores[id]?.rule_count)} zugeordnete Regeln
+            <button key={id} type="button" onClick={() => setProfile(profile === id ? "all" : id)} aria-pressed={profile === id}
+              title={profile === id ? "Filter aufheben" : `Befunde auf ${PROFILE_LABELS[id]} filtern`}
+              className={`rounded-xl text-left transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 ${profile === id ? "ring-2 ring-brand-500" : ""}`}>
+              <Card padded>
+                <div className="flex items-center gap-3">
+                  <ScoreRing score={profileScores[id]?.score} size={78} label={label} />
+                  <div className="min-w-0">
+                    <div className="font-semibold text-slate-900 dark:text-slate-100">{label}-Score</div>
+                    <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                      {fmtInt(profileScores[id]?.rule_count ?? 0)} zugeordnete Regeln
+                    </div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400">
+                      {groups.filter((g) => matchesAuditProfile(g, id)).length} Befundarten in diesem Crawl
+                    </div>
                   </div>
                 </div>
-              </div>
-            </Card>
+              </Card>
+            </button>
           ))}
         </div>
         <p className="-mt-2 text-xs text-slate-500 dark:text-slate-400">
@@ -222,12 +233,9 @@ export default function Audit() {
             </Select>
             <Select value={profile} onChange={(e) => setProfile(e.target.value as AuditProfile)} className="w-auto" aria-label="Suchmaschinen- und GEO-Filter">
               <option value="all">Alle Befunde</option>
-              <option value="google">Google</option>
-              <option value="bing">Microsoft Bing</option>
-              <option value="brave">Brave Search</option>
-              <option value="geo">GEO</option>
+              {Object.entries(PROFILE_LABELS).map(([id, label]) => <option key={id} value={id}>{label}</option>)}
             </Select>
-            <span className="ml-auto text-xs text-slate-500 dark:text-slate-400">{rows.length} of {groups.length}</span>
+            <span className="ml-auto text-xs text-slate-500 dark:text-slate-400">{rows.length} von {groups.length}</span>
           </div>
           <DataTable columns={columns} rows={rows} rowKey={(g) => g.id} onRowClick={(g) => navigate(`/audit/issues/${g.id}`)}
             empty={groups.length ? <EmptyState title="Keine passenden Befunde" description="Suche oder Filter zurücksetzen, um alle Befunde zu sehen." />
