@@ -87,6 +87,8 @@ A new area (page, API, data) usually touches the same places. Use an existing on
    provenance set there (`TECHNICAL_REQUIREMENT_IDS`, `GOOGLE_RECOMMENDATION_IDS` or `SEO_HEURISTIC_IDS`; `geo_*` rules are
    classified automatically). A test fails otherwise. Do not present a heuristic as a search-engine requirement; see
    `docs/AUDIT_PROVENANCE.md`.
+   A Bing or Brave mapping in `backend/app/audit/engine_guidance.py` needs the guideline section and either a verbatim quote or an explicit
+   `topic` entry. Never copy Google statements to Bing or Brave, and never use blog posts as the source (see `docs/SEARCH_ENGINE_RULES.md`).
 2. Emit it from `audit/page_checks.py` (needs one page) or `audit/analysis.py` (needs the whole crawl).
 3. Add a page that triggers it to `backend/tests/fixture_site.py` and list it in `EXPECTED` in `tests/test_api.py`; add a healthy page
    to `NOT_EXPECTED` if false positives are plausible.

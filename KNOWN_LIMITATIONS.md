@@ -63,6 +63,20 @@ the current implementation.
 - **JSON-LD proposals remain raw JSON.** They must not be pasted directly between HTML `<script>` tags. Use the separately HTML-escaped `safe_html` snippet shown for a saved proposal. The validator does not establish schema.org semantic completeness or eligibility for Google Rich Results, and no CMS publishing takes place.
 - **Automated CI coverage is not full manual validation.** API checks, Linux/Windows/macOS tests, frontend tests and Docker smoke tests have run, but production server deployments, complete UI click-throughs and every external provider scenario remain unverified.
 
+## Search-engine evidence (Bing, Brave)
+
+- **Mapping level.** A Bing or Brave mapping is either `quoted` (a sentence of the guideline describes the check) or `topic` (the guideline covers the
+  subject area only). `topic` rules still count in the engine profile score; treat them as weaker evidence. 12 of the 43 Bing mappings and 2 of the 4 Brave mappings are `topic` only.
+- **Sources are snapshots.** Quotes come from the Bing Webmaster Guidelines (local copy, 2026-11-23) and Brave's crawler page (2026-11-23). The Bing page is
+  rendered by JavaScript and cannot be fetched automatically, so updates must be re-read by hand. A changed guideline can make a quote stale.
+- **Bing AI Preferences are an announcement** (2026-10-30, effective 2027-02-01). Dates and syntax may change; `bing_legacy_ai_directives` only flags
+  `noarchive`/`nocache` that apply to Bing (generic or `bingbot`/`msnbot`), not Googlebot-only values.
+- **Engine-specific `robots.txt` checks look at the start URL only.** A block of a single path for Googlebot or Bingbot is not reported by
+  `robots_googlebot_blocked`/`robots_bingbot_blocked`.
+- **Not detected:** `noindex` on a URL that `robots.txt` blocks (blocked URLs are not fetched) and soft-404 pages.
+- **Profile scores are not comparable** between engines and are no ranking or compliance estimate.
+- **IndexNow is a hint**, not an indexing guarantee, and Google does not take part. Bing and IndexNow were tested with mocked HTTP; no live account was available.
+
 ## Content and language
 
 - Readability formulas (Flesch) and the stemmer are calibrated for English. Other languages get tokenised correctly but scores are less

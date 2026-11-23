@@ -17,6 +17,7 @@ Ordered by expected value to users. Items move to `CHANGELOG.md` when shipped. S
 - Advanced log-analysis adapters: arbitrary Nginx `log_format`, JSON access logs, independently verified crawler signatures and configurable retention. Current support is Common/Combined + up to two trailing quoted fields; 64 KiB/line.
 - Google Analytics 4 integration; validate Bing Webmaster Tools/IndexNow with a live authorized account (both are already implemented).
 - Image audit by downloading headers of all images (dimensions, format, compression potential).
+- Quotes for the Bing mappings that are still `topic` only (or removal from the Bing profile); re-check quotes whenever Bing or Brave change their guidelines.
 - Soft-404 detection, pagination-sequence checks, `srcset`/CSS-background link extraction, AMP checks.
 - Rendering-based mobile checks (tap targets, font sizes) through Playwright.
 - Language-aware readability (formulas for German, Spanish, French ...) and multilingual stop words.
@@ -26,7 +27,11 @@ Ordered by expected value to users. Items move to `CHANGELOG.md` when shipped. S
 - White-label PDF reports (logo, colours), scheduled report delivery.
 - Plugin interface for custom audit rules.
 
-## Delivered (PRs #41–#45, 23 November 2026)
+## Delivered (PRs #40–#49, 23 November 2026)
+
+- Rule provenance and Google/Bing/Brave/GEO profile scores; Bing Webmaster Tools and IndexNow (new, changed, removed URLs).
+- Section-referenced Bing/Brave evidence (verbatim quote or `topic`), five engine-specific rules including the Bing AI-Preferences deadlines.
+- Contributor documentation (README, `CONTRIBUTING.md`, `SUPPORT.md`, issue and PR templates).
 
 - Redirect proposal, simulation, approval and Apache/Nginx/CSV draft export; database uniqueness per site/source (migrations `0010`, `0013`).
 - Privacy-reduced access-log and 404 monitoring with bounded import, crash recovery, API tests and redirect proposal handoff (migration `0011`).

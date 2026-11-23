@@ -66,7 +66,8 @@ Offizielle Anlaufstellen:
    Prüfmethodik dokumentieren.
 2. Bewusst gesetzte `noindex`-, `canonical`-, `robots`- und
    Sprachvarianten gegen die gewünschte Indexierungsstrategie prüfen.
-3. Die Quellen und Zuordnungen jeder einzelnen Regel weiter präzisieren.
+3. Fundstellen für Bing und Brave sind erfasst (Zitat oder Themenbezug). Offen: Google-Regeln einzeln belegen und die
+   Bing-Regeln mit Stufe „Themenbezug“ durch einen Satz der Leitlinie ersetzen oder aus dem Profil nehmen.
 4. Optional einen separaten technischen Google-Indexierungsstatus bilden –
    aber keinen scheinbar offiziellen Google-Compliance-Score behaupten.
 5. Die Profil-Scores bei Bedarf nach gesonderter Validierung um eigene
