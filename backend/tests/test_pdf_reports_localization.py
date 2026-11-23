@@ -111,7 +111,7 @@ def test_competitor_pdf_labels_are_german(monkeypatch):
 
 
 def test_audit_pdf_endpoint_returns_pdf_for_completed_crawl(client, auth, crawled):
-    response = client.get(f"/api/crawls/{crawled['crawl']['id']}/report.pdf", headers=auth)
+    response = client.get(f"/api/crawls/{crawled['crawl_id']}/report.pdf", headers=auth)
     assert response.status_code == 200, response.text[:200] if response.status_code != 200 else ""
     assert response.content.startswith(b"%PDF-")
     assert response.headers.get("content-type") == "application/pdf"
