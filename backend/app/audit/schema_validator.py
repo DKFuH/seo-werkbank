@@ -219,3 +219,20 @@ def recommend_types(page: dict) -> list[dict]:
     if any(s in url for s in ("/event",)) and "Event" not in have:
         recs.append({"type": "Event", "reason": "URL looks like an event page"})
     return recs
+
+
+def serialize_jsonld_for_html(doc: dict | list) -> str:
+    """Serialize JSON-LD for embedding in HTML without terminating a script element.
+
+    This is distinct from JSON storage: escape HTML-sensitive characters only
+    when constructing the actual script element.
+    """
+    return (json.dumps(doc, indent=2, ensure_ascii=False)
+            .replace("&", r"\u0026").replace("<", r"\u003c")
+            .replace(">", r"\u003e").replace("\u2028", r"\u2028")
+            .replace("\u2029", r"\u2029"))
+
+
+def jsonld_script_element(doc: dict | list) -> str:
+    """Return a copyable, safe HTML <script> element for JSON-LD."""
+    return '<script type="application/ld+json">\n' + serialize_jsonld_for_html(doc) + '\n</script>'

@@ -4,6 +4,7 @@ from __future__ import annotations
 import csv
 import io
 import re
+from collections import Counter, defaultdict
 from difflib import SequenceMatcher
 from urllib.parse import urlsplit
 
@@ -90,20 +91,44 @@ def propose_from_crawl(db, crawl, site) -> list[dict]:
                 "confidence": 0.9 if hops else 0.55, "origin": "crawl",
                 "note": "Kette kürzen" if hops else "Temporäre Weiterleitung: Dauerhaftigkeit manuell prüfen",
             })
-    for page in pages:
-        if page.status_code not in (404, 410) or not page.inlinks:
+    # Inverted token index avoids comparing every 404 with every healthy page.
+    # Exclude very common terms, cap postings and expensive similarity calls.
+    stopwords = {"html", "php", "de", "www", "index", "seite", "page", "shop"}
+    def tokens(url: str) -> set[str]:
+        return set(re.findall(r"[a-z0-9]+", urlsplit(url).path.lower())) - stopwords
+
+    indexed: dict[str, list[int]] = defaultdict(list)
+    healthy_tokens = [tokens(p.url) for p in good]
+    for i, words in enumerate(healthy_tokens):
+        for word in words:
+            indexed[word].append(i)
+
+    missing = [p for p in pages if p.status_code in (404, 410) and p.inlinks]
+    for page in missing[:500]:
+        words = tokens(page.url)
+        if not words:
             continue
-        tokens = set(re.findall(r"[a-z0-9]+", urlsplit(page.url).path.lower())) - {"html", "php", "de"}
-        matches = []
-        for target in good:
-            words = set(re.findall(r"[a-z0-9]+", urlsplit(target.url).path.lower())) - {"html", "php", "de"}
-            overlap = len(tokens & words) / max(1, len(tokens | words))
+        candidates: Counter[int] = Counter()
+        for word in words:
+            matches = indexed.get(word, [])
+            if len(matches) <= 256:
+                candidates.update(matches)
+        if not candidates:
+            continue
+        # Check at most the 32 strongest overlapping URL candidates.
+        shortlist = sorted(candidates, key=lambda i: (
+            -candidates[i], abs(len(healthy_tokens[i]) - len(words)), good[i].url
+        ))[:32]
+        best = None
+        for i in shortlist:
+            target = good[i]
+            overlap = len(words & healthy_tokens[i]) / max(1, len(words | healthy_tokens[i]))
             lexical = SequenceMatcher(None, urlsplit(page.url).path, urlsplit(target.url).path).ratio()
             score = 0.7 * overlap + 0.3 * lexical
-            if score >= 0.45:
-                matches.append((score, target))
-        if matches:
-            confidence, target = max(matches, key=lambda row: row[0])
+            if score >= 0.45 and (best is None or score > best[0]):
+                best = (score, target)
+        if best is not None:
+            confidence, target = best
             try:
                 suggestions.append({
                     "source_url": normalise_url(site, page.url),

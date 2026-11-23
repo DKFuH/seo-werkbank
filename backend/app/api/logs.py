@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+import os
 import tempfile
 from collections import Counter
 from pathlib import Path
@@ -96,7 +97,11 @@ async def upload_logs(site_id: int, file: UploadFile = File(...), fmt: str = For
         db.commit()
         db.refresh(record)
 
-        temp_path = path
+        # Bind the temporary file to its import ID so startup recovery can
+        # remove only files belonging to interrupted imports.
+        temp_path = os.path.join(tempfile.gettempdir(), f"seo-log-import-{record.id}-{os.path.basename(path)}")
+        os.replace(path, temp_path)
+        path = None
 
         async def work(ctx):
             try:
@@ -116,6 +121,7 @@ async def upload_logs(site_id: int, file: UploadFile = File(...), fmt: str = For
         try:
             job_id = jobs.start("log_import", work, owner_id=user.id, site_id=site.id)
         except JobLimitError as exc:
+            Path(temp_path).unlink(missing_ok=True)
             db.delete(record)
             db.commit()
             raise HTTPException(429, str(exc)) from exc

@@ -12,7 +12,7 @@ from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 
 from ..audit.geo import analyse_geo
-from ..audit.schema_validator import SPECS, TEMPLATES, all_types, generate_template, validate_jsonld
+from ..audit.schema_validator import SPECS, TEMPLATES, all_types, generate_template, jsonld_script_element, validate_jsonld
 from ..content.optimizer import analyse_content, parse_draft
 from ..content.wdf_idf import analyse_wdf_idf
 from ..crawler.fetcher import Fetcher
@@ -498,8 +498,7 @@ def schema_generate(body: SchemaGenerateIn, user: User = Depends(current_user)) 
         doc = generate_template(body.type, body.values)
     except KeyError:
         raise HTTPException(404, f"Keine Vorlage für '{body.type}'") from None
-    text = json.dumps(doc, indent=2, ensure_ascii=False).replace("</", "<\\/")  # safe to embed inside <script>
-    return {"jsonld": doc, "html": f'<script type="application/ld+json">\n{text}\n</script>', "validation": validate_jsonld([doc])}
+    return {"jsonld": doc, "html": jsonld_script_element(doc), "validation": validate_jsonld([doc])}
 
 
 # ----------------------------------------------------------------------------- page speed
