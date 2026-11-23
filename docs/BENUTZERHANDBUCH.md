@@ -275,9 +275,9 @@ Im geöffneten Crawl stehen unter anderem folgende Reiter zur Verfügung:
 7. Nach der externen Korrektur erneut crawlen.
 8. Wenn vorhanden **Mit früherem Crawl vergleichen** verwenden.
 9. Nachweise als Aufgabe unter **Maßnahmen → SEO-Maßnahmen** dokumentieren.
-9. Spalte **Herkunft** und die Karte **Einordnung** zeigen, ob ein Befund eine technische Pflicht, eine Google-Empfehlung oder nur eine Heuristik ist und wie Bing und Brave dazu stehen; die Profil-Kacheln filtern danach ([Kapitel 24](#24-bing-indexnow-und-suchmaschinenprofile)).
+10. Spalte **Herkunft** und die Karte **Einordnung** zeigen, ob ein Befund eine technische Pflicht, eine Google-Empfehlung oder nur eine Heuristik ist und wie Bing und Brave dazu stehen; die Profil-Kacheln filtern danach ([Kapitel 24](#24-bing-indexnow-und-suchmaschinenprofile)).
 
-**Suchmaschinen-Nachweise (Stand PR #49, 23.11.2026):** Die aktuelle Zuordnung umfasst **43 Bing-** und **4 Brave-Regeln**. Jede Zuordnung nennt die Fundstelle und das Prüfdaten-/Quellendatum. Sieben ältere Bing-Prüfungen bleiben mangels passender konkreter Formulierung nur **`topic`**: `http_5xx`, `fetch_error`, `robots_unreachable`, `canonical_invalid`, `canonical_broken`, `broken_internal_link` und `sitemap_invalid`. Diese nicht als bestätigte Bing-Vorgaben ausgeben. Die Suchmaschinenprofile nutzen dieselben bisherigen Schweregrad-Abzüge, nicht individuell von Bing oder Brave veröffentlichte Gewichtungen. [Quellen, Nachweisstufen und nicht belegte Annahmen](SEARCH_ENGINE_RULES.md).
+**Suchmaschinen-Nachweise (Stand PR #49, 23.11.2026):** Die aktuelle Zuordnung umfasst **43 Bing-** und **4 Brave-Regeln**. Jede Zuordnung nennt die Fundstelle und das Prüfdatum der Quelle. Sieben ältere Bing-Prüfungen bleiben mangels passender konkreter Formulierung nur **`topic`**: `http_5xx`, `fetch_error`, `robots_unreachable`, `canonical_invalid`, `canonical_broken`, `broken_internal_link` und `sitemap_invalid`. Diese nicht als bestätigte Bing-Vorgaben ausgeben. Die Suchmaschinenprofile nutzen dieselben bisherigen Schweregrad-Abzüge, nicht individuell von Bing oder Brave veröffentlichte Gewichtungen. [Quellen, Nachweisstufen und nicht belegte Annahmen](SEARCH_ENGINE_RULES.md).
 
 **Template-Content-Erkennung:** Das Audit kann Seiten mit einem ungewöhnlich hohen Anteil gleicher Textpassagen auf anderen indexierbaren Seiten markieren. Dies ist ein **Hinweis zur manuellen Prüfung**, nicht ein automatischer Google-Penalty-Nachweis. Gemeinsame Navigations- und CTA-Blöcke werden bei der Erkennung teilweise herausgefiltert.
 
@@ -436,26 +436,6 @@ GSC-Positionen sind **impressionsgewichtete Durchschnittswerte**, keine neutrale
 3. Den von Google gemeldeten Indexierungsstatus, den letzten Google-Crawl und die Canonical-Angaben ansehen.
 
 Die Abfrage nutzt die **Google URL Inspection API**. Sie führt **keinen Live-Test** aus, ändert nichts an Googles Index und unterliegt Googles Kontingent. Details: [Google URL Inspection](GSC_URL_INSPECTION.md).
-
-### 8.5 Bing Webmaster Tools und IndexNow
-
-**Wo:** `Sichtbarkeit → Bing & IndexNow` (`/bing`). Einrichtung durch Administratoren unter **System → Einstellungen → Bing Webmaster Tools / IndexNow**.
-
-1. Website bei Bing Webmaster Tools verifizieren, API-Schlüssel hinterlegen und die zur ausgewählten Website passende Bing-Property kontrollieren. Bing-Daten sind eine **eigene Datenquelle**, nicht aus der Google Search Console ableitbar.
-2. Für **IndexNow** einen Schlüssel erzeugen und die dazugehörige `.txt`-Datei direkt unter der eigenen Domain verfügbar machen. Die Werkbank prüft, ob diese Datei erreichbar ist.
-3. Nach **zwei abgeschlossenen Crawls** zwischen **„Neu + geändert seit vorherigem Crawl“** und **„Neu, geändert und gelöscht seit vorherigem Crawl“** wählen. Die zweite Auswahl berücksichtigt auch URLs, die vorher indexierbar waren und jetzt **HTTP 404 oder 410** zurückgeben. **301 ist keine Löschung**.
-4. Alternativ URLs bewusst als eigene Liste eingeben. Nur URLs der Website werden berücksichtigt. Das Ergebnis der Übermittlung und mögliche API-Fehler prüfen.
-5. Änderungen nach Möglichkeit **zeitnah nach Veröffentlichung oder Löschung** melden. Bing empfiehlt fortlaufende Meldungen statt seltener Sammelmeldungen. Die Werkbank sendet die ausgewählte Liste **pro Klick**, nicht kontinuierlich im Hintergrund.
-
-**Grenzen:** IndexNow ist keine Aufforderung an Google und garantiert weder Crawling noch Indexierung. Die Auswahl gelöschter URLs beruht auf dem Unterschied der gespeicherten Crawls. Für die konkrete Website muss die gemeldete 404/410-Antwort tatsächlich gelten. [Einrichtung, Ablauf und HTTP-Antwortcodes](BING_INDEXNOW.md).
-
-### 8.6 Bing AI Preferences und auslaufende Angaben
-
-Findet das Audit `bing_legacy_ai_directives`, nutzt eine Seite `noarchive` oder `nocache`. Microsoft führt für **AI Training** und **AI Grounding** neue Einstellungen ein. Der Befund ist ein **Prüfhinweis**, keine automatische Umschreibung von Meta-Tags.
-
-**Laut der dokumentierten Bing-Ankündigung vom 30.10.2026** sind diese Termine relevant: **15.12.2026** (befristete Einstellung über Bing Webmaster Tools), **01.02.2027** (Auswertung der neuen AI-Preferences), **01.03.2027** (Umstellungsfrist für bisherige `noarchive`-/`nocache`-Verwendung zur Grounding-Sperre) und **30.09.2027** (Ablauf befristeter Einstellungen). Prüfe vor Änderungen die aktuelle offizielle Richtlinie und ob die alten Angaben tatsächlich mit dieser Absicht eingesetzt wurden.
-
-Beispiele für neue Anweisungen sowie den Unterschied zwischen Training, Grounding und normaler Bing-Suche findest du unter [Google, Bing und Brave – Suchmaschinen-Regeln](SEARCH_ENGINE_RULES.md). Die Werkbank veröffentlicht keine dieser Angaben automatisch.
 
 ## 9. Keywords, Rankings und SERP-Analyse
 
@@ -890,7 +870,6 @@ Diese Tabelle ist zugleich ein **„Wo finde ich was?“**-Nachschlagewerk.
 | Übersicht | **Dashboard** (`/`) | Lagebild zu Technik, Google, KI und Maßnahmen |
 | Übersicht | **Websites** (`/sites`) | Website anlegen, wählen, Crawl-Standards ändern |
 | Analyse | **Website-Audit** (`/audit`) | 122 Regeln mit Google-/Bing-/Brave-/GEO-Profilen, Quellen-Nachweisstufen und Befunddetails |
-
 | Analyse | **Crawler** (`/crawler`) | Crawls starten, Fortschritt, Seiten, Links, Duplikate und **Relaunch**-Reiter |
 | Analyse | **Weiterleitungen** (`/redirects`) | Regeln vorschlagen, simulieren, freigeben und als Apache-/Nginx-/CSV-Entwurf exportieren |
 | Analyse | **Tracking & Rendering** (`/diagnostics`) | Consent-Zeitfolge, Roh-/JS-Rendering und Bildhinweise |
@@ -1184,6 +1163,8 @@ Der integrierte Validator deckt nur ausgewählte Feldanforderungen ab. Eine erfo
 
 ## 24. Bing, IndexNow und Suchmaschinenprofile
 
+Im Regelkatalog sind seit PR #49 **122 Audit-Regeln** definiert. Das bedeutet **nicht**, dass 122 offizielle Suchmaschinenanforderungen vorliegen. **43 Regeln** sind dem Bing-Profil und **4 Regeln** Brave zugeordnet.
+
 Die Werkbank betrachtet Google, Bing und Brave Search **getrennt**. Eine Regel, die für Google gilt, gilt nicht automatisch für
 die anderen. Zuordnung und Quellen: [Suchmaschinenbezogene Audit-Evidenz](SEARCH_ENGINE_RULES.md).
 
@@ -1198,6 +1179,8 @@ die anderen. Zuordnung und Quellen: [Suchmaschinenbezogene Audit-Evidenz](SEARCH
 - Ein Befund öffnet die Karte **Einordnung**. Je Suchmaschine steht dort, ob ein Satz der Leitlinie die Prüfung wörtlich
   beschreibt (**Zitat**, mit Abschnitt, Wortlaut und Datum der Quelle) oder nur das Themenfeld (**Themenbezug**), oder ob die Regel
   dort **nicht bewertet** wird. „Nicht bewertet“ heißt nicht „irrelevant“.
+- Die technischen Nachweisstufen heißen **`quoted`** (konkretes Zitat) und **`topic`** (nur Themenbezug). **`topic`-Regeln fließen derzeit ebenfalls in den Bing-/Brave-Profilscore ein**, obwohl die Suchmaschinenrichtlinie die genaue Prüfung nicht belegt. Als professionelle Auswertung diese Fälle separat betrachten.
+- Bei **sieben** älteren Bing-Regeln gibt es nur einen Themenbezug: `http_5xx`, `fetch_error`, `robots_unreachable`, `canonical_invalid`, `canonical_broken`, `broken_internal_link` und `sitemap_invalid`. Diese Einträge nicht als dokumentierte Bing-Anforderungen darstellen.
 
 ### 24.2 Bing Webmaster Tools einrichten
 
@@ -1215,14 +1198,12 @@ IndexNow meldet neue, geänderte oder gelöschte URLs an Bing und weitere teilne
 Eine Meldung ist ein Hinweis, keine Garantie für Crawling oder Indexierung.
 
 1. `System → Einstellungen → IndexNow`: Schlüssel **erzeugen** und speichern.
-2. Auf der Website die Datei `/<schlüssel>.txt` mit genau dem Schlüssel als Inhalt ablegen.
-3. `Sichtbarkeit → Bing & IndexNow`: Die Werkbank prüft die Schlüsseldatei und bietet als Quelle an: neu, geändert, gelöscht
-   (404 oder 410, vorher indexierbar), alles zusammen oder eine eigene Liste. Neu, geändert und gelöscht brauchen zwei
-   abgeschlossene Crawls.
-4. Bing empfiehlt, Änderungen **laufend** statt gebündelt zu melden. Also nach jedem Crawl oder jeder Veröffentlichung melden,
-   nicht gesammelt in großen Listen, und nur echte Änderungen.
+2. Auf der Website die Datei `/<schlüssel>.txt` mit genau dem Schlüssel als Inhalt ablegen und die Erreichbarkeit prüfen. Die Datei darf nicht nur per Redirect erreichbar sein.
+3. `Sichtbarkeit → Bing & IndexNow`: Als Auswahl stehen **neue/geänderte URLs**, **neue, geänderte und gelöschte URLs** sowie **eine eigene Liste** zur Verfügung. Der Vergleich benötigt **zwei abgeschlossene Crawls**.
+4. Als **gelöscht** gelten URLs, die im vorherigen Crawl indexierbar waren und beim neuen Crawl **404 oder 410** liefern. Eine **301-Weiterleitung ist keine Löschung**; eine verschwundene URL ohne eindeutigen 404-/410-Nachweis wird nicht allein deshalb als gelöscht gemeldet.
+5. Nach dem Senden den Status der IndexNow-API prüfen und echte Änderungen möglichst **zeitnah nach Veröffentlichung oder Löschung** melden. Bing empfiehlt laufende Meldungen statt seltener Sammelmeldungen. Die Werkbank sendet die ausgewählte Liste **pro Klick**, nicht automatisch dauerhaft im Hintergrund.
 
-Ausführlich: [Bing und IndexNow](BING_INDEXNOW.md).
+**Grenzen:** Eine erfolgreiche IndexNow-Übermittlung garantiert weder Indexierung noch einen Live-Crawl. Bing-Webmaster-Tools-Daten stammen aus Bing, nicht aus der Google Search Console. [Einrichtung, HTTP-Statuscodes und Quellen](BING_INDEXNOW.md).
 
 ### 24.4 Neue suchmaschinenspezifische Befunde
 
@@ -1237,7 +1218,7 @@ Ausführlich: [Bing und IndexNow](BING_INDEXNOW.md).
 **Bing AI Preferences:** Microsoft ersetzt `noarchive` und `nocache` für KI-Training und Grounding durch `ai-training` und
 `ai-grounding` (Meta-Tag `<meta name="Bingbot" content="ai-grounding:disallow">` oder `X-Robots-Tag`; Training zusätzlich in
 `robots.txt`). Fristen: **15.12.2026** befristete Einstellung in den Bing Webmaster Tools, **1.2.2027** Microsoft wertet die
-neuen Angaben aus, **1.3.2027** letzter Termin, wenn du Inhalte weiter vom Grounding ausnehmen willst. Die Fristen stammen aus
+neuen Angaben aus, **1.3.2027** letzter Termin, wenn du Inhalte weiter vom Grounding ausnehmen willst; **30.9.2027** Ende der befristeten Einstellungen. Die Fristen stammen aus
 einer Ankündigung vom 30.10.2026; Microsoft kann sie ändern.
 
 ### 24.5 Grenzen
@@ -1246,6 +1227,8 @@ einer Ankündigung vom 30.10.2026; Microsoft kann sie ändern.
 - Bingbot-Treffer im Logfile sind nur über den User-Agent erkannt. Die Echtheitsprüfung per Reverse-DNS (`search.msn.com`)
   braucht IP-Adressen, die die Werkbank nicht speichert.
 - Nicht erkannt: `noindex` auf einer per `robots.txt` gesperrten URL (die Seite wird nicht abgerufen) und Soft-404-Seiten.
+- Nicht als Bing-Vorgabe belegt sind beispielsweise Redirect-Ketten, Title-/Description-Obergrenzen und reine Agenturblog-Behauptungen. Ebenso unbewiesen sind pauschale Brave-Limits wie 10 Sekunden, 2 MB oder generell kein JavaScript. [Quellen und abgegrenzte Aussagen](SEARCH_ENGINE_RULES.md).
+- Der Stand für PR #49 wurde automatisiert mit 392 bestandenen und 4 übersprungenen Backend-Tests, 29 Frontend-Tests und Typecheck/Build geprüft. Die neue Befunddetailansicht wurde dabei **nicht manuell im Browser** beurteilt; CI belegt keine Eignung aller Regeln für jede reale Website.
 - Brave hat keine Webmaster-Tools. Wer eine Seite neu abrufen oder entfernen lassen will, nutzt das
   [Formular von Brave](https://search.brave.com/submit-url).
 
