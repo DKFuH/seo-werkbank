@@ -268,13 +268,16 @@ Im geöffneten Crawl stehen unter anderem folgende Reiter zur Verfügung:
 
 1. Website auswählen und abgeschlossenen Crawl sicherstellen.
 2. **Website-Audit** öffnen.
-3. Nach Schweregrad und Kategorie priorisieren.
-4. Einen Befund anklicken: Betroffene URLs und Prüfhilfe ansehen.
-5. Problem an der Website selbst nachvollziehen.
-6. Nach der externen Korrektur erneut crawlen.
-7. Wenn vorhanden **Mit früherem Crawl vergleichen** verwenden.
-8. Nachweise als Aufgabe unter **Maßnahmen → SEO-Maßnahmen** dokumentieren.
+3. Nach Schweregrad, Kategorie und – wenn für die Aufgabe passend – **Suchmaschinenprofil** (Google, Bing, Brave oder GEO) filtern. Im Katalog sind derzeit **122 Audit-Regeln** definiert; nicht jede Regel gehört zu jedem Profil.
+4. Einen Befund anklicken: Betroffene URLs, Prüfhilfe und die **Quellenzuordnung** ansehen. Für Bing und Brave enthält sie einen Abschnitt und Prüfstand der Quelle sowie die Nachweisstufe **`quoted`** (wörtlich belegte konkrete Prüfung) oder **`topic`** (lediglich Themenbezug).
+5. Die Nachweisstufe beurteilen: **`topic` zählt derzeit im Suchmaschinen-Profilscore mit**, belegt aber gerade **keine konkrete Suchmaschinen-Vorgabe**. Regeln ohne geeignete Zuordnung bleiben in **Alle Befunde** sichtbar.
+6. Das Problem an der Website selbst nachvollziehen. Ein Profilscore ist **kein offizieller Google-/Bing-/Brave-Score**, keine Rankingprognose und wegen unterschiedlicher Regelmengen nicht direkt zwischen Suchmaschinen vergleichbar.
+7. Nach der externen Korrektur erneut crawlen.
+8. Wenn vorhanden **Mit früherem Crawl vergleichen** verwenden.
+9. Nachweise als Aufgabe unter **Maßnahmen → SEO-Maßnahmen** dokumentieren.
 9. Spalte **Herkunft** und die Karte **Einordnung** zeigen, ob ein Befund eine technische Pflicht, eine Google-Empfehlung oder nur eine Heuristik ist und wie Bing und Brave dazu stehen; die Profil-Kacheln filtern danach ([Kapitel 24](#24-bing-indexnow-und-suchmaschinenprofile)).
+
+**Suchmaschinen-Nachweise (Stand PR #49, 23.11.2026):** Die aktuelle Zuordnung umfasst **43 Bing-** und **4 Brave-Regeln**. Jede Zuordnung nennt die Fundstelle und das Prüfdaten-/Quellendatum. Sieben ältere Bing-Prüfungen bleiben mangels passender konkreter Formulierung nur **`topic`**: `http_5xx`, `fetch_error`, `robots_unreachable`, `canonical_invalid`, `canonical_broken`, `broken_internal_link` und `sitemap_invalid`. Diese nicht als bestätigte Bing-Vorgaben ausgeben. Die Suchmaschinenprofile nutzen dieselben bisherigen Schweregrad-Abzüge, nicht individuell von Bing oder Brave veröffentlichte Gewichtungen. [Quellen, Nachweisstufen und nicht belegte Annahmen](SEARCH_ENGINE_RULES.md).
 
 **Template-Content-Erkennung:** Das Audit kann Seiten mit einem ungewöhnlich hohen Anteil gleicher Textpassagen auf anderen indexierbaren Seiten markieren. Dies ist ein **Hinweis zur manuellen Prüfung**, nicht ein automatischer Google-Penalty-Nachweis. Gemeinsame Navigations- und CTA-Blöcke werden bei der Erkennung teilweise herausgefiltert.
 
@@ -291,6 +294,8 @@ Ein Linkvorschlag ändert die Website noch nicht.
 ### 7.3 Sitemaps, Schema, PageSpeed, International und Local
 
 **Sitemaps & Indexierung:** `Analyse → Sitemaps & Indexierung`. Prüft Sitemap-URLs, robots.txt, fehlende indexierbare Seiten und Canonical-Abweichungen. Ein erzeugtes `sitemap.xml`-Dokument muss bei Bedarf selbst im Webauftritt bereitgestellt werden.
+
+**Neu seit PR #49 – robots.txt und Sitemap:** Im Website-Audit erscheinen bei entsprechendem Befund die zusätzlichen Regeln `robots_googlebot_blocked` (Googlebot für die Startseite gesperrt, Werkbank-Crawler nicht), `robots_bingbot_blocked` (entsprechend Bingbot), `robots_bingbot_group_incomplete` (eigene Bingbot-Gruppe übernimmt allgemeine Sperren nicht) und `sitemap_lastmod_missing` (keine URL der XML-Sitemap mit `lastmod`). Prüfe die tatsächliche robots.txt samt User-Agent-Gruppen; eine für die Werkbank abrufbare Seite ist nicht zwingend für Google oder Bing crawlbar. **Bei Brave ist eine Googlebot-Sperre ebenfalls relevant**. Ein `lastmod`-Wert sollte nur bei nachweisbarer Änderung gesetzt werden, niemals erfunden werden. Fehlende `lastmod`-Einträge sind ein Hinweis, keine allgemeine Indexierungsblockade. Details: [Suchmaschinen-Regeln](SEARCH_ENGINE_RULES.md).
 
 **Strukturierte Daten:** `Analyse → Strukturierte Daten`. Unter **Validator** eine URL oder JSON-LD eingeben und prüfen; unter **Generator** einen Schema-Typ auswählen, Felder ausfüllen, Markup erzeugen und anschließend **selbst** in die Website einbauen. Der zusätzliche Reiter **Rich-Result-Potenzial** wertet JSON-LD des letzten Crawls aus (siehe 7.7).
 
@@ -431,6 +436,26 @@ GSC-Positionen sind **impressionsgewichtete Durchschnittswerte**, keine neutrale
 3. Den von Google gemeldeten Indexierungsstatus, den letzten Google-Crawl und die Canonical-Angaben ansehen.
 
 Die Abfrage nutzt die **Google URL Inspection API**. Sie führt **keinen Live-Test** aus, ändert nichts an Googles Index und unterliegt Googles Kontingent. Details: [Google URL Inspection](GSC_URL_INSPECTION.md).
+
+### 8.5 Bing Webmaster Tools und IndexNow
+
+**Wo:** `Sichtbarkeit → Bing & IndexNow` (`/bing`). Einrichtung durch Administratoren unter **System → Einstellungen → Bing Webmaster Tools / IndexNow**.
+
+1. Website bei Bing Webmaster Tools verifizieren, API-Schlüssel hinterlegen und die zur ausgewählten Website passende Bing-Property kontrollieren. Bing-Daten sind eine **eigene Datenquelle**, nicht aus der Google Search Console ableitbar.
+2. Für **IndexNow** einen Schlüssel erzeugen und die dazugehörige `.txt`-Datei direkt unter der eigenen Domain verfügbar machen. Die Werkbank prüft, ob diese Datei erreichbar ist.
+3. Nach **zwei abgeschlossenen Crawls** zwischen **„Neu + geändert seit vorherigem Crawl“** und **„Neu, geändert und gelöscht seit vorherigem Crawl“** wählen. Die zweite Auswahl berücksichtigt auch URLs, die vorher indexierbar waren und jetzt **HTTP 404 oder 410** zurückgeben. **301 ist keine Löschung**.
+4. Alternativ URLs bewusst als eigene Liste eingeben. Nur URLs der Website werden berücksichtigt. Das Ergebnis der Übermittlung und mögliche API-Fehler prüfen.
+5. Änderungen nach Möglichkeit **zeitnah nach Veröffentlichung oder Löschung** melden. Bing empfiehlt fortlaufende Meldungen statt seltener Sammelmeldungen. Die Werkbank sendet die ausgewählte Liste **pro Klick**, nicht kontinuierlich im Hintergrund.
+
+**Grenzen:** IndexNow ist keine Aufforderung an Google und garantiert weder Crawling noch Indexierung. Die Auswahl gelöschter URLs beruht auf dem Unterschied der gespeicherten Crawls. Für die konkrete Website muss die gemeldete 404/410-Antwort tatsächlich gelten. [Einrichtung, Ablauf und HTTP-Antwortcodes](BING_INDEXNOW.md).
+
+### 8.6 Bing AI Preferences und auslaufende Angaben
+
+Findet das Audit `bing_legacy_ai_directives`, nutzt eine Seite `noarchive` oder `nocache`. Microsoft führt für **AI Training** und **AI Grounding** neue Einstellungen ein. Der Befund ist ein **Prüfhinweis**, keine automatische Umschreibung von Meta-Tags.
+
+**Laut der dokumentierten Bing-Ankündigung vom 30.10.2026** sind diese Termine relevant: **15.12.2026** (befristete Einstellung über Bing Webmaster Tools), **01.02.2027** (Auswertung der neuen AI-Preferences), **01.03.2027** (Umstellungsfrist für bisherige `noarchive`-/`nocache`-Verwendung zur Grounding-Sperre) und **30.09.2027** (Ablauf befristeter Einstellungen). Prüfe vor Änderungen die aktuelle offizielle Richtlinie und ob die alten Angaben tatsächlich mit dieser Absicht eingesetzt wurden.
+
+Beispiele für neue Anweisungen sowie den Unterschied zwischen Training, Grounding und normaler Bing-Suche findest du unter [Google, Bing und Brave – Suchmaschinen-Regeln](SEARCH_ENGINE_RULES.md). Die Werkbank veröffentlicht keine dieser Angaben automatisch.
 
 ## 9. Keywords, Rankings und SERP-Analyse
 
@@ -864,7 +889,8 @@ Diese Tabelle ist zugleich ein **„Wo finde ich was?“**-Nachschlagewerk.
 |---|---|---|
 | Übersicht | **Dashboard** (`/`) | Lagebild zu Technik, Google, KI und Maßnahmen |
 | Übersicht | **Websites** (`/sites`) | Website anlegen, wählen, Crawl-Standards ändern |
-| Analyse | **Website-Audit** (`/audit`) | Regelbasierte Fehler und Hinweise je Crawl |
+| Analyse | **Website-Audit** (`/audit`) | 122 Regeln mit Google-/Bing-/Brave-/GEO-Profilen, Quellen-Nachweisstufen und Befunddetails |
+
 | Analyse | **Crawler** (`/crawler`) | Crawls starten, Fortschritt, Seiten, Links, Duplikate und **Relaunch**-Reiter |
 | Analyse | **Weiterleitungen** (`/redirects`) | Regeln vorschlagen, simulieren, freigeben und als Apache-/Nginx-/CSV-Entwurf exportieren |
 | Analyse | **Tracking & Rendering** (`/diagnostics`) | Consent-Zeitfolge, Roh-/JS-Rendering und Bildhinweise |
@@ -875,7 +901,7 @@ Diese Tabelle ist zugleich ein **„Wo finde ich was?“**-Nachschlagewerk.
 | Analyse | **Internationales SEO** (`/international`) | Sprach- und Länderangaben |
 | Analyse | **Lokales SEO** (`/local`) | LocalBusiness, NAP, Standortdaten |
 | Sichtbarkeit | **Search Console** (`/search-console`) | Google-Messwerte per API oder CSV |
-| Sichtbarkeit | **Bing & IndexNow** (`/bing`) | Bing-Suchanfragen und -Crawling, URL-Meldung per IndexNow ([Anleitung](BING_INDEXNOW.md)) |
+| Sichtbarkeit | **Bing & IndexNow** (`/bing`) | Bing-Webmaster-Daten und IndexNow für neue, geänderte und gelöschte (404/410) URLs nach zwei Crawls ([Anleitung](BING_INDEXNOW.md)) |
 | Sichtbarkeit | **Logfile & 404** (`/logs`) | Serverlog-Import, aggregierte 404-Pfade, User-Agent-Indizien und Redirect-Entwürfe |
 | Sichtbarkeit | **Ranktracker** (`/rank-tracking`) | GSC-Portfolio, alle GSC-Keywords mit Chancen, Anbieter-Messungen; Keyword-Detail unter `/rank-tracking/keywords/…` |
 | Sichtbarkeit | **Keyword-Recherche** (`/keywords`) | Vorschläge, Keywords, Zuordnung, Cluster |
@@ -1084,6 +1110,8 @@ Die technische Dokumentation des Projekts enthält Details zu Methoden, Grenzwer
 
 - [Tracking, Rendering und Bilddiagnostik](TECHNICAL_DIAGNOSTICS.md)
 - [Advanced SEO: Overlap, Relaunch, Paginierung, Schema](ADVANCED_SEO.md)
+- [Suchmaschinenprofile und Nachweise: Google, Bing, Brave](SEARCH_ENGINE_RULES.md)
+- [Bing Webmaster Tools und IndexNow](BING_INDEXNOW.md)
 - [Verzeichnisqualität und KI-Quellenstabilität](AUTHORITY_INTELLIGENCE.md)
 - [Verschlüsselte Zugangsdaten](SECURE_INTEGRATIONS.md)
 - [Google URL Inspection](GSC_URL_INSPECTION.md)
@@ -1152,7 +1180,7 @@ Der integrierte Validator deckt nur ausgewählte Feldanforderungen ab. Eine erfo
 
 [Ausführliche Anleitung und technische Grenzen](STRUCTURED_DATA.md)
 
-**Prüfstand:** Implementierung PRs #41–#45, 23.11.2026. Automatisierte CI-Prüfungen sind erfolgreich; eine vollständige manuelle Bedienprüfung mit realen produktiven Serverkonfigurationen steht aus.
+**Prüfstand:** SEO-Operations PRs #41–#45 und Suchmaschinen-Erweiterung **PR #49** (Merge-Commit `11b1a32`, 23.11.2026). Für PR #49 waren 392 Backend-Tests bestanden, 4 übersprungen, dazu Frontend-Typecheck, Build und 29 Tests sowie vor dem Merge zehn grüne CI-Checks dokumentiert. Eine manuelle Browserprüfung der neuen Detailansicht und eine Prüfung mit echten Produktionsdaten sind damit **nicht** belegt. **Noch nicht implementiert:** `noindex` auf per robots.txt gesperrten URLs erkennen (die Seite wird nicht abgerufen) sowie Soft-404-Erkennung durch gezielte Abrufe nicht existierender URLs.
 
 ## 24. Bing, IndexNow und Suchmaschinenprofile
 
