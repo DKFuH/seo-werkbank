@@ -12,7 +12,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from ..audit.schema_validator import validate_jsonld
+from ..audit.schema_validator import jsonld_script_element, validate_jsonld
 from ..db import get_db
 from ..models import SeoContentProposal, SeoWorkItem, User, utcnow
 from ..security.auth import current_user, get_site_for
@@ -41,9 +41,15 @@ def _proposal(db: Session, item_id: int) -> SeoContentProposal | None:
 def _out(p: SeoContentProposal) -> dict:
     diff = list(difflib.unified_diff(p.original_text.splitlines(), p.proposed_text.splitlines(),
                                      fromfile="Vom Nutzer eingegebener Ausgangstext", tofile="Entwurf", lineterm=""))
+    safe_html = None
+    if p.content_type == "application/ld+json":
+        try:
+            safe_html = jsonld_script_element(json.loads(p.proposed_text))
+        except (json.JSONDecodeError, TypeError):
+            pass  # Retain invalid drafts for correction without inventing HTML.
     return {"exists": True, "id": p.id, "work_item_id": p.work_item_id, "original_text": p.original_text,
             "proposed_text": p.proposed_text, "rationale": p.rationale,
-            "content_type": p.content_type, "status": p.status,
+            "content_type": p.content_type, "safe_html": safe_html, "status": p.status,
             "approved_at": p.approved_at.isoformat() if p.approved_at else None,
             "marked_published_at": p.marked_published_at.isoformat() if p.marked_published_at else None,
             "created_at": p.created_at.isoformat(), "updated_at": p.updated_at.isoformat(),
