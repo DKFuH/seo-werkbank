@@ -1,8 +1,8 @@
 """Redirect-planner unit tests, no server writes."""
 from types import SimpleNamespace
 
-import pytest
 from fastapi import HTTPException
+import pytest
 
 from app.services.redirects import export_rules, normalise_url, simulate
 
