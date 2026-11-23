@@ -53,6 +53,17 @@ the current implementation.
   not a full schema.org validator, does not validate value formats (dates, URLs, enumerations) and reports Microdata/RDFa types without
   validating them.
 
+## SEO-Operations (Redirects, access logs, JSON-LD)
+
+- **Redirects are planned, not deployed.** The tool proposes and simulates rules but never changes web servers or CMS configuration. Only approved rules can be exported. Apache output is specifically for `.htaccess` at document root, not a virtual-host rewrite context; Nginx uses exact-match locations. Existing server configuration can create conflicts not visible in the simulator.
+- **Database migration `0013` is deliberately strict.** If existing rows share `(site_id, source_url)`, the migration stops rather than silently deleting a redirect. Review and resolve duplicates before restarting the upgrade. Concurrent duplicate inserts are rejected with HTTP 409.
+- **404-to-redirect candidates are heuristic.** Similar path tokens do not prove equivalent search intent. Candidate comparisons are deliberately capped, so some suitable destinations may not be suggested; final selection and approval are manual.
+- **Log parser is intentionally restricted:** Apache/Nginx Common and Combined, with up to two additional trailing quoted fields. Custom `log_format`, JSON logs and arbitrary HTTP variants are not supported. A 64 KiB limit applies per line; longer lines are skipped with bounded buffering. Import and decompression limits still apply.
+- **Privacy protection is partial, not guaranteed anonymisation.** Raw log lines, IP addresses, complete User-Agents, referrer paths and query strings are not persisted, but unrecognised personal identifiers may remain in URL paths. Temporary raw files can exist during processing and until recovery after a crash. User-Agent labels such as `googlebot_claim` are not verified by DNS or IP ranges.
+- **Jobs are in-process.** On restart, interrupted imports are marked failed and their associated temporary files are removed. Job-start failures are cleaned up, but a process crash before the temporary file is assigned an import ID may leave a staging file until manual/OS cleanup. A missing Googlebot-claim hit in an imported period is not proof of non-indexing.
+- **JSON-LD proposals remain raw JSON.** They must not be pasted directly between HTML `<script>` tags. Use the separately HTML-escaped `safe_html` snippet shown for a saved proposal. The validator does not establish schema.org semantic completeness or eligibility for Google Rich Results, and no CMS publishing takes place.
+- **Automated CI coverage is not full manual validation.** API checks, Linux/Windows/macOS tests, frontend tests and Docker smoke tests have run, but production server deployments, complete UI click-throughs and every external provider scenario remain unverified.
+
 ## Content and language
 
 - Readability formulas (Flesch) and the stemmer are calibrated for English. Other languages get tokenised correctly but scores are less
