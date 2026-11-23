@@ -23,7 +23,7 @@ BRAVE_DOCUMENTED = frozenset({
     "noindex", "robots_blocks_site", "blocked_by_robots",
 })
 # Not supported as a claim of documented engine-specific ranking criteria.
-ENGINE_STATES = ("documented", "unverified")
+ENGINE_STATES = ("related_guidance", "not_evaluated")
 
 
 def engine_guidance(rule_id: str) -> dict:
@@ -31,12 +31,11 @@ def engine_guidance(rule_id: str) -> dict:
     # This module is only invoked for IDs from the registered audit catalogue.
     return {
         engine: {
-            "status": ("documented" if rule_id in ids else "unverified"),
+            "status": ("related_guidance" if rule_id in ids else "not_evaluated"),
             "documentation": ENGINE_DOCUMENTATION[engine]
                 if rule_id in ids else None,
         }
         for engine, ids in (
-            ("google", frozenset()),  # See separate rule provenance for Google.
             ("bing", BING_DOCUMENTED),
             ("brave", BRAVE_DOCUMENTED),
         )
