@@ -75,23 +75,25 @@ SEO-Operations changes in PRs #41–#45:
 | Feature | Why unverified | Risk |
 |---|---|---|
 | PageSpeed Insights API call | The anonymous shared quota was exhausted (HTTP 429, handled with a clear message). Result parsing is unit-tested with a synthetic Lighthouse report. | Field names in real responses may differ in details |
-| Local Lighthouse run | Lighthouse CLI not installed on the development machine | Subprocess invocation untested |
-| Search Console OAuth, property list, API sync | No Google Cloud OAuth client available | Token exchange / API response handling untested |
+| Local Lighthouse run | Environment needs the Lighthouse CLI and Chrome | Verify invocation against the target machine and browser |
+| Search Console OAuth, property list, API sync and URL Inspection | Code/API implemented; no verified external OAuth round trip documented | Verify consent flow, permissions, actual search data and index status against an authorized property |
 | SERP providers (SearXNG, Google Programmable Search, Brave) | No instance or API keys available | Response mapping untested; manual-URL mode is tested |
 | AI providers (Ollama, OpenAI-compatible) | No model server available | Prompt construction is tested; HTTP calls are not |
 | PostgreSQL beyond a smoke test | CI proves the migrations apply and a user can be written through the API on PostgreSQL 16 in a container. The full test suite and crawls were only run on SQLite | Dialect differences in less common queries |
 | Docker on Windows/macOS and long-running use | CI runs on Linux only. A crawl, the data volume across restarts and the UI inside the container were not exercised | Volume permissions or crawl behaviour inside the container could still surprise |
 | Frontend interactions | Screens were loaded and checked for errors; forms/buttons on most screens were not clicked through one by one. The Search Console return flow was checked in the browser only with an invalid state | UI bugs in less common flows are likely |
 | Dropped capabilities and `no-new-privileges` | Applied in `docker-compose.yml` and covered by the Compose smoke test (the app starts and answers health and registration) | Anything that needs a capability at runtime would only show up in less common flows |
-| SEO-Werkbank screens (`/seo-work`, `/research`, `/rank-tracking` …) | Covered by API tests only; no browser walkthrough yet | Form or display bugs in the new screens |
+| SEO-Werkbank screens (`/seo-work`, `/research`, `/rank-tracking`, `/redirects`, `/logs`, `/schema` …) | API/frontend/CI checks exist; no comprehensive manual live-site click-through documented | Form or display bugs in less common flows remain possible |
 | Rank capture through a SERP provider | No provider configured; only the "no provider" refusal is tested | Host matching and result mapping untested against live data |
 | External penetration test | Not done; the review was code reading, scanners and regression tests | Unknown issues may remain |
 
 ### Not implemented / still unverified
 
 See `KNOWN_LIMITATIONS.md` and `docs/ROADMAP.md`: Google Analytics, Google Trends,
-Google Business Profile, e-mail/webhook notifications, batch page-speed runs,
-custom log format definitions and verified bot identities remain unavailable or out of scope.
+Google Business Profile, guaranteed queued alert delivery, custom log format definitions
+and verified bot identities remain unavailable or out of scope. SMTP/HTTPS-webhooks,
+bounded batch-PageSpeed, encrypted secrets, Google URL Inspection and SERP-overlap
+clustering **are implemented**, but need relevant live-provider verification.
 **Logfile analysis, Bing Webmaster Tools/IndexNow, redirect and schema management are implemented**;
 none of their existence establishes verified results against every live search engine or production web server.
 The Google Search Console URL Inspection integration and other external API integrations must be verified
