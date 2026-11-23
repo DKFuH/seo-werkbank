@@ -1,7 +1,6 @@
 """Regression checks for redirect API policy, log parsing and schema delivery."""
 from __future__ import annotations
 
-import tempfile
 from pathlib import Path
 
 import pytest
