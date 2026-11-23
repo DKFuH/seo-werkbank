@@ -12,7 +12,7 @@ from sqlalchemy import select
 
 from ..models import Page
 
-SAFE_PATH = re.compile(r"^/[A-Za-z0-9._~!$&'()*+,;=:@/-]*$")
+SAFE_PATH = re.compile(r"^/[A-Za-z0-9._~!&'()*+,=:@/-]*$")
 
 
 def normalise_url(site, raw: str) -> str:
