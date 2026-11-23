@@ -4,7 +4,7 @@ import {
   Activity, Bell, FileSearch, FileText, Gauge, Globe2, Languages, LayoutDashboard, Link2, LogOut, MapPin, Menu, Moon, Network,
   PenLine, Search, Settings, Share2, ListTree, Sun, Swords, Braces, Bug, KeyRound, LineChart, X, Sigma, Bot, BarChart3,
   ChevronRight, ClipboardList, Eye, FilePen, History, Microscope, Radar, RefreshCw, ShieldCheck, Target, TrendingUp, BadgeEuro,
-  MapPinned, MessageSquareQuote, Sparkles, Lightbulb, CircleHelp,
+  MapPinned, MessageSquareQuote, HeartPulse, Sparkles, Lightbulb, CircleHelp,
 } from "lucide-react";
 import { type ReactNode, useEffect, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
@@ -75,6 +75,7 @@ export const NAV: NavGroup[] = [
   { section: "Maßnahmen", hint: "Aufgaben und Nachweise", items: [
     { to: "/seo-work", label: "SEO-Maßnahmen", icon: i(ClipboardList) },
     { to: "/seo-evidence", label: "Lokale Nachweise", icon: i(MapPinned) },
+    { to: "/health", label: "Website Health", icon: i(HeartPulse) },
     { to: "/monitoring", label: "Monitoring", icon: i(Activity) },
     { to: "/reports", label: "Berichte", icon: i(FileText) },
   ] },

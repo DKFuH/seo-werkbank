@@ -5,6 +5,16 @@ uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased] - SEO-Werkbank
 
+### Added (Website Health)
+- **Website Health** (`/health`): uptime monitor with check history (90 days), incidents (start, duration, cause) and
+  statistics per URL. Each check is classified: high response time, timeout, SSL, DNS, connection, redirect error,
+  404/410, server error, client error, Content-Encoding error, incomplete response, oversized content. Downtime opens an
+  incident at once; slowness after a configurable number of consecutive slow checks (default 2, threshold 2,000 ms).
+  Alerts on open and on resolve. Status strip per time bucket, response-time candles (first/last/min/max per bucket)
+  with the alert threshold, incident table with search, filter, sort and paging, overview of the checked error classes.
+- Uptime monitors now check every 15 minutes by default (was 1 hour); alert texts are German.
+- `GET /sites/{id}/website-health?period=24h|7d|30d&url=…`; migration `0008`.
+
 ### Added (GEO)
 - robots.txt AI signals: detection of the Cloudflare-managed section that blocks AI crawlers (`geo_cloudflare_ai_block`)
   and of `Content-Signal` lines with `search=no` or `ai-input=no` (`geo_content_signal_restrictive`; `ai-train=no` is

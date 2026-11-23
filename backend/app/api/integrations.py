@@ -303,7 +303,7 @@ def _clean_config(config: dict) -> dict:
         out["urls"] = [checked_url(str(u)) for u in config["urls"][:50]]
     if isinstance(config.get("crawl"), dict):
         out["crawl"] = CrawlConfig(**config["crawl"]).model_dump(exclude_unset=True)
-    for key, lo, hi in (("position_change", 1, 50), ("days", 7, 180)):
+    for key, lo, hi in (("position_change", 1, 50), ("days", 7, 180), ("slow_ms", 300, 30000), ("slow_repeat", 1, 10)):
         if key in config:
             out[key] = max(lo, min(hi, float(config[key])))
     return out

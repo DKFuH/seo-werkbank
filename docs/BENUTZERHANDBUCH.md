@@ -672,6 +672,24 @@ kürzen und dann als `/llms.txt` ins Wurzelverzeichnis der Website legen.
 
 Die Erfüllung solcher Kriterien garantiert keine Aufnahme in KI-Antworten.
 
+### 13.1a Website Health
+
+**Wo:** `Maßnahmen → Website Health`
+
+1. Website auswählen und **Überwachung starten**. Geprüft wird die Website-URL alle 15 Minuten.
+2. Oben stehen der aktuelle Status (UP, LANGSAM, DOWN) und die Verfügbarkeit im gewählten Zeitraum (24 Stunden, 7 oder 30 Tage).
+3. Die **Statusleiste** zeigt je Zeitabschnitt, ob alle Prüfungen in Ordnung waren, langsam oder fehlerhaft.
+4. Das **Kerzendiagramm** zeigt die Antwortzeit je Zeitabschnitt: erste und letzte Prüfung als Kerzenkörper, schnellste
+   und langsamste als Linie. Die gestrichelte Linie ist der Alert-Grenzwert, rote Marken unten zeigen Ausfälle.
+5. **Vorfälle** listet jeden Ausfall und jede Phase mit hoher Antwortzeit mit Beginn, Dauer und Ursache. Suchen,
+   filtern und sortieren ist möglich.
+6. **Einstellungen** am Diagramm: Grenzwert in ms (Standard 2.000), nach wie vielen langsamen Prüfungen in Folge ein
+   Vorfall entsteht (Standard 2) und das Prüfintervall (ab 15 Minuten). Weitere URLs lassen sich unter Monitoring
+   eintragen.
+
+Jeder neue und jeder behobene Vorfall erzeugt eine Meldung (Glocke oben rechts) und geht über eingerichtete
+Benachrichtigungskanäle raus. Geprüft wird von dem Server aus, auf dem SEO-Werkbank läuft.
+
 ### 13.2 KI-Erwähnungen
 
 **Wo:** `Sichtbarkeit → KI-Erwähnungen`
