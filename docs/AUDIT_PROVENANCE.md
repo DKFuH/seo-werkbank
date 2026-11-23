@@ -43,6 +43,9 @@ konservativer Metadaten-Schritt, **keine offizielle Google-Zertifizierung**.
 - **Befund-Detailseite:** Karte „Einordnung“ mit der Klassifizierung und dem
   Status je Suchmaschine („dokumentiert · im Score“ bzw. „nicht bewertet“)
   samt Link zur Dokumentation.
+- **Exporte:** Der Issue-Export (CSV/XLSX/JSON) enthält die Spalten
+  `classification` und `profiles`; der PDF-Bericht zeigt die Profil-Scores
+  und je Befund die Spalte „Basis“.
 - Jede Nicht-GEO-Regel steht explizit in genau einer der drei Mengen in
   `rules.py`; ein Test schlägt fehl, wenn eine neue Regel nicht eingeordnet ist.
 

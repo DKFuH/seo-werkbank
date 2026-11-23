@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 
 from ..audit.rules import RULES, rule_dict
 from ..db import get_db, session_scope
-from ..integrations import ai, gsc
+from ..integrations import ai, bing, gsc
 from ..integrations import matomo as mt
 from ..jobs import jobs
 from ..models import Alert, Backlink, Citation, Crawl, GscRow, Issue, Link, Monitor, Page, Site, User, utcnow
@@ -450,6 +450,8 @@ class SettingsIn(BaseModel):
     ai: dict[str, str] | None = None
     gsc: dict[str, str] | None = None
     matomo: dict[str, str] | None = None
+    bing: dict[str, str] | None = None
+    indexnow: dict[str, str] | None = None
     notifications: dict[str, str] | None = None
 
 
@@ -460,6 +462,13 @@ def write_settings(body: SettingsIn, user: User = Depends(admin_user), db: Sessi
         raise HTTPException(422, "Unbekannter SERP-Anbieter")
     if "ai" in data and data["ai"].get("provider") not in (None, "none", "ollama", "openai_compatible"):
         raise HTTPException(422, "Unbekannter KI-Anbieter")
+    if "indexnow" in data:
+        key = (data["indexnow"].get("key") or "").strip()
+        if key and not bing.KEY_RE.fullmatch(key):
+            raise HTTPException(422, "IndexNow-Schlüssel: 8–128 Zeichen aus a–z, A–Z, 0–9 und '-'")
+        loc = (data["indexnow"].get("key_location") or "").strip()
+        if loc and (urlsplit(loc).scheme != "https" or not urlsplit(loc).hostname or not loc.endswith(".txt")):
+            raise HTTPException(422, "Ort der Schlüsseldatei muss eine https-URL auf eine .txt-Datei sein")
     if "notifications" in data:
         n = data["notifications"]
         if n.get("enabled", "false") not in ("true", "false"):

@@ -56,9 +56,18 @@ Brave-SEO-Regelliste aus allgemeinen Heuristiken ableiten.
 
 1. Pro einzelner Regel die genaue Fundstelle und Dokumentationsstand
    hinterlegen, nicht bloß einen allgemeinen Link.
-2. Bing-Datenanbindung und IndexNow als optionale, unabhängig getestete
-   Module planen und entwickeln.
+2. ~~Bing-Datenanbindung und IndexNow~~ – umgesetzt, siehe
+   [BING_INDEXNOW.md](BING_INDEXNOW.md).
 3. Brave-Check auf nachweisbare Crawl-Sperren und `noindex` beschränken;
    Indexierungsstatus als unbekannt kennzeichnen, sofern keine Quelle vorliegt.
 4. Die konkrete Quellenzuordnung pro Regel weiter präzisieren; `not_evaluated`
    bleibt sichtbar und wird nicht in Bing-/Brave-Scores eingerechnet.
+
+## Warum keine eigene Gewichtung je Suchmaschine
+
+Die Profile unterscheiden Suchmaschinen bereits dadurch, **welche** Regeln in
+ihren Score einfließen. Unterschiedliche Punktabzüge je Suchmaschine (etwa
+„fehlender Title wiegt bei Bing schwerer“) würden eine Genauigkeit
+behaupten, die keine der Suchmaschinen dokumentiert. Deshalb verwenden alle
+Profile dieselben Schweregrad-Abzüge. Eine eigene Gewichtung kommt erst
+infrage, wenn eine konkrete, datierte Quelle sie stützt.

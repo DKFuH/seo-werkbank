@@ -6,6 +6,7 @@ const resources = [
   { title: "Erste Website anlegen und crawlen", path: "/sites", guide: "SCHNELLSTART.md", info: "Website, Crawl-Optionen, erste technische Fehler" },
   { title: "Crawls, Rendering und Bilddiagnostik", path: "/diagnostics", guide: "TECHNICAL_DIAGNOSTICS.md", info: "JavaScript und Consent getrennt prüfen; Bildhinweise sind keine LCP-Messung" },
   { title: "Google Search Console und URL Inspection", path: "/search-console", guide: "GSC_URL_INSPECTION.md", info: "OAuth, Indexierungsdaten und die Grenzen des Google-API-Ergebnisses" },
+  { title: "Bing Webmaster Tools und IndexNow", path: "/bing", guide: "BING_INDEXNOW.md", info: "Bing-Daten, Schlüsseldatei und URL-Meldungen; keine Indexierungsgarantie" },
   { title: "SERP-Overlap, Relaunch und Schema", path: "/serp", guide: "ADVANCED_SEO.md", info: "Keyword-Paare, gespeicherte Crawls und strukturierte Daten" },
   { title: "Keyword- und SERP-Clustering", path: "/keywords", guide: "KEYWORD_SERP_CLUSTERING.md", info: "Lexikalische Cluster vs. tatsächliche Listenüberschneidungen" },
   { title: "PageSpeed und Monitoring", path: "/pagespeed", guide: "NOTIFICATIONS_PAGESPEED.md", info: "Einzelmessungen, Batches, Quellen und Meldungskanäle" },

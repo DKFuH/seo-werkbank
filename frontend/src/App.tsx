@@ -42,6 +42,7 @@ const Matomo = lazy(() => import("./pages/Matomo"));
 const Competitors = lazy(() => import("./pages/Competitors"));
 const Backlinks = lazy(() => import("./pages/Backlinks"));
 const SearchConsole = lazy(() => import("./pages/SearchConsole"));
+const Bing = lazy(() => import("./pages/Bing"));
 const Monitoring = lazy(() => import("./pages/Monitoring"));
 const Health = lazy(() => import("./pages/Health"));
 const Reports = lazy(() => import("./pages/Reports"));
@@ -94,6 +95,7 @@ export default function App() {
             <Route path="/competitors" element={<Competitors />} />
             <Route path="/backlinks" element={<Backlinks />} />
             <Route path="/search-console" element={<SearchConsole />} />
+            <Route path="/bing" element={<Bing />} />
             <Route path="/monitoring" element={<Monitoring />} />
             <Route path="/health" element={<Health />} />
             <Route path="/reports" element={<Reports />} />

@@ -4,7 +4,7 @@ import {
   Activity, Bell, FileSearch, FileText, Gauge, Globe2, Languages, LayoutDashboard, Link2, LogOut, MapPin, Menu, Moon, Network,
   PenLine, Search, Settings, Share2, ListTree, Sun, Swords, Braces, Bug, KeyRound, LineChart, X, Sigma, Bot, BarChart3,
   ChevronRight, ClipboardList, Eye, FilePen, History, Microscope, Radar, RefreshCw, ShieldCheck, Target, TrendingUp, BadgeEuro,
-  MapPinned, MessageSquareQuote, HeartPulse, Sparkles, Lightbulb, CircleHelp,
+  MapPinned, MessageSquareQuote, HeartPulse, Sparkles, Lightbulb, CircleHelp, Send,
 } from "lucide-react";
 import { type ReactNode, useEffect, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
@@ -45,8 +45,9 @@ export const NAV: NavGroup[] = [
     { to: "/international", label: "Internationales SEO", icon: i(Languages) },
     { to: "/local", label: "Lokales SEO", icon: i(MapPin) },
   ] },
-  { section: "Sichtbarkeit", hint: "Google, KI-Antworten, Wettbewerb", items: [
+  { section: "Sichtbarkeit", hint: "Google, Bing, KI-Antworten, Wettbewerb", items: [
     { to: "/search-console", label: "Search Console", icon: i(LineChart) },
+    { to: "/bing", label: "Bing & IndexNow", icon: i(Send) },
     { to: "/rank-tracking", label: "Ranktracker", icon: i(TrendingUp) },
     { to: "/keywords", label: "Keyword-Recherche", icon: i(KeyRound) },
     { to: "/serp", label: "SERP-Analyse", icon: i(Search) },
