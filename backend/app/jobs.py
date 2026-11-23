@@ -124,12 +124,26 @@ jobs = JobManager()
 
 def mark_interrupted_jobs() -> None:
     """On startup, anything still marked queued/running belonged to a previous process."""
+    import tempfile
+    from pathlib import Path
+
     from .models import Crawl, LogImport  # local import to avoid a cycle
 
+    interrupted_imports: set[int] = set()
     with session_scope() as db:
         for job in db.query(Job).filter(Job.status.in_(("queued", "running"))):
             job.status, job.error, job.finished_at = "failed", "Durch Serverneustart unterbrochen", utcnow()
         for crawl in db.query(Crawl).filter(Crawl.status.in_(("queued", "running"))):
             crawl.status, crawl.error, crawl.finished_at = "failed", "Durch Serverneustart unterbrochen", utcnow()
         for record in db.query(LogImport).filter(LogImport.state == "processing"):
+            interrupted_imports.add(record.id)
             record.state = "failed"  # failed imports can be deleted or uploaded again
+    # Only remove files linked to imports this startup marked interrupted;
+    # never remove arbitrary temporary uploads from other jobs.
+    temp_dir = Path(tempfile.gettempdir())
+    for import_id in interrupted_imports:
+        for path in temp_dir.glob(f"seo-log-import-{import_id}-*.tmp"):
+            try:
+                path.unlink(missing_ok=True)
+            except OSError:
+                log.warning("Could not remove interrupted log temp file: %s", path.name)
