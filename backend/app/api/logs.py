@@ -100,7 +100,12 @@ async def upload_logs(site_id: int, file: UploadFile = File(...), fmt: str = For
         # Bind the temporary file to its import ID so startup recovery can
         # remove only files belonging to interrupted imports.
         temp_path = os.path.join(tempfile.gettempdir(), f"seo-log-import-{record.id}-{os.path.basename(path)}")
-        os.replace(path, temp_path)
+        try:
+            os.replace(path, temp_path)
+        except Exception:
+            record.state = "failed"
+            db.commit()
+            raise
         path = None
 
         async def work(ctx):
@@ -125,6 +130,14 @@ async def upload_logs(site_id: int, file: UploadFile = File(...), fmt: str = For
             db.delete(record)
             db.commit()
             raise HTTPException(429, str(exc)) from exc
+        except Exception:
+            # Unexpected scheduler/DB failure must not leave an orphaned file
+            # or an un-deletable "processing" import until the next restart.
+            Path(temp_path).unlink(missing_ok=True)
+            db.rollback()
+            record.state = "failed"
+            db.commit()
+            raise
         # The scheduled job owns and deletes the temporary file.
         path = None
         return {"import_id": record.id, "job_id": job_id, "state": "processing",
