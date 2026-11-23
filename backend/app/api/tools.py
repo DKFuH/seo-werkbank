@@ -427,17 +427,19 @@ async def geo_check(body: GeoIn, user: User = Depends(current_user)) -> dict:
         res = await fetcher.fetch_following(url, max_body=5_000_000)
         if res.status != 200 or not res.is_html:
             raise HTTPException(400, f"Seite nicht ladbar: {res.error or f'HTTP {res.status}'}")
-        robots, llms, ai_txt = await asyncio.gather(
+        robots, llms, ai_txt, llms_full = await asyncio.gather(
             fetcher.fetch_following(root + "/robots.txt", max_body=500_000),
             fetcher.fetch_following(root + "/llms.txt", max_body=500_000),
             fetcher.fetch_following(root + "/.well-known/ai.txt", max_body=200_000),
+            fetcher.fetch_following(root + "/llms-full.txt", max_body=4096),
         )
     final = res.final_url or url
     parsed = await asyncio.to_thread(parse_html, res.body, final, res.headers.get("content-type", ""))
     robots_text = robots.body.decode("utf-8", "replace") if robots.status == 200 else ""
     llms_text = llms.body.decode("utf-8", "replace")[:5000] if llms.status == 200 else ""
     return analyse_geo(final, res.body, parsed, robots_text=robots_text, robots_status=robots.status,
-                       llms_status=llms.status, llms_text=llms_text, ai_txt_status=ai_txt.status, headers=res.headers)
+                       llms_status=llms.status, llms_text=llms_text, ai_txt_status=ai_txt.status, headers=res.headers,
+                       llms_full_status=llms_full.status)
 
 
 class FetchIn(BaseModel):

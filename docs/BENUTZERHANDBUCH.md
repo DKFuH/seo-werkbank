@@ -659,6 +659,17 @@ behandeln echte Crawler unter Umständen anders. Das Ergebnis ist ein starker Hi
 
 Dieselben Integritätsprüfungen laufen bei jedem Crawl als Audit-Regeln mit (Kategorie GEO / KI-Suche).
 
+Unter **Zugang** prüft der GEO-Check außerdem:
+- **KI-Signale in robots.txt:** ob Cloudflare einen eigenen Abschnitt („Cloudflare Managed content“) mit Sperren für
+  KI-Crawler eingefügt hat und welche `Content-Signal`-Werte gesetzt sind. `search=no` oder `ai-input=no` hält die
+  Website aus KI-Antworten heraus, `ai-train=no` betrifft nur das Training.
+- **KI-Sperren per Meta-Tag oder Header:** etwa `<meta name="GPTBot" content="noindex">` oder `noai`.
+- **llms.txt gegliedert:** Titel, Kurzbeschreibung, Abschnitte und Linkliste nach llmstxt.org, dazu `/llms-full.txt`.
+
+**llms.txt-Entwurf:** Die Karte erzeugt aus dem letzten Crawl einen Entwurf: Abschnitte nach dem ersten Pfadteil, am
+besten verlinkte Seiten zuerst, Titel und Meta-Description der Seiten als Text. Kopieren oder als Datei laden, prüfen,
+kürzen und dann als `/llms.txt` ins Wurzelverzeichnis der Website legen.
+
 Die Erfüllung solcher Kriterien garantiert keine Aufnahme in KI-Antworten.
 
 ### 13.2 KI-Erwähnungen

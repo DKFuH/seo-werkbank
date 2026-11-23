@@ -5,6 +5,27 @@ uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased] - SEO-Werkbank
 
+### Added (GEO)
+- robots.txt AI signals: detection of the Cloudflare-managed section that blocks AI crawlers (`geo_cloudflare_ai_block`)
+  and of `Content-Signal` lines with `search=no` or `ai-input=no` (`geo_content_signal_restrictive`; `ai-train=no` is
+  not flagged). Crawler-specific meta tags / X-Robots-Tag and `noai`/`noimageai` (`geo_ai_meta_restricted`).
+- llms.txt checked for the llmstxt.org structure (H1, `>` summary, `##` sections, link list; `geo_llms_incomplete`) and
+  `/llms-full.txt`. New **llms.txt draft** from the last crawl (`GET /sites/{id}/geo/llms-txt-draft`, card on the GEO page).
+- GEO check group **Integrität** and five crawl audit rules: `geo_snippet_limited` (nosnippet, max-snippet below 50,
+  data-nosnippet on half the text), `geo_hidden_instructions` (LLM instructions in comments, attributes or hidden
+  text, invisible control characters), `geo_schema_not_visible` (headline, product name, price or FAQ question only in
+  JSON-LD), `geo_date_inconsistent` (future dates, dateModified before datePublished, visible date over 30 days off),
+  `geo_brand_inconsistent` (start page: brand name missing from title/Open Graph or differing from og:site_name).
+- **CDN bot access** (`POST /sites/{id}/geo/bot-access`): requests a page of the own site with a browser and with
+  eleven AI crawler user agents and reports blocks, challenge pages and diverging responses. On demand only.
+- AI crawler list: Applebot (now a search crawler that must not be blocked), DuckAssistBot, Amazonbot.
+
+### Fixed (GEO)
+- A `Content-Signal` line in robots.txt (added by Cloudflare on many sites) was reported as an unknown directive and
+  raised the robots.txt syntax rule.
+- GEO integrity checks decode HTML as UTF-8 before parsing; lxml otherwise reads pages without a charset declaration
+  as Latin-1.
+
 ### Changed
 - **Navigation** grouped by the question a user brings: Analyse, Sichtbarkeit, Content, Conversion, Maßnahmen (plus Übersicht and
   System). Groups collapse; the group of the open page is always expanded and highlighted, other open groups are remembered per

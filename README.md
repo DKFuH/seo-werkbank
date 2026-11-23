@@ -44,7 +44,9 @@ Exporten und Fehlerbehebung.
   WDF = log2(f+1)/log2(L+1), IDF = log10(1+N/n), deutsche Stoppwörter, optional Zweiwort-Begriffe,
   Drittelverteilung und Überschriftenvergleich. Zusätzlich direkt in der Content-Optimierung.
 - **GEO-Check** (`/geo`): KI-Crawler in robots.txt (OAI-SearchBot, Claude-SearchBot, PerplexityBot, GPTBot …),
-  llms.txt, Entität und sameAs, Autor, Aktualität, Antwortstruktur, Listen, Zahlen und Quellen.
+  llms.txt, Entität und sameAs, Autor, Aktualität, Antwortstruktur, Listen, Zahlen und Quellen. Dazu Snippet-Grenzen,
+  versteckte Anweisungen an KI-Systeme (Prompt-Injection), sichtbare strukturierte Daten, stimmige Datumsangaben, ein
+  einheitlicher Markenname und auf Knopfdruck ein Test, ob das CDN KI-Crawler per User-Agent abweist.
 - **Matomo** (`/matomo`): Besuche, Kanäle, Einstiegsseiten, Ziele und Geräte aus der Reporting-API, verknüpft
   mit dem letzten Crawl, inklusive indexierbarer Seiten ohne Besuch.
 - **Content-Refresh** (`/content-refresh`): GSC-Query-URL-Chancen, redaktionelle Prüfhinweise und kopierbare Briefings;
