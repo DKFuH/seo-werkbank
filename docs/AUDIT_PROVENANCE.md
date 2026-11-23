@@ -43,6 +43,9 @@ konservativer Metadaten-Schritt, **keine offizielle Google-Zertifizierung**.
 - **Befund-Detailseite:** Karte „Einordnung“ mit der Klassifizierung und dem
   Status je Suchmaschine („dokumentiert · im Score“ bzw. „nicht bewertet“)
   samt Link zur Dokumentation.
+- **Fundstellen:** In der Karte „Einordnung“ steht je Suchmaschine, ob ein Satz der Leitlinie die Prüfung wörtlich beschreibt
+  („Zitat“) oder nur das Themenfeld („Themenbezug“), mit Abschnitt und Datum der Quelle
+  (siehe [SEARCH_ENGINE_RULES.md](SEARCH_ENGINE_RULES.md)).
 - **Exporte:** Der Issue-Export (CSV/XLSX/JSON) enthält die Spalten
   `classification` und `profiles`; der PDF-Bericht zeigt die Profil-Scores
   und je Befund die Spalte „Basis“.

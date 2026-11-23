@@ -30,6 +30,7 @@ class ParsedPage:
     meta_description: str | None = None
     meta_description_count: int = 0
     meta_robots: str | None = None
+    bing_robots: list[str] = field(default_factory=list)  # content of robots/bingbot/msnbot meta tags only
     canonical: str | None = None
     canonical_count: int = 0
     canonical_raw: str | None = None
@@ -194,6 +195,10 @@ def parse_html(body: bytes, url: str, content_type_header: str = "") -> ParsedPa
                 page.meta_description = content or None
         elif name in ("robots", "googlebot"):
             robots_parts.append(content.lower())
+            if name == "robots":
+                page.bing_robots.append(content.lower())
+        elif name in ("bingbot", "msnbot"):
+            page.bing_robots.append(content.lower())
         elif name == "viewport":
             page.viewport = content
         elif name.startswith("twitter:"):

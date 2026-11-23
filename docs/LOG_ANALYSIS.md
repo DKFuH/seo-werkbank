@@ -28,7 +28,10 @@ Navigation: **Sichtbarkeit → Logfile & 404**; API `/api/sites/{id}/logs`.
 - User-Agent-Klassifizierung ist **nicht** per Reverse-DNS oder IP-Range
   verifiziert. Auch Treffer mit `googlebot_claim` beweisen nicht, dass Google
   die URL besucht hat. Braves Suchcrawler lässt sich nicht zuverlässig
-  gesondert anhand eines eigenen User-Agents erkennen.
+  gesondert anhand eines eigenen User-Agents erkennen. Bing beschreibt die Prüfung echter Bingbot-Zugriffe so: Reverse-DNS der
+  IP muss auf `search.msn.com` enden, die Vorwärtsabfrage muss auf dieselbe IP zurückführen (oder die veröffentlichte
+  Bingbot-IP-Liste). Weil die Werkbank keine IP-Adressen speichert, ist das hier nicht möglich; wer es braucht, prüft es
+  direkt im Serverlog oder mit dem „Verify Bingbot“-Werkzeug der Bing Webmaster Tools.
 - Ein importierter Zeitraum enthält möglicherweise nicht alle Zugriffe;
   URLs ohne Treffer sind **kein** Beweis für Nichtindexierung.
 - Die maximale Uploadgröße ist über `SEO_MAX_LOG_UPLOAD_MB` (Default 100)

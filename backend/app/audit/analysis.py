@@ -434,11 +434,21 @@ def analyse_crawl(crawl_id: int, *, sitemap: SitemapReport | None = None, site_c
                 add("robots_missing", None, {"status": robots.get("status")})
             if robots.get("errors"):
                 add("robots_syntax", None, {"errors": robots["errors"]})
+            # Engine-specific blocks that this crawl (using its own user agent) would not notice.
+            if not robots.get("blocks_start") and (robots.get("status") or 0) < 500:
+                if robots.get("googlebot_blocks_start"):
+                    add("robots_googlebot_blocked", None, {"robots_status": robots.get("status")})
+                if robots.get("bingbot_blocks_start"):
+                    add("robots_bingbot_blocked", None, {"robots_status": robots.get("status")})
+            if robots.get("bingbot_missing_generic"):
+                add("robots_bingbot_group_incomplete", None, {"missing_disallows": robots["bingbot_missing_generic"]})
         good_files = [f for f in sitemap.files if f.status == 200 and f.kind != "unknown"]
         if not good_files:
             add("sitemap_missing", None, {})
         elif robots.get("present") and not robots.get("sitemaps"):
             add("sitemap_not_in_robots", None, {"sitemaps": [f.url for f in good_files][:5]})
+        if any(f.kind == "urlset" for f in good_files) and sitemap.urls and not any(v.get("lastmod") for v in sitemap.urls.values()):
+            add("sitemap_lastmod_missing", None, {"urls": len(sitemap.urls)})
         bad_files = [f for f in sitemap.files if f.errors]
         if bad_files:
             add("sitemap_invalid", None, {"sitemaps": [{"url": f.url, "errors": f.errors[:5]} for f in bad_files][:10]})

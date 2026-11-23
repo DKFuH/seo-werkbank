@@ -5,6 +5,14 @@ uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased] - SEO-Werkbank
 
+### Added (Bing and Brave evidence)
+- Every Bing/Brave mapping now carries its guideline section, a verbatim quote or an explicit `topic` level, and the date of the
+  source (`docs/SEARCH_ENGINE_RULES.md`). The detail view of a finding shows them. Bing mappings grew from 14 to 43 rules, Brave from 3 to 4.
+- Five new rules: `robots_googlebot_blocked` (Brave), `robots_bingbot_blocked`, `robots_bingbot_group_incomplete`,
+  `sitemap_lastmod_missing` and `bing_legacy_ai_directives` (noarchive/nocache, Bing AI Preferences with deadlines). 122 rules in total.
+- IndexNow can also report URLs removed since the previous crawl (404/410); the UI notes Bing's advice to avoid batch submissions.
+- Not claimed: Bing/Brave statements that only appear in agency blogs or are unconfirmed (Brave 10 s / 2 MB / no JavaScript, redirect chains for Bing).
+
 ### Fixed (SEO Operations quality)
 - Failed log-import job creation now deletes the temporary file and records failed state.
 - Redirect rules are database-unique per site/source (migration `0013`, duplicate preflight), and API collisions return 409.
