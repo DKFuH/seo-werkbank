@@ -5,6 +5,7 @@ from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import PlainTextResponse
+from sqlalchemy.exc import IntegrityError
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -68,7 +69,11 @@ def create_redirect(site_id: int, body: RedirectIn, user: User = Depends(current
     row = RedirectRule(site_id=site.id, source_url=src, target_url=dst, status_code=body.status_code,
                        origin="manual", state="proposed", note=body.note)
     db.add(row)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError as exc:
+        db.rollback()
+        raise HTTPException(409, "Für diese Quelle existiert bereits eine Regel") from exc
     db.refresh(row)
     return _out(row)
 
@@ -135,7 +140,11 @@ def suggest_redirects(site_id: int, user: User = Depends(current_user),
         db.add(row)
         existing.add(data["source_url"])
         created.append(row)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError as exc:
+        db.rollback()
+        raise HTTPException(409, "Eine der vorgeschlagenen URLs besitzt bereits eine Regel; Liste aktualisieren") from exc
     return {"created": len(created), "crawl_id": crawl.id, "items": [_out(r) for r in created]}
 
 
