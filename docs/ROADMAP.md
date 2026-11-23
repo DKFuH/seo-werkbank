@@ -5,12 +5,12 @@ Ordered by expected value to users. Items move to `CHANGELOG.md` when shipped. S
 ## Next (0.2)
 
 - Expand Chromium/Playwright CI coverage and add a dedicated local Lighthouse integration test.
-- Verify Search Console OAuth and URL Inspection against a real authorized Google Cloud project and property.
-- Notifications for alerts: e-mail (SMTP) and generic webhook (Slack/Discord compatible).
-- Batch page-speed testing for the top pages of a crawl, with site-level Core Web Vitals summary.
-- Verify encryption and key rotation of stored integration secrets on real migrations and recovery.
-- Validate SERP-overlap clustering against a configured provider and document ranking-source limitations.
-- Refresh README screenshots/demo for Redirects, Logs/404 and Schema-Management; manually test these new workflows.
+- Verify the **implemented** Search Console OAuth and URL Inspection against a real authorized Google Cloud project and property; document API quota errors and permissions.
+- Verify the **implemented** optional SMTP/HTTPS-webhook notifications with real destinations; consider delivery retries and an optional persistent outbox.
+- Validate the **implemented** bounded PageSpeed batch and site-level summary against real Google PSI results and rate limits.
+- Verify **implemented** encrypted integration secret storage with key backup, migration from legacy plaintext and recovery procedures; define key rotation policy.
+- Validate the **implemented** SERP-overlap comparison/keyword clustering with configured providers; make provider-specific result limits visible.
+- Review the **implemented** CI-generated screenshots/demo for Redirects, Logs/404 and Schema-Management; manually test the new workflows with live data.
 
 ## Later
 
