@@ -2,9 +2,8 @@
 from __future__ import annotations
 
 import asyncio
-import os
 import tempfile
-from collections import Counter, defaultdict
+from collections import Counter
 from pathlib import Path
 from urllib.parse import urlsplit
 
@@ -97,10 +96,12 @@ async def upload_logs(site_id: int, file: UploadFile = File(...), fmt: str = For
         db.commit()
         db.refresh(record)
 
+        temp_path = path
+
         async def work(ctx):
             try:
                 ctx.update(0.05, "Analysiere Logdatei")
-                result = await asyncio.to_thread(_process_import, record.id, path, compressed, fmt)
+                result = await asyncio.to_thread(_process_import, record.id, temp_path, compressed, fmt)
                 ctx.update(1.0, "Nur Aggregate gespeichert", force=True)
                 return result
             except Exception:
@@ -110,7 +111,7 @@ async def upload_logs(site_id: int, file: UploadFile = File(...), fmt: str = For
                         item.state = "failed"
                 raise
             finally:
-                Path(path).unlink(missing_ok=True)
+                Path(temp_path).unlink(missing_ok=True)
 
         try:
             job_id = jobs.start("log_import", work, owner_id=user.id, site_id=site.id)
