@@ -5,8 +5,6 @@ adds is verification (is the link still live, anchor, rel) and analysis on top o
 from __future__ import annotations
 
 import asyncio
-import csv
-import io
 from collections import Counter
 from datetime import timedelta
 from urllib.parse import urlsplit
@@ -45,24 +43,12 @@ def _nofollow(value: str | None) -> bool | None:
     return None
 
 
-def import_csv(db: Session, site: Site, raw: bytes, origin: str = "import") -> dict:
-    text = raw.decode("utf-8-sig", "replace")
-    try:
-        dialect = csv.Sniffer().sniff(text[:4096], delimiters=",;\t")
-    except csv.Error:
-        dialect = csv.excel
-    reader = csv.reader(io.StringIO(text), dialect)
-    header = next(reader, None)
-    if not header:
-        raise ValueError("Die CSV-Datei ist leer.")
-    idx: dict[str, int] = {}
-    for i, name in enumerate(header):
-        n = name.strip().lower()
-        for field, aliases in _COLS.items():
-            if n in aliases and field not in idx:
-                idx[field] = i
-    if "source" not in idx and "site" not in idx:
-        raise ValueError("CSV needs a source column (e.g. 'Source URL', 'Linking page') or a 'Site' column.")
+def import_csv(db: Session, site: Site, raw: bytes, origin: str = "import", mapping: str | None = None) -> dict:
+    """``mapping`` (JSON {field: column}) overrides the detected columns. Raises ValueError for unusable files."""
+    from . import csv_import
+
+    _, rows, idx = csv_import.resolve(raw, "backlinks", mapping)  # ImportFormatError is a ValueError
+    reader = iter(rows)
     existing = {(s, t) for s, t in db.execute(select(Backlink.source_url, Backlink.target_url).where(Backlink.site_id == site.id))}
     added = skipped = 0
     for row in reader:

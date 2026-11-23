@@ -4,9 +4,10 @@ import { type ReactNode, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip as ChartTooltip, XAxis, YAxis } from "recharts";
 import {
-  Badge, Button, Card, chartColors, Checkbox, type Column, DataBadge, DataTable, EmptyState, ErrorBox, Field, FileButton, Input, Modal, NeedsCrawl, Notice,
+  Badge, Button, Card, chartColors, Checkbox, type Column, DataBadge, DataTable, EmptyState, ErrorBox, Field, Input, Modal, NeedsCrawl, Notice,
   PageHeader, Pagination, ProgressBar, SearchInput, Select, Spinner, Stat, Tabs, Url,
 } from "../components/ui";
+import { CsvImportButton, type ImportFields } from "../components/CsvImport";
 import { api, ApiError } from "../lib/api";
 import { type Job, type Site, useJob, useSite } from "../lib/context";
 import { fmtDate, fmtInt, fmtNum, fmtPct, shortUrl } from "../lib/format";
@@ -111,7 +112,7 @@ function ConnectionPanel({ site, onData }: { site: Site; onData: () => void }) {
 function ImportPanel({ site, onData }: { site: Site; onData: () => void }) {
   const [replace, setReplace] = useState(false);
   const [confirm, setConfirm] = useState(false);
-  const importCsv = useMutation({ mutationFn: (file: File) => api.upload(`/sites/${site.id}/gsc/import`, file, { replace }), onSuccess: onData });
+  const importCsv = useMutation({ mutationFn: ({ file, fields }: { file: File; fields: ImportFields }) => api.upload(`/sites/${site.id}/gsc/import`, file, { replace }, fields), onSuccess: onData });
   const clear = useMutation({
     mutationFn: () => api.del(`/sites/${site.id}/gsc/data`),
     onSuccess: () => { setConfirm(false); importCsv.reset(); onData(); },
@@ -127,7 +128,7 @@ function ImportPanel({ site, onData }: { site: Site; onData: () => void }) {
         <p className="text-xs text-slate-500 dark:text-slate-400">Verläufe und Zeitraumvergleiche brauchen eine Datumsspalte. Dateien einzeln importieren.</p>
         <Checkbox label="Bisher importierte Zeilen derselben Art ersetzen" checked={replace} onChange={setReplace} hint="Sonst werden Zeilen angehängt; dieselbe Datei zweimal importiert zählt dann doppelt." />
         <div className="flex flex-wrap items-center gap-2">
-          <FileButton label="CSV importieren" loading={importCsv.isPending} onFile={(f) => importCsv.mutate(f)} />
+          <CsvImportButton kind="gsc" loading={importCsv.isPending} onImport={(file, fields) => importCsv.mutateAsync({ file, fields })} />
           <Button variant="ghost" icon={<Trash2 className="h-4 w-4" />} onClick={() => setConfirm(true)}>Importierte Daten löschen</Button>
         </div>
         {importCsv.error && <ErrorBox error={importCsv.error} />}

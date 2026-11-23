@@ -386,10 +386,16 @@ Der Import läuft als Job; währenddessen wird ein Fortschritt angezeigt. Google
 2. Exportierte CSV-Datei(en) herunterladen.
 3. In der Werkbank **Search Console → CSV importieren** öffnen.
 4. Eine Datei mit **CSV importieren** auswählen.
-5. Den Importstatus prüfen. Weitere Dateien einzeln importieren.
-6. Die Option **Bisher importierte Zeilen derselben Art ersetzen** verwenden, wenn ein alter Import derselben Art ersetzt werden soll.
+5. Im Fenster **Spalten zuordnen** prüfen, welche Spalte der Datei zu welchem Feld gehört. Erkannte Spalten sind
+   vorausgewählt; jede Zuordnung lässt sich ändern oder auf „nicht importieren“ stellen. Daneben stehen Beispielwerte
+   aus der Datei. Pflichtfelder sind mit * markiert. Bei Bedarf das Zahlenformat (Deutsch 1.234,5 / Englisch 1,234.5)
+   festlegen, dann **… Zeilen importieren**.
+6. Den Importstatus prüfen. Weitere Dateien einzeln importieren.
+7. Die Option **Bisher importierte Zeilen derselben Art ersetzen** verwenden, wenn ein alter Import derselben Art ersetzt werden soll.
 
-Unterstützt werden deutsche und englische Spaltennamen wie `Suchanfragen / Queries`, `Seiten / Pages`, `Klicks / Clicks`, `Impressionen / Impressions`. Deutsche Zahlenformate werden erkannt.
+Unterstützt werden deutsche und englische Spaltennamen wie `Suchanfragen / Queries`, `Seiten / Pages`, `Klicks / Clicks`, `Impressionen / Impressions`. Deutsche Zahlenformate werden erkannt. Dateien mit anderen Spaltennamen (etwa aus anderen Tools oder selbst gebauten Tabellen) lassen sich über die Zuordnung importieren.
+
+Dasselbe Zuordnungsfenster gibt es bei allen CSV-Importen: Backlinks, Branchenverzeichnisse (Lokales SEO) und Keywords. Dateien aus Excel in Windows-1252 und Keyword-Planer-Exporte mit Titelzeilen werden erkannt.
 
 **Wichtig beim Import:**
 

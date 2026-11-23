@@ -3,8 +3,9 @@ import { Check, MapPin, X } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
-  Badge, Card, type Column, DataTable, EmptyState, ErrorBox, FileButton, NeedsCrawl, Notice, PageHeader, Pagination, Spinner, Stat, Url,
+  Badge, Card, type Column, DataTable, EmptyState, ErrorBox, NeedsCrawl, Notice, PageHeader, Pagination, Spinner, Stat, Url,
 } from "../components/ui";
+import { CsvImportButton, type ImportFields } from "../components/CsvImport";
 import { api } from "../lib/api";
 import { useSite } from "../lib/context";
 import { fmtInt, shortUrl } from "../lib/format";
@@ -23,7 +24,7 @@ export default function Local() {
   const [imported, setImported] = useState<number | null>(null);
   const [locPage, setLocPage] = useState(1);
   const importCitations = useMutation({
-    mutationFn: (file: File) => api.upload(`/sites/${site!.id}/citations/import`, file),
+    mutationFn: ({ file, fields }: { file: File; fields: ImportFields }) => api.upload(`/sites/${site!.id}/citations/import`, file, undefined, fields),
     onMutate: () => setImported(null),
     onSuccess: (r) => {
       setImported(r.imported);
@@ -140,7 +141,7 @@ export default function Local() {
       </Card>
 
       <Card padded={false} title="Brancheneinträge" description="Einträge in Verzeichnissen und Plattformen, verglichen mit der Referenz-NAP" className="mb-4"
-        actions={site ? <FileButton label="Einträge-CSV importieren" accept=".csv,.txt" loading={importCitations.isPending} onFile={(f) => importCitations.mutate(f)} /> : undefined}>
+        actions={site ? <CsvImportButton kind="citations" label="Einträge-CSV importieren" accept=".csv,.txt" loading={importCitations.isPending} onImport={(file, fields) => importCitations.mutateAsync({ file, fields })} /> : undefined}>
         <div className="space-y-3 border-b border-slate-100 p-4 dark:border-slate-800">
           <p className="text-xs text-slate-500 dark:text-slate-400">
             CSV mit Kopfzeile und den Spalten <code className="rounded bg-slate-100 px-1 dark:bg-slate-800">source</code>,{" "}

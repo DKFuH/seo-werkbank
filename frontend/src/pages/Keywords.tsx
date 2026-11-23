@@ -3,9 +3,10 @@ import { Download, Layers, Plus, Save, Search, Trash2 } from "lucide-react";
 import { type FormEvent, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
-  Badge, Button, Card, Checkbox, type Column, DataBadge, DataTable, EmptyState, ErrorBox, ExportMenu, Field, FileButton, Input,
+  Badge, Button, Card, Checkbox, type Column, DataBadge, DataTable, EmptyState, ErrorBox, ExportMenu, Field, Input,
   NeedsCrawl, Notice, PageHeader, Pagination, SearchInput, Select, Spinner, Stat, Tabs, Textarea, Url,
 } from "../components/ui";
+import { CsvImportButton, type ImportFields } from "../components/CsvImport";
 import { api } from "../lib/api";
 import { useSite } from "../lib/context";
 import { fmtInt, fmtNum, shortUrl, titleCase } from "../lib/format";
@@ -299,7 +300,7 @@ function SavedTab() {
     mutationFn: (keywords: string[]) => api.post(`/sites/${siteId}/keywords`, { keywords, source: "manual" }),
     onSuccess: () => { setManual(""); invalidate(); },
   });
-  const importCsv = useMutation({ mutationFn: (file: File) => api.upload(`/sites/${siteId}/keywords/import`, file), onSuccess: invalidate });
+  const importCsv = useMutation({ mutationFn: ({ file, fields }: { file: File; fields: ImportFields }) => api.upload(`/sites/${siteId}/keywords/import`, file, undefined, fields), onSuccess: invalidate });
   const remove = useMutation({
     mutationFn: (ids: number[]) => api.del(`/sites/${siteId}/keywords`, ids),
     onSuccess: () => { setSelected(new Set()); invalidate(); },
@@ -354,7 +355,7 @@ function SavedTab() {
       <Card padded={false} title={`Gespeicherte Keywords für ${site.name}`}
         actions={<>
           <Button size="sm" icon={<Plus className="h-3.5 w-3.5" />} onClick={() => setAdding((a) => !a)}>Keywords hinzufügen</Button>
-          <FileButton label="Keyword-Planer-CSV importieren" loading={importCsv.isPending} onFile={(f) => importCsv.mutate(f)} />
+          <CsvImportButton kind="keywords" label="Keyword-CSV importieren" loading={importCsv.isPending} onImport={(file, fields) => importCsv.mutateAsync({ file, fields })} />
           <ExportMenu formats={[
             { label: "CSV", path: `/sites/${site.id}/keywords/export`, query: { format: "csv" } },
             { label: "Excel (XLSX, mit Seitenzuordnung)", path: `/sites/${site.id}/keywords/export`, query: { format: "xlsx" } },
