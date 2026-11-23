@@ -121,6 +121,7 @@ async def upload_logs(site_id: int, file: UploadFile = File(...), fmt: str = For
         try:
             job_id = jobs.start("log_import", work, owner_id=user.id, site_id=site.id)
         except JobLimitError as exc:
+            Path(temp_path).unlink(missing_ok=True)
             db.delete(record)
             db.commit()
             raise HTTPException(429, str(exc)) from exc
