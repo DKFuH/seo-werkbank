@@ -3,6 +3,7 @@ import { ArrowLeft, ArrowRight, Sparkles } from "lucide-react";
 import { type ReactNode, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { Badge, Button, Card, type Column, DataTable, EmptyState, ErrorBox, NeedsCrawl, PageHeader, Pagination, SeverityBadge, Spinner, StatusCode, Url } from "../components/ui";
+import { ClassificationBadge, ProvenanceCard } from "../components/AuditProvenance";
 import { api } from "../lib/api";
 import { useSite } from "../lib/context";
 import { fmtBytes, fmtInt, fmtMs, shortUrl, titleCase } from "../lib/format";
@@ -107,7 +108,7 @@ export function AiResult({ run, title = "AI suggestion" }: { run: { data?: any; 
 /* ------------------------------------------------------------------ page */
 const backLink = (
   <Link to="/audit" className="mb-3 inline-flex items-center gap-1 text-sm font-medium text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200">
-    <ArrowLeft className="h-4 w-4" /> Back to Site Audit
+    <ArrowLeft className="h-4 w-4" /> Zurück zum Site-Audit
   </Link>
 );
 
@@ -144,13 +145,14 @@ export default function IssueDetail() {
     <>
       {backLink}
       <PageHeader title={rule.title}
-        description={<span className="inline-flex flex-wrap items-center gap-2"><SeverityBadge severity={rule.severity} /><Badge>{titleCase(rule.category)}</Badge>{rule.scope === "site" && <Badge tone="purple">websiteweite Prüfung</Badge>}<span>{fmtInt(q.data.total)} betroffen</span></span>}
+        description={<span className="inline-flex flex-wrap items-center gap-2"><SeverityBadge severity={rule.severity} /><Badge>{titleCase(rule.category)}</Badge><ClassificationBadge rule={rule} />{rule.scope === "site" && <Badge tone="purple">websiteweite Prüfung</Badge>}<span>{fmtInt(q.data.total)} betroffen</span></span>}
         actions={<Button icon={<Sparkles className="h-4 w-4" />} loading={ai.isPending} onClick={() => ai.mutate()} title="Optional. Braucht einen KI-Anbieter in den Einstellungen.">Mit KI erklären</Button>} />
       <div className="space-y-4">
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           <Card title="Warum es wichtig ist"><p className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">{rule.description}</p></Card>
           <Card title="So behebst du es"><p className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">{rule.fix}</p></Card>
         </div>
+        <ProvenanceCard rule={rule} />
         <AiResult run={ai} title="KI-Erklärung" />
         <Card title="Betroffene URLs" description={rule.scope === "site" ? "Diese Prüfung gilt für die Website als Ganzes." : "Zeile anklicken, um den vollständigen Seitenbericht zu öffnen."} padded={false}>
           <div className={q.isPlaceholderData ? "opacity-60 transition-opacity" : ""}>

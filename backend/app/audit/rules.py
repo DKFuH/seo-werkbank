@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from .engine_guidance import engine_guidance
+
 SEVERITIES = ("critical", "high", "medium", "low")
 # Points removed from a page's score (0-100) for each rule that fires on it.
 PAGE_PENALTY = {"critical": 25, "high": 10, "medium": 4, "low": 1}
@@ -376,10 +378,125 @@ _R = [
 ]
 
 RULES: dict[str, Rule] = {r[0]: Rule(*r) for r in _R}
+
+# Provenance is deliberately separate from severity. A warning may be useful
+# without representing a Google requirement or a proven ranking signal.
+# Keep this mapping explicit so a newly introduced rule cannot silently
+# become a claimed Google policy.
+RULE_CLASSIFICATIONS = (
+    "technical_requirement",
+    "google_recommendation",
+    "seo_heuristic",
+    "geo_experiment",
+)
+TECHNICAL_REQUIREMENT_IDS = frozenset({
+    "http_5xx", "http_4xx", "fetch_error", "redirect_loop",
+    "redirect_broken", "broken_internal_link", "broken_image",
+    "noindex", "blocked_by_robots",
+    "robots_blocks_site", "robots_unreachable", "canonical_invalid",
+    "canonical_broken", "not_https", "mixed_content", "insecure_form",
+    "schema_invalid_json", "sitemap_invalid",
+})
+GOOGLE_RECOMMENDATION_IDS = frozenset({
+    "redirect_chain", "link_to_redirect", "empty_anchor",
+    "canonical_multiple", "canonical_chain", "title_missing",
+    "title_duplicate", "description_duplicate", "duplicate_content",
+    "https_not_enforced", "img_alt_missing", "img_large",
+    "viewport_missing", "viewport_not_responsive",
+    "schema_missing_required", "schema_missing_recommended",
+    "schema_structure", "hreflang_invalid", "hreflang_no_return",
+    "hreflang_broken", "hreflang_conflict", "sitemap_non_indexable",
+})
+SEO_HEURISTIC_IDS = frozenset({
+    "slow_response", "html_too_large", "redirect_temporary",
+    "nofollow_internal", "orphan_page", "deep_page", "single_inlink",
+    "robots_missing", "canonical_missing", "pagination_canonical",
+    "title_too_long", "title_too_short", "description_missing",
+    "description_too_long", "description_too_short",
+    "h1_missing", "h1_multiple", "h1_duplicate", "heading_skipped",
+    "thin_content", "template_content", "near_duplicate_content",
+    "url_too_long", "url_uppercase", "url_underscores",
+    "url_many_params", "url_non_ascii", "url_double_slash",
+    "hsts_missing", "img_no_dimensions", "img_legacy_format",
+    "render_blocking", "favicon_missing", "og_missing",
+    "og_incomplete", "twitter_card_missing", "schema_none",
+    "hreflang_no_self", "hreflang_no_x_default", "sitemap_missing",
+    "sitemap_not_in_robots", "not_in_sitemap", "lang_missing",
+    "meta_refresh", "broken_external_link", "robots_syntax",
+    "canonicalised", "title_multiple", "description_multiple",
+    "host_variants", "doctype_missing", "html_structure",
+    "duplicate_ids", "charset_missing", "hreflang_lang_mismatch",
+    "intl_duplicate",
+})
+GOOGLE_DOCUMENTATION = {
+    "technical_requirement": "https://developers.google.com/search/docs/essentials/technical",
+    "google_recommendation": "https://developers.google.com/search/docs/fundamentals/seo-starter-guide",
+}
+# A category-level documentation link is a starting point, NOT evidence
+# that Google mandates a particular threshold or recommendation.
+CLASSIFICATION_LABELS = {
+    "technical_requirement": "Technisches Problem (kontextabhängig)",
+    "google_recommendation": "Google-Empfehlung / Best Practice",
+    "seo_heuristic": "SEO-Heuristik (keine Google-Vorgabe)",
+    "geo_experiment": "GEO-Hypothese (nicht als Rankingfaktor belegt)",
+}
+PROFILE_IDS = ("google", "bing", "brave", "geo")
+
+
+def classify_rule(rule_id: str) -> str:
+    """Return provenance; does not change the existing score or severity."""
+    if rule_id not in RULES:
+        raise KeyError(rule_id)
+    if rule_id.startswith("geo_"):
+        return "geo_experiment"
+    if rule_id in TECHNICAL_REQUIREMENT_IDS:
+        return "technical_requirement"
+    if rule_id in SEO_HEURISTIC_IDS:
+        return "seo_heuristic"
+    if rule_id in GOOGLE_RECOMMENDATION_IDS:
+        return "google_recommendation"
+    return "seo_heuristic"
+
+
+def rule_provenance(rule_id: str) -> dict:
+    classification = classify_rule(rule_id)
+    return {
+        "classification": classification,
+        "classification_label": CLASSIFICATION_LABELS[classification],
+        "google_documentation": GOOGLE_DOCUMENTATION.get(classification),
+        "google_requirement": False if classification != "technical_requirement" else None,
+    }
+
+
+def rule_profiles(rule_id: str) -> tuple[str, ...]:
+    """Return profiles with a documented or explicitly classified relationship to this rule."""
+    classification = classify_rule(rule_id)
+    profiles = []
+    if classification in ("technical_requirement", "google_recommendation"):
+        profiles.append("google")
+    evidence = engine_guidance(rule_id)
+    profiles.extend(
+        engine for engine in ("bing", "brave")
+        if evidence[engine]["status"] == "related_guidance"
+    )
+    if classification == "geo_experiment":
+        profiles.append("geo")
+    return tuple(profiles)
+
+
+PROFILE_RULE_IDS = {
+    profile: frozenset(rule_id for rule_id in RULES if profile in rule_profiles(rule_id))
+    for profile in PROFILE_IDS
+}
+
+
 CATEGORIES = sorted({r.category for r in RULES.values()})
 
 
 def rule_dict(rule_id: str) -> dict:
     r = RULES[rule_id]
     return {"id": r.id, "title": r.title, "severity": r.severity, "category": r.category,
-            "description": r.description, "fix": r.fix, "scope": r.scope}
+            "description": r.description, "fix": r.fix, "scope": r.scope,
+            **rule_provenance(rule_id),
+            "search_engines": engine_guidance(rule_id),
+            "profiles": list(rule_profiles(rule_id))}

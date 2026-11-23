@@ -17,7 +17,7 @@ from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import mm
 from reportlab.platypus import PageBreak, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
-from ..audit.rules import RULES, SEVERITIES
+from ..audit.rules import RULES, SEVERITIES, classify_rule, rule_profiles
 from ..config import APP_NAME
 
 _FORMULA_PREFIX = ("=", "+", "-", "@", "\t", "\r")
@@ -114,6 +114,10 @@ def _build(story: list, title: str) -> bytes:
     return buf.getvalue()
 
 
+_BASIS = {"technical_requirement": "Technical", "google_recommendation": "Google recommendation",
+          "seo_heuristic": "Heuristic", "geo_experiment": "GEO hypothesis"}
+
+
 def audit_pdf(site_name: str, site_url: str, crawl: dict, issue_groups: list[dict]) -> bytes:
     """``crawl``: {id, finished_at, score, stats}; ``issue_groups``: [{rule_id, count, urls: [...]}]."""
     stats = crawl.get("stats") or {}
@@ -135,6 +139,16 @@ def audit_pdf(site_name: str, site_url: str, crawl: dict, issue_groups: list[dic
         "site-wide problems. Fix critical and high issues first; they block crawling, indexing or user access.", _SMALL)]
     if stats.get("limit_reached"):
         story.append(_p("Note: the crawl stopped at its URL limit, so the site was only partly analysed.", _SMALL))
+    profiles = crawl.get("profile_scores") or stats.get("profile_scores") or {}
+    if profiles:
+        names = [("google", "Google"), ("bing", "Bing"), ("brave", "Brave"), ("geo", "GEO")]
+        story += [Spacer(1, 6), _table([
+            ["Profile score"] + [n for _, n in names],
+            ["Score / 100"] + [("n/a" if (profiles.get(k) or {}).get("score") is None else profiles[k]["score"]) for k, _ in names],
+            ["Rules mapped"] + [(profiles.get(k) or {}).get("rule_count", 0) for k, _ in names],
+        ], [W * 0.2] + [W * 0.2] * 4), _p(
+            "Profile scores use the same penalties but count only rules mapped to that engine (documented guidance) or to GEO. "
+            "Coverage differs per engine, so the values are not directly comparable and are no ranking or compliance estimate.", _SMALL)]
 
     story.append(_p("Crawl overview", _H2))
     sc = stats.get("status_classes", {})
@@ -155,13 +169,14 @@ def audit_pdf(site_name: str, site_url: str, crawl: dict, issue_groups: list[dic
     groups = sorted(issue_groups, key=lambda g: (order[RULES[g["rule_id"]].severity], -g["count"]))
     if not groups:
         story.append(_p("No issues were found in this crawl."))
-    rows = [["Priority", "Issue", "Affected", "Recommended fix"]]
+    rows = [["Priority", "Issue", "Basis", "Affected", "Recommended fix"]]
     for g in groups:
         r = RULES[g["rule_id"]]
+        basis = _BASIS[classify_rule(r.id)] + (f" ({', '.join(rule_profiles(r.id))})" if rule_profiles(r.id) else "")
         rows.append([Paragraph(f'<font color="{_SEV_HEX[r.severity]}"><b>{r.severity.upper()}</b></font>', _CELL),
-                     _p(r.title, _CELL), g["count"], _p(r.fix, _CELL)])
+                     _p(r.title, _CELL), _p(basis, _CELL), g["count"], _p(r.fix, _CELL)])
     if len(rows) > 1:
-        story.append(_table(rows, [W * 0.12, W * 0.3, W * 0.1, W * 0.48]))
+        story.append(_table(rows, [W * 0.11, W * 0.25, W * 0.16, W * 0.09, W * 0.39]))
 
     detail = [g for g in groups if RULES[g["rule_id"]].severity in ("critical", "high")]
     if detail:

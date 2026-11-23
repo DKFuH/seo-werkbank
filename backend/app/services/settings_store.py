@@ -21,10 +21,12 @@ DEFAULTS: dict[str, dict] = {
     "ai": {"provider": "none", "base_url": "http://localhost:11434", "model": "llama3.1", "api_key": ""},
     "gsc": {"client_id": "", "client_secret": ""},
     "matomo": {"url": "", "token_auth": ""},
+    "bing": {"api_key": ""},
+    "indexnow": {"key": "", "key_location": ""},
     "notifications": {"enabled": "false", "min_severity": "high", "smtp_host": "", "smtp_port": "587",
                       "smtp_user": "", "smtp_password": "", "from_email": "", "to_email": "", "webhook_url": ""},
 }
-_SECRET_KEYS = {"serp": {"google_cse_key", "brave_key"}, "pagespeed": {"api_key"}, "ai": {"api_key"}, "gsc": {"client_secret"}, "matomo": {"token_auth"}, "notifications": {"smtp_password", "webhook_url"}}
+_SECRET_KEYS = {"serp": {"google_cse_key", "brave_key"}, "pagespeed": {"api_key"}, "ai": {"api_key"}, "gsc": {"client_secret"}, "matomo": {"token_auth"}, "bing": {"api_key"}, "notifications": {"smtp_password", "webhook_url"}}
 
 
 def get_setting(db: Session, key: str) -> dict:

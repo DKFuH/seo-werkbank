@@ -871,6 +871,7 @@ Diese Tabelle ist zugleich ein **„Wo finde ich was?“**-Nachschlagewerk.
 | Analyse | **Internationales SEO** (`/international`) | Sprach- und Länderangaben |
 | Analyse | **Lokales SEO** (`/local`) | LocalBusiness, NAP, Standortdaten |
 | Sichtbarkeit | **Search Console** (`/search-console`) | Google-Messwerte per API oder CSV |
+| Sichtbarkeit | **Bing & IndexNow** (`/bing`) | Bing-Suchanfragen und -Crawling, URL-Meldung per IndexNow ([Anleitung](BING_INDEXNOW.md)) |
 | Sichtbarkeit | **Ranktracker** (`/rank-tracking`) | GSC-Portfolio, alle GSC-Keywords mit Chancen, Anbieter-Messungen; Keyword-Detail unter `/rank-tracking/keywords/…` |
 | Sichtbarkeit | **Keyword-Recherche** (`/keywords`) | Vorschläge, Keywords, Zuordnung, Cluster |
 | Sichtbarkeit | **SERP-Analyse** (`/serp`) | Suchergebnisse und **Keyword-SERP-Überschneidungen** analysieren |

@@ -10,6 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import and_, case, delete, func, or_, select
 from sqlalchemy.orm import Session
 
+from ..audit.analysis import calculate_profile_scores
 from ..audit.hreflang import locale_from_path
 from ..audit.rules import RULES, SEVERITIES, rule_dict
 from ..audit.schema_validator import LOCAL_TYPES, all_types, recommend_types, validate_jsonld
@@ -162,11 +163,22 @@ def issue_summary(crawl_id: int, user: User = Depends(current_user), db: Session
     rows = db.execute(select(Issue.rule_id, func.count()).where(Issue.crawl_id == crawl.id).group_by(Issue.rule_id)).all()
     order = {s: i for i, s in enumerate(SEVERITIES)}
     groups = sorted(({**rule_dict(r), "count": c} for r, c in rows if r in RULES), key=lambda g: (order[g["severity"]], -g["count"]))
-    return {"crawl": crawl_out(crawl), "groups": groups,
+    profile_scores = _profile_scores(db, crawl)
+    return {"crawl": crawl_out(crawl), "groups": groups, "profile_scores": profile_scores,
             "by_severity": {s: sum(g["count"] for g in groups if g["severity"] == s) for s in SEVERITIES},
             "by_category": {c: sum(g["count"] for g in groups if g["category"] == c) for c in sorted({g["category"] for g in groups})},
             "scoring": "Jede Seite startet bei 100 und verliert je ausgelöster kritischer/hoher/mittlerer/niedriger Regel 25/10/4/1 Punkte. "
                        "Website-Score = Durchschnitt der Seiten-Scores minus 10/5/2/0,5 je websiteweiter kritischer/hoher/mittlerer/niedriger Regel."}
+
+
+def _profile_scores(db: Session, crawl: Crawl) -> dict:
+    """Stored per-engine profile scores, recomputed for crawls analysed before they existed."""
+    scores = (crawl.stats or {}).get("profile_scores")
+    if scores is None:
+        pages = db.scalars(select(Page).where(Page.crawl_id == crawl.id)).all()
+        issue_rows = db.execute(select(Issue.page_id, Issue.rule_id, Issue.severity).where(Issue.crawl_id == crawl.id))
+        scores = calculate_profile_scores(pages, issue_rows)
+    return scores
 
 
 @router.get("/crawls/{crawl_id}/issues/{rule_id}")
@@ -508,7 +520,10 @@ def _dataset(db: Session, crawl: Crawl, dataset: str, limit: int = 200_000) -> l
     if dataset == "issues":
         rows = db.execute(select(Issue.severity, Issue.category, Issue.rule_id, Issue.url, Issue.details).where(Issue.crawl_id == crawl.id)
                           .order_by(_SEV_ORDER, Issue.rule_id, Issue.url).limit(limit)).all()
-        return [{"severity": s, "category": c, "issue": RULES[r].title if r in RULES else r, "url": u, "details": d,
+        prov = {r: rule_dict(r) for r in RULES}
+        return [{"severity": s, "category": c, "issue": RULES[r].title if r in RULES else r,
+                 "classification": prov[r]["classification_label"] if r in prov else "",
+                 "profiles": ", ".join(prov[r]["profiles"]) if r in prov else "", "url": u, "details": d,
                  "recommended_fix": RULES[r].fix if r in RULES else ""} for s, c, r, u, d in rows]
     if dataset in ("links", "broken_links"):
         stmt = select(Link.source_url, Link.target_url, Link.anchor, Link.is_internal, Link.nofollow, Link.target_status, Link.target_error).where(Link.crawl_id == crawl.id)
@@ -556,7 +571,8 @@ def audit_report(crawl_id: int, user: User = Depends(current_user), db: Session 
             urls = db.scalars(select(Issue.url).where(Issue.crawl_id == crawl.id, Issue.rule_id == rule_id).order_by(Issue.url).limit(15)).all()
             groups.append({"rule_id": rule_id, "count": count, "urls": urls})
     pdf = audit_pdf(site.name, site.url, {"id": crawl.id, "number": crawl_number(db, crawl), "finished_at": crawl.finished_at.strftime("%Y-%m-%d %H:%M") if crawl.finished_at else None,
-                                          "score": crawl.score, "stats": crawl.stats}, groups)
+                                          "score": crawl.score, "stats": crawl.stats,
+                                          "profile_scores": _profile_scores(db, crawl)}, groups)
     return download(pdf, f"seo-audit-{site.domain}-crawl{crawl_number(db, crawl)}.pdf", "application/pdf")
 
 

@@ -7,7 +7,7 @@ import { api, tokenStore } from "../lib/api";
 import { useAuth } from "../lib/context";
 
 const MASK = "********";
-type Section = "serp" | "pagespeed" | "ai" | "gsc" | "matomo" | "notifications";
+type Section = "serp" | "pagespeed" | "ai" | "gsc" | "matomo" | "bing" | "indexnow" | "notifications";
 type Values = Record<string, string>;
 
 /** Local form state for one settings section; resets whenever the server copy changes. */
@@ -202,6 +202,61 @@ function MatomoSettings({ server }: { server: Values }) {
   );
 }
 
+function BingSettings({ server }: { server: Values }) {
+  const s = useSection("bing", server);
+  return (
+    <Card title="Bing Webmaster Tools" description="Suchanfragen und Crawl-Statistik deiner in Bing verifizierten Websites">
+      <form onSubmit={(e) => { e.preventDefault(); s.save.mutate(s.values); }} className="space-y-4">
+        <Field label="API-Schlüssel" hint={secretHint(s.values.api_key)}>
+          <SecretInput value={s.values.api_key ?? ""} onChange={(v) => s.set("api_key", v)} placeholder="Bing Webmaster API-Schlüssel" />
+        </Field>
+        <p className="text-xs text-slate-500 dark:text-slate-400">
+          In {ext("https://www.bing.com/webmasters", "Bing Webmaster Tools")} unter Einstellungen → API-Zugriff → API-Schlüssel erzeugen. Bing verlangt den Schlüssel als URL-Parameter; er wird nur an ssl.bing.com gesendet und hier ausgeblendet gespeichert.
+        </p>
+        <SaveBar s={s} />
+      </form>
+    </Card>
+  );
+}
+
+function newIndexNowKey() {
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+function IndexNowSettings({ server }: { server: Values }) {
+  const s = useSection("indexnow", server);
+  const key = s.values.key ?? "";
+  return (
+    <Card title="IndexNow" description="Neue und geänderte URLs an Bing und weitere IndexNow-Suchmaschinen melden">
+      <form onSubmit={(e) => { e.preventDefault(); s.save.mutate(s.values); }} className="space-y-4">
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Field label="Schlüssel" hint="8–128 Zeichen aus a–z, A–Z, 0–9 und „-“. Der Schlüssel ist öffentlich (liegt als Datei auf der Website).">
+            <div className="flex gap-2">
+              <Input value={key} onChange={(e) => s.set("key", e.target.value.trim())} placeholder="z. B. 32 Hex-Zeichen" />
+              <Button type="button" onClick={() => s.set("key", newIndexNowKey())}>Erzeugen</Button>
+            </div>
+          </Field>
+          <Field label="Ort der Schlüsseldatei (optional)" hint="Leer lassen für https://deine-domain/<schlüssel>.txt">
+            <Input type="url" value={s.values.key_location ?? ""} onChange={(e) => s.set("key_location", e.target.value)} placeholder="https://…/schluessel.txt" />
+          </Field>
+        </div>
+        {key && (
+          <Notice>
+            Lege auf jeder Website, die du meldest, die Datei <code className="font-mono">/{key}.txt</code> mit genau diesem Inhalt ab: <code className="font-mono">{key}</code>.
+            Die Prüfung und das Melden findest du unter Sichtbarkeit → Bing & IndexNow.
+          </Notice>
+        )}
+        <p className="text-xs text-slate-500 dark:text-slate-400">
+          {ext("https://www.indexnow.org/documentation", "IndexNow")} ist ein Hinweis an die Suchmaschinen, keine Garantie für Crawling oder Indexierung. Google nimmt nicht teil.
+        </p>
+        <SaveBar s={s} />
+      </form>
+    </Card>
+  );
+}
+
 function AiSettings({ server }: { server: Values }) {
   const s = useSection("ai", server);
   const p = s.values.provider ?? "none";
@@ -343,7 +398,7 @@ function Integrations() {
   if (!isAdmin) {
     return (
       <Card title="Integrationen">
-        <Notice tone="warn">Integrationen (SERP-Anbieter, PageSpeed-Schlüssel, KI-Anbieter, Search-Console-Client, Matomo) gelten für die ganze Installation und können nur von Administratoren geändert werden.</Notice>
+        <Notice tone="warn">Integrationen (SERP-Anbieter, PageSpeed-Schlüssel, KI-Anbieter, Search-Console-Client, Matomo, Bing, IndexNow) gelten für die ganze Installation und können nur von Administratoren geändert werden.</Notice>
       </Card>
     );
   }
@@ -355,6 +410,8 @@ function Integrations() {
       <SerpSettings server={d.serp ?? {}} />
       <PageSpeedSettings server={d.pagespeed ?? {}} />
       <MatomoSettings server={d.matomo ?? {}} />
+      <BingSettings server={d.bing ?? {}} />
+      <IndexNowSettings server={d.indexnow ?? {}} />
       <AiSettings server={d.ai ?? {}} />
       <GscSettings server={d.gsc ?? {}} />
       <NotificationSettings server={d.notifications ?? {}} />

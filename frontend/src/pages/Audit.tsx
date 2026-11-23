@@ -8,11 +8,19 @@ import {
   SeverityBadge, Spinner, Stat,
 } from "../components/ui";
 import { api, errorMessage } from "../lib/api";
+import { ClassificationBadge, ProfileChips } from "../components/AuditProvenance";
+import { type AuditProfile, matchesAuditProfile, PROFILE_LABELS } from "../lib/auditProfiles";
 import { type CrawlSummary, useSite } from "../lib/context";
 import { crawlName, fmtDateTime, fmtInt, fmtNum, SEVERITIES, titleCase } from "../lib/format";
 
 const tooltipStyle = { background: "#0f172a", border: "none", borderRadius: 8, color: "#f1f5f9", fontSize: 12 };
 const axisTick = { fontSize: 11, fill: "#94a3b8" };
+const PROFILE_CARDS = [
+  { id: "google", label: "Google" },
+  { id: "bing", label: "Bing" },
+  { id: "brave", label: "Brave" },
+  { id: "geo", label: "GEO" },
+] as const satisfies readonly { id: Exclude<AuditProfile, "all">; label: string }[];
 
 function Change({ value, goodWhenUp }: { value: number; goodWhenUp?: boolean }) {
   if (!value) return <span className="inline-flex items-center gap-1 text-slate-500"><Minus className="h-3.5 w-3.5" />0</span>;
@@ -73,6 +81,7 @@ function Compare({ siteId, crawlId }: { siteId: number; crawlId: number }) {
 export default function Audit() {
   const { site, crawlId, loading } = useSite();
   const navigate = useNavigate();
+  const [profile, setProfile] = useState<AuditProfile>("all");
   const [severity, setSeverity] = useState("");
   const [category, setCategory] = useState("");
   const [search, setSearch] = useState("");
@@ -83,9 +92,9 @@ export default function Audit() {
   const groups: any[] = q.data?.groups ?? [];
   const rows = useMemo(() => {
     const needle = search.trim().toLowerCase();
-    return groups.filter((g) => (!severity || g.severity === severity) && (!category || g.category === category)
+    return groups.filter((g) => matchesAuditProfile(g, profile) && (!severity || g.severity === severity) && (!category || g.category === category)
       && (!needle || g.title.toLowerCase().includes(needle) || g.description.toLowerCase().includes(needle)));
-  }, [groups, severity, category, search]);
+  }, [groups, profile, severity, category, search]);
 
   if (loading) return <Spinner />;
   if (!site || crawlId === null) {
@@ -119,6 +128,7 @@ export default function Audit() {
 
   const crawl = q.data.crawl;
   const bySeverity: Record<string, number> = q.data.by_severity ?? {};
+  const profileScores = q.data.profile_scores ?? {};
   const categoryData = Object.entries(q.data.by_category ?? {}).map(([name, value]) => ({ name: titleCase(name), value: Number(value) })).sort((a, b) => b.value - a.value);
   const tones = { critical: "bad", high: "warn", medium: undefined, low: undefined } as const;
 
@@ -131,6 +141,9 @@ export default function Audit() {
       </div>
     ) },
     { key: "category", header: "Kategorie", render: (g) => <Badge>{titleCase(g.category)}</Badge> },
+    { key: "classification", header: "Herkunft", tooltip: "Technisches Problem, Google-Empfehlung, SEO-Heuristik oder GEO-Hypothese. Ändert den Schweregrad nicht.",
+      render: (g) => <ClassificationBadge rule={g} /> },
+    { key: "profiles", header: "Profile", tooltip: "In welche Suchmaschinen-/GEO-Scores der Befund einfließt.", render: (g) => <ProfileChips profiles={g.profiles} /> },
     { key: "count", header: "Betroffen", align: "right", tooltip: "Betroffene URLs. Websiteweite Prüfungen zählen einmal.", render: (g) => <span className="font-semibold text-slate-900 dark:text-slate-100">{fmtInt(g.count)}</span> },
   ];
 
@@ -146,7 +159,7 @@ export default function Audit() {
               <div className="min-w-0 text-sm text-slate-600 dark:text-slate-300">
                 <div className="font-semibold text-slate-900 dark:text-slate-100">{site?.name ? `${site.name} · ` : ""}{crawlName(crawl)}</div>
                 <div>{fmtInt(crawl.pages_crawled)} URLs · {fmtDateTime(crawl.finished_at)}</div>
-                <div className="mt-1">{fmtInt(groups.length)} issue types found</div>
+                <div className="mt-1">{fmtInt(groups.length)} Befundarten gefunden</div>
               </div>
             </div>
             <p className="mt-4 border-t border-slate-100 pt-3 text-xs leading-relaxed text-slate-500 dark:border-slate-800 dark:text-slate-400">
@@ -178,6 +191,35 @@ export default function Audit() {
           </div>
         </div>
 
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          {PROFILE_CARDS.map(({ id, label }) => (
+            <button key={id} type="button" onClick={() => setProfile(profile === id ? "all" : id)} aria-pressed={profile === id}
+              title={profile === id ? "Filter aufheben" : `Befunde auf ${PROFILE_LABELS[id]} filtern`}
+              className={`rounded-xl text-left transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 ${profile === id ? "ring-2 ring-brand-500" : ""}`}>
+              <Card padded>
+                <div className="flex items-center gap-3">
+                  <ScoreRing score={profileScores[id]?.score} size={78} label={label} />
+                  <div className="min-w-0">
+                    <div className="font-semibold text-slate-900 dark:text-slate-100">{label}-Score</div>
+                    <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                      {fmtInt(profileScores[id]?.rule_count ?? 0)} zugeordnete Regeln
+                    </div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400">
+                      {groups.filter((g) => matchesAuditProfile(g, id)).length} Befundarten in diesem Crawl
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            </button>
+          ))}
+        </div>
+        <p className="-mt-2 text-xs text-slate-500 dark:text-slate-400">
+          Profil-Scores verwenden nur zugeordnete Audit-Regeln, nicht bewertete Regeln fließen nicht ein.
+          Unterschiedliche Abdeckung macht die Werte zwischen Suchmaschinen nicht direkt vergleichbar.
+          Nicht zugeordnete Heuristiken bleiben unter „Alle Befunde“ sichtbar.
+          GEO basiert auf GEO-Befunden dieses Crawls und ist nicht der separate GEO-Einzelseiten-Check.
+        </p>
+
         <Card title="Befunde" description="Befund anklicken, um betroffene URLs und die Lösung zu sehen." padded={false}>
           <div className="flex flex-wrap items-center gap-2 border-b border-slate-100 p-3 dark:border-slate-800">
             <SearchInput value={search} onChange={setSearch} placeholder="Befunde suchen…" />
@@ -189,7 +231,11 @@ export default function Audit() {
               <option value="">Alle Kategorien</option>
               {Object.keys(q.data.by_category ?? {}).map((c) => <option key={c} value={c}>{titleCase(c)}</option>)}
             </Select>
-            <span className="ml-auto text-xs text-slate-500 dark:text-slate-400">{rows.length} of {groups.length}</span>
+            <Select value={profile} onChange={(e) => setProfile(e.target.value as AuditProfile)} className="w-auto" aria-label="Suchmaschinen- und GEO-Filter">
+              <option value="all">Alle Befunde</option>
+              {Object.entries(PROFILE_LABELS).map(([id, label]) => <option key={id} value={id}>{label}</option>)}
+            </Select>
+            <span className="ml-auto text-xs text-slate-500 dark:text-slate-400">{rows.length} von {groups.length}</span>
           </div>
           <DataTable columns={columns} rows={rows} rowKey={(g) => g.id} onRowClick={(g) => navigate(`/audit/issues/${g.id}`)}
             empty={groups.length ? <EmptyState title="Keine passenden Befunde" description="Suche oder Filter zurücksetzen, um alle Befunde zu sehen." />
