@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from .engine_guidance import engine_guidance
+
 SEVERITIES = ("critical", "high", "medium", "low")
 # Points removed from a page's score (0-100) for each rule that fires on it.
 PAGE_PENALTY = {"critical": 25, "high": 10, "medium": 4, "low": 1}
@@ -467,4 +469,4 @@ def rule_dict(rule_id: str) -> dict:
     return {"id": r.id, "title": r.title, "severity": r.severity, "category": r.category,
             "description": r.description, "fix": r.fix, "scope": r.scope,
             **rule_provenance(rule_id),
-            "search_engines": __import__("app.audit.engine_guidance", fromlist=["engine_guidance"]).engine_guidance(rule_id)}
+            "search_engines": engine_guidance(rule_id)}
