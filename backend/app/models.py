@@ -175,6 +175,12 @@ class Keyword(Base):
     intent: Mapped[str | None] = mapped_column(String(20), nullable=True)
     cluster: Mapped[str | None] = mapped_column(String(255), nullable=True)
     metrics: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    # Keyword portfolio (GSC rank tracking): only tracked keywords appear in the portfolio dashboard.
+    tracked: Mapped[bool] = mapped_column(Boolean, default=False)
+    label: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    target_url: Mapped[str | None] = mapped_column(String(2048), nullable=True)
+    measurement: Mapped[str] = mapped_column(String(20), default="national")  # national|lokal|marke
+    priority: Mapped[int] = mapped_column(Integer, default=2)  # 1 (high) .. 3
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
 
     __table_args__ = (Index("ix_keywords_site_kw", "site_id", "keyword", unique=True),)
@@ -451,3 +457,15 @@ class UptimeIncident(Base):
     started_at: Mapped[datetime] = mapped_column(DateTime, index=True)
     resolved_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     checks: Mapped[int] = mapped_column(Integer, default=1)
+
+
+class KeywordNote(Base):
+    """Change journal entry for a tracked keyword ("title and intro rewritten"), shown in its position chart."""
+
+    __tablename__ = "keyword_notes"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    keyword_id: Mapped[int] = mapped_column(ForeignKey("keywords.id", ondelete="CASCADE"), index=True)
+    event_date: Mapped[date] = mapped_column(Date)
+    title: Mapped[str] = mapped_column(String(160))
+    details: Mapped[str] = mapped_column(Text, default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)

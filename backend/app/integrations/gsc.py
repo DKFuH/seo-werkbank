@@ -143,8 +143,9 @@ async def _query(client: httpx.AsyncClient, token: str, prop: str, body: dict) -
         start += 25000
 
 
-DATASETS = {"query_page": ["date", "query", "page"], "country": ["date", "country"], "device": ["date", "device"],
-            "appearance": ["searchAppearance"]}
+# query_device feeds the device filter of the keyword portfolio; all other analyses read query_page.
+DATASETS = {"query_page": ["date", "query", "page"], "query_device": ["date", "query", "device"], "country": ["date", "country"],
+            "device": ["date", "device"], "appearance": ["searchAppearance"]}
 
 
 async def sync(db: Session, user_id: int, site_id: int, prop: str, days: int = 90) -> dict:
