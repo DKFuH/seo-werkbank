@@ -13,8 +13,7 @@ the current implementation.
 - **Rank tracking** is limited to Search Console's average position for your own verified site. There is no per-location, per-device
   daily tracking of arbitrary keywords.
 - **Indexed-page counts** cannot be verified without Search Console; sitemap size and indexable crawled pages are shown instead.
-- **Google Trends** is not integrated (no official API). **Google Analytics** integration is not
-  implemented yet. Bing Webmaster Tools and IndexNow are separate optional integrations. **Google Business Profile** needs API access that Google grants per project and is not implemented.
+- **Google Trends** is not integrated. **Google Analytics 4** is not integrated. Bing Webmaster Tools, IndexNow and Google URL Inspection have implemented integrations but still depend on credentials, permissions and provider availability. **Google Business Profile** requires Google-granted API access and is not implemented.
 - **Google Ads Keyword Planner** has no direct API integration; use its CSV export.
 
 ## Estimates (always labelled in the UI)
@@ -80,7 +79,7 @@ the current implementation.
 - The OAuth flow needs your own Google Cloud OAuth client. The integration is implemented against the documented API and its parsing and
   reporting logic is tested with imported data, but the live OAuth round-trip was **not verified end to end** during development (no
   Google credentials were available). CSV import is fully tested.
-- URL Inspection (per-URL index status) is not implemented.
+- **URL Inspection API** is implemented at `POST /api/sites/{site_id}/gsc/inspect`. It shows Google's recorded index state, **not** a live URL test or a request for indexation. A real OAuth/Inspection round trip with a verified property remains environment-dependent and was not established by the unit tests.
 
 ## Page speed
 
@@ -89,8 +88,7 @@ the current implementation.
 
 ## Monitoring
 
-- The scheduler runs inside the API process; monitors do not run while the app is stopped. Alerts appear in the app only (no e-mail,
-  Slack or webhook delivery yet).
+- The scheduler runs inside the API process; monitors do not run while the app is stopped. SMTP (STARTTLS) and HTTPS-webhook notifications are implemented as optional best-effort delivery, disabled by default. They do **not** provide a durable delivery queue; external SMTP/webhook success depends on the deployment configuration.
 
 ## Evidence and planning modules (SEO-Werkbank)
 
@@ -138,12 +136,11 @@ the current implementation.
 
 ## Security and multi-user use
 
-- Integration secrets are stored unencrypted in the application database.
+- Integration secrets are encrypted at rest using a versioned master key (Fernet). Losing the master key prevents decryption and can prevent startup; backup the key separately from the database. Pre-upgrade backups may still contain older unencrypted secret values.
 - Rate limiting is in-memory and per process, intended for a single-instance deployment.
 - Access control is per user (each user sees only their own sites). There are no teams, roles beyond admin, or shared workspaces.
 - Access tokens cannot be revoked individually before expiry (change `SEO_SECRET_KEY` to invalidate all).
 
 ## Not implemented (roadmap)
 
-Custom log formats and verified bot identities · Google Analytics · Google Trends · e-mail/webhook notifications · batch page-speed testing
-across a crawl · SERP-overlap clustering in the UI (function exists) · encrypted secrets · distributed crawling.
+Custom log formats and verified bot identities · Google Analytics 4 · Google Trends · durable notification delivery/queues · distributed crawling · live-provider end-to-end verification for GSC/Bing/PSI, as applicable.
