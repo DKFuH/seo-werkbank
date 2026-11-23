@@ -49,6 +49,7 @@ export const NAV: NavGroup[] = [
   { section: "Sichtbarkeit", hint: "Google, Bing, KI-Antworten, Wettbewerb", items: [
     { to: "/search-console", label: "Search Console", icon: i(LineChart) },
     { to: "/bing", label: "Bing & IndexNow", icon: i(Send) },
+    { to: "/logs", label: "Logfile & 404", icon: i(FileText) },
     { to: "/rank-tracking", label: "Ranktracker", icon: i(TrendingUp) },
     { to: "/keywords", label: "Keyword-Recherche", icon: i(KeyRound) },
     { to: "/serp", label: "SERP-Analyse", icon: i(Search) },
