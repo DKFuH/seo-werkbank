@@ -11,6 +11,19 @@ uses [Semantic Versioning](https://semver.org/).
   required fields are enforced, and the number format (German/English) can be set. `POST /imports/preview?kind=…`;
   the import endpoints accept `mapping` (JSON {field: column index}) and `number_format` form fields.
 - Shared CSV reader: UTF-8, UTF-16 and Windows-1252 files, `,` `;` and tab, header found after preamble lines.
+### Changed (crawl numbering)
+- Crawls are numbered per project: "Crawl 1" to "Crawl n" for each website (competitor crawls separately), instead of
+  the global database id. The number is gap-free after a deletion; the internal id stays in URLs and as a tooltip.
+  Exports and the PDF report use the run number in file name and header.
+### Added (Website Health)
+- **Website Health** (`/health`): uptime monitor with check history (90 days), incidents (start, duration, cause) and
+  statistics per URL. Each check is classified: high response time, timeout, SSL, DNS, connection, redirect error,
+  404/410, server error, client error, Content-Encoding error, incomplete response, oversized content. Downtime opens an
+  incident at once; slowness after a configurable number of consecutive slow checks (default 2, threshold 2,000 ms).
+  Alerts on open and on resolve. Status strip per time bucket, response-time candles (first/last/min/max per bucket)
+  with the alert threshold, incident table with search, filter, sort and paging, overview of the checked error classes.
+- Uptime monitors now check every 15 minutes by default (was 1 hour); alert texts are German.
+- `GET /sites/{id}/website-health?period=24h|7d|30d&url=…`; migration `0008`.
 
 ### Added (GEO)
 - robots.txt AI signals: detection of the Cloudflare-managed section that blocks AI crawlers (`geo_cloudflare_ai_block`)

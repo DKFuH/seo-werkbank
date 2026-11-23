@@ -8,6 +8,13 @@ SEO-Werkbank ist eine Weiterentwicklung von [OpenSEOSuite](https://github.com/Su
 (MIT-Lizenz, © The OpenSEOSuite contributors). Die ursprüngliche Dokumentation liegt unter
 [docs/UPSTREAM_README.md](docs/UPSTREAM_README.md); Architektur, Sicherheit und Installation gelten unverändert.
 
+## Hilfe, Keyword-Clustering und Demo
+
+- **Integrierte Hilfe** unter `/help`: direkte Verweise zu Werkzeugen und passenden Handbuchkapiteln.
+- **SERP-basiertes Keyword-Clustering** im Cluster-Werkzeug; 2–15 Keywords, tatsächlich erfasste SERP-URL-Listen oder ein konfigurierter Anbieter ([Anleitung](docs/KEYWORD_SERP_CLUSTERING.md)).
+- **Screenshots und kurzer Rundgang:** Mit `python scripts/capture_demo.py` auf einer gestarteten Installation aufnehmen. Das Skript erzeugt authentische PNG-Screenshots und ein WebM-Video unter `docs/media/generated/`. **Im GitHub-CI-Job `demo-capture` werden echte Screenshots und eine WebM-Aufnahme einer isolierten Testinstallation als Workflow-Artefakt erzeugt.** Die Aufnahmen werden nicht automatisch im README veröffentlicht. Vor einer Übernahme in das Repository müssen die Artefakte geprüft werden.
+- **0.2 Integrationen:** [verschlüsselte Zugangsdaten](docs/SECURE_INTEGRATIONS.md), [Google URL Inspection](docs/GSC_URL_INSPECTION.md), [SMTP/Webhooks und Batch-PageSpeed](docs/NOTIFICATIONS_PAGESPEED.md).
+
 ## Bedienung: Benutzerhandbuch und Schnellstart
 
 **Neu hier?** Beginne mit dem [Schnellstart für Anwender](docs/SCHNELLSTART.md):

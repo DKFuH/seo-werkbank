@@ -280,14 +280,14 @@ def test_monitors_and_alerts(client, auth, crawled):
     assert wait_for_job(client, auth, client.post(f"/api/monitors/{sm['id']}/run", headers=auth).json()["job_id"])["status"] == "completed"
     alerts = client.get("/api/alerts", headers=auth, params={"site_id": sid}).json()
     titles = [a["title"] for a in alerts["items"]]
-    assert "Page is down" in titles and any("title changed" in t for t in titles) and alerts["unread"] == 4
+    assert any(t.endswith(": Serverfehler") for t in titles) and any("title changed" in t for t in titles) and alerts["unread"] == 4
     assert client.post("/api/alerts/read", headers=auth, json={}).json()["updated"] == 4
     mons = {m["kind"]: m for m in client.get(f"/api/sites/{sid}/monitors", headers=auth).json()}
     assert mons["uptime"]["last_status"] == "problem" and mons["sitemap"]["summary"]["urls"] == 6 and mons["metadata"]["next_run"]
     assert client.patch(f"/api/monitors/{up['id']}", headers=auth, json={"enabled": False}).json()["enabled"] is False
     assert client.delete(f"/api/monitors/{sm['id']}", headers=auth).status_code == 204
     assert client.post(f"/api/sites/{sid}/monitors", headers=auth, json={"kind": "nope"}).status_code == 422
-    assert "Page is down" in client.get("/api/alerts/export", headers=auth).text
+    assert "Serverfehler" in client.get("/api/alerts/export", headers=auth).text
 
 
 def test_scheduled_audit_monitor_and_compare(client, auth, crawled):

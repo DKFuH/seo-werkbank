@@ -6,7 +6,7 @@ from urllib.parse import urlsplit
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy import func, select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, object_session
 
 from ..crawler.engine import CrawlConfig, run_crawl
 from ..crawler.urls import normalize_url, registrable_domain
@@ -38,8 +38,16 @@ class CompetitorIn(BaseModel):
     url: str = Field(min_length=3, max_length=2048)
 
 
+def crawl_number(db: Session | None, c: Crawl) -> int | None:
+    """Run number of a crawl within its project: 1..n over the site's own crawls (or per competitor), gap-free."""
+    if db is None or c.id is None:
+        return None
+    owner = Crawl.competitor_id == c.competitor_id if c.competitor_id else Crawl.competitor_id.is_(None)
+    return db.scalar(select(func.count()).select_from(Crawl).where(Crawl.site_id == c.site_id, owner, Crawl.id <= c.id))
+
+
 def crawl_out(c: Crawl, with_stats: bool = False) -> dict:
-    out = {"id": c.id, "site_id": c.site_id, "competitor_id": c.competitor_id, "status": c.status, "start_url": c.start_url,
+    out = {"id": c.id, "number": crawl_number(object_session(c), c), "site_id": c.site_id, "competitor_id": c.competitor_id, "status": c.status, "start_url": c.start_url,
            "score": c.score, "pages_crawled": c.pages_crawled, "error": c.error, "job_id": c.job_id, "config": c.config,
            "created_at": c.created_at.isoformat() if c.created_at else None,
            "started_at": c.started_at.isoformat() if c.started_at else None,
@@ -133,7 +141,7 @@ def site_overview(site_id: int, user: User = Depends(current_user), db: Session 
     return {
         "site": site_out(db, site),
         "latest": crawl_out(last, with_stats=True) if last else None,
-        "history": [{"id": c.id, "date": c.finished_at.isoformat() if c.finished_at else None, "score": c.score, "pages": c.pages_crawled,
+        "history": [{"id": c.id, "number": crawl_number(db, c), "date": c.finished_at.isoformat() if c.finished_at else None, "score": c.score, "pages": c.pages_crawled,
                      **{k: (c.stats or {}).get("issues_by_severity", {}).get(k, 0) for k in ("critical", "high", "medium", "low")}}
                     for c in reversed(history)],
         "counts": {

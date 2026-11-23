@@ -9,7 +9,7 @@ import {
 } from "../components/ui";
 import { api, errorMessage } from "../lib/api";
 import { type CrawlSummary, useSite } from "../lib/context";
-import { fmtDateTime, fmtInt, fmtNum, SEVERITIES, titleCase } from "../lib/format";
+import { crawlName, fmtDateTime, fmtInt, fmtNum, SEVERITIES, titleCase } from "../lib/format";
 
 const tooltipStyle = { background: "#0f172a", border: "none", borderRadius: 8, color: "#f1f5f9", fontSize: 12 };
 const axisTick = { fontSize: 11, fill: "#94a3b8" };
@@ -46,10 +46,10 @@ function Compare({ siteId, crawlId }: { siteId: number; crawlId: number }) {
     { key: "change", header: "Änderung", align: "right", render: (i) => <Change value={i.change} /> },
   ];
   return (
-    <Card title="Mit früherem Crawl vergleichen" description={`Crawl #${crawlId} gegen einen früheren abgeschlossenen Crawl`} padded={false}
+    <Card title="Mit früherem Crawl vergleichen" description={`${crawlName((crawls.data ?? []).find((c) => c.id === crawlId) ?? { id: crawlId })} gegen einen früheren abgeschlossenen Crawl`} padded={false}
       actions={
         <Select value={previousId} onChange={(e) => setChosen(Number(e.target.value))} className="w-auto" aria-label="Vergleichs-Crawl">
-          {others.map((c) => <option key={c.id} value={c.id}>#{c.id} · {fmtDateTime(c.finished_at)}</option>)}
+          {others.map((c) => <option key={c.id} value={c.id}>{crawlName(c)} · {fmtDateTime(c.finished_at)}</option>)}
         </Select>
       }>
       {cmp.isLoading ? <Spinner /> : cmp.error ? <div className="p-3"><ErrorBox error={cmp.error} onRetry={() => cmp.refetch()} /></div> : (
@@ -144,7 +144,7 @@ export default function Audit() {
             <div className="flex items-center gap-4">
               <ScoreRing score={crawl.score} size={104} />
               <div className="min-w-0 text-sm text-slate-600 dark:text-slate-300">
-                <div className="font-semibold text-slate-900 dark:text-slate-100">Crawl #{crawl.id}</div>
+                <div className="font-semibold text-slate-900 dark:text-slate-100">{site?.name ? `${site.name} · ` : ""}{crawlName(crawl)}</div>
                 <div>{fmtInt(crawl.pages_crawled)} URLs · {fmtDateTime(crawl.finished_at)}</div>
                 <div className="mt-1">{fmtInt(groups.length)} issue types found</div>
               </div>

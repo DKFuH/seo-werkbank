@@ -5,7 +5,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { api } from "../lib/api";
 import type { CrawlSummary } from "../lib/context";
-import { fmtDateTime, fmtInt } from "../lib/format";
+import { crawlName, fmtDateTime, fmtInt } from "../lib/format";
 import { Badge, Button, Card, EmptyState, ErrorBox, Field, Input, Select, Spinner, Textarea } from "./ui";
 
 type Overlap = { provider: string; result: { common_count: number; count_a: number;
@@ -72,7 +72,7 @@ const RELAUNCH_STATUS: Record<string, string> = {
 };
 const statusLabel = (s: string) => RELAUNCH_STATUS[s] ?? s;
 
-const crawlLabel =(c: CrawlSummary) => `#${c.id} · ${fmtDateTime(c.finished_at ?? c.started_at)} · ${fmtInt(c.pages_crawled)} URLs`;
+const crawlLabel = (c: CrawlSummary) => `${crawlName(c)} · ${fmtDateTime(c.finished_at ?? c.started_at)} · ${fmtInt(c.pages_crawled)} URLs`;
 
 export function RelaunchPanel({ siteId, crawls, newestId }: { siteId: number; crawls: CrawlSummary[]; newestId: number | null }) {
   const done = crawls.filter((c) => c.status === "completed");

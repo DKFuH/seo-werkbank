@@ -30,3 +30,6 @@ Thumbs.db
 .idea/
 .vscode/
 *.log
+
+# Real UI capture; review artifacts before intentional publication
+docs/media/generated/
