@@ -100,3 +100,13 @@ Diese Funktionen sind bewusst **nicht** Teil des Pflicht-Schnellstarts. Sie nutz
 - **Keine Wirkung erkennbar:** Auf denselben Zeitraum, dieselbe Datenquelle und ausreichende Impressionen achten; Veränderungen beweisen keine Kausalität.
 
 Mehr Details, sämtliche Menüpunkte, Datengrenzen, Berechtigungen und Fehlerbehebung: **[Benutzerhandbuch](BENUTZERHANDBUCH.md)**. 
+
+## E. Optional: SEO-Operations nach dem ersten Crawl
+
+Nach dem ersten abgeschlossenen Crawl kannst du unter **Analyse → Weiterleitungen** sichere Redirect-Entwürfe erstellen, simulieren und nach Freigabe als Konfiguration exportieren. Der Export installiert nichts auf dem Server. [Weiterleitungen](REDIRECTS.md)
+
+Unter **Sichtbarkeit → Logfile & 404** kannst du Apache-/Nginx-Access-Logs importieren und verdichtete 404-Statistiken ansehen. User-Agent-Angaben wie `googlebot_claim` sind nicht verifiziert. Bei passenden Ersatzzielen wird lediglich ein freigabepflichtiger Redirect-Entwurf angelegt. [Logfile-Anleitung](LOG_ANALYSIS.md)
+
+Unter **Analyse → Strukturierte Daten → Schema-Management** entstehen JSON-LD-Vorschläge aus Crawl-Fakten. Speichere sie als Content-Entwurf, prüfe sie separat und verwende zum Einbetten in HTML nur den **sicher serialisierten HTML-Block** aus der Freigabeansicht, nicht den rohen JSON-Entwurf. [Schema-Management](STRUCTURED_DATA.md)
+
+**Update von älteren Versionen:** Migration `0013` stoppt bei vorhandenen doppelten Redirect-Quell-URLs pro Website; betroffene Datensätze müssen vor erneutem Start geprüft werden. Die [bekannten Einschränkungen](../KNOWN_LIMITATIONS.md) dokumentieren die Grenzen.
