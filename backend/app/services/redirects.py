@@ -24,10 +24,8 @@ def normalise_url(site, raw: str) -> str:
             or p.query or p.fragment or not SAFE_PATH.fullmatch(p.path or "/")
             or any(ord(ch) < 32 or ord(ch) == 127 for ch in raw)):
         raise HTTPException(422, "Nur sichere URLs derselben Website ohne Query/Fragment erlaubt")
-    if "%" in p.path:
-        # Encoded slash, CRLF and dot-segments can be interpreted differently by web servers.
-        if re.search(r"%(?:0[0-9a-f]|1[0-9a-f]|2f|5c|7f|2e)", p.path, re.I):
-            raise HTTPException(422, "Mehrdeutige URL-Kodierung nicht erlaubt")
+    if "%" in p.path or "//" in p.path or any(segment in (".", "..") for segment in p.path.split("/")):
+        raise HTTPException(422, "Mehrdeutige URL-Kodierung oder Pfadsegmente nicht erlaubt")
     return p._replace(scheme=origin.scheme, netloc=origin.netloc, path=p.path or "/", query="", fragment="").geturl()
 
 
