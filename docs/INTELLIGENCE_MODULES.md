@@ -92,3 +92,45 @@ zu installieren.
 Die Link-Überprüfung kann durch HTML-Umbauten, Weiterleitungen oder
 Serverprobleme falsche Verlustsignale erzeugen. Vor einer Kontaktaufnahme
 ist eine manuelle Gegenprüfung erforderlich.
+
+## Optionale Anbieter: GA4 und Microsoft Clarity
+
+Unter **Conversion → GA4, Clarity & lokale SERPs** werden die
+Zugangsdaten **pro Website und Eigentümer verschlüsselt** hinterlegt.
+Ein vorhandener Zugang beweist nicht, dass die API für die Property
+berechtigt ist.
+
+- **GA4 Data API**: Property-ID, Service-Account-E-Mail und RSA-Private-Key
+  nötig. Das Service Account muss in Google Analytics mindestens
+  Leserechte auf die Property haben. Ein expliziter Klick fragt aggregierte
+  Sessions, aktive Nutzer, Seitenaufrufe und Conversions für einen
+  ausgewählten Zeitraum ab; keine geschätzten Daten.
+  Dokumentation: https://developers.google.com/analytics/devguides/reporting/data/v1/rest/v1beta/properties/runReport
+- **Microsoft Clarity Export API**: Bearer-Token erforderlich.
+  Unterstützt nur einen Zeitraum von 1–3 Tagen. Zusätzlich zum
+  anbieterseitigen Limit (10 Anfragen/Projekt/Tag) setzt die Werkbank
+  ein vorsichtiges lokales Budget (8 Abfragen/Website und User/Tag).
+  Es werden nur zulässige aggregierte Metrikfelder zurückgegeben.
+  Dokumentation: https://learn.microsoft.com/en-us/clarity/setup-and-installation/clarity-data-export-api
+
+Es findet keine Hintergrundüberwachung oder automatisierte Berechnung
+von GA4/Clarity-Kennzahlen ohne explizite Abfrage statt.
+
+## Lokales organisches und Maps-Ranktracking
+
+Die vorhandenen Rank-Targets können mit einem **konkreten Standort**
+(DataForSEO-`location_name`) verbunden werden. Eine Messung ruft nach
+ausdrücklicher Kostenbestätigung **zwei kostenpflichtige Endpunkte**
+(DataForSEO Google Organic und Google Maps) auf. Die Ergebnisse werden
+als getrennte `RankObservation.provider=dataforseo:organic` bzw.
+`dataforseo:maps` gespeichert.
+
+Ein Ergebnis gilt nur als Treffer, wenn DataForSEO eine Website-Domain
+übermittelt, die exakt der ausgewählten Website entspricht. Maps-Einträge
+ohne überprüfbare Domain werden als „nicht eindeutig zuordenbar“
+behandelt. Ein Anbieter-Rank ist **nicht** mit der GSC-Ø-Position zu
+vergleichen. Die tatsächlichen API-Kosten trägt der Nutzer selbst;
+die Werkbank schickt keine automatischen bezahlten Abfragen.
+
+Quelle: https://docs.dataforseo.com/v3/serp/google/organic/live/advanced/
+und https://docs.dataforseo.com/v3/serp/google/maps/live/advanced/

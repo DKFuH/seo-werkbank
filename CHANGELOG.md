@@ -5,6 +5,14 @@ uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased] - SEO-Werkbank
 
+### Added (Intelligence PRs #54–#57)
+- Content Decay, zeitliche Keyword-URL-Überschneidung, GSC-Query-Trend-Radar.
+- Index Intelligence mit expliziten Google-URL-Inspection-Batches und Sitemap-Historie.
+- Redaktionelle QA-Prüfhinweise, unveränderliche HTML/PDF-Berichte und geplante Report-Monitore.
+- Dokumentierte Backlink-Live/Verlust-Übergänge und manuelle Recovery-Maßnahmen.
+- Optionale echte GA4/Clarity-Daten und DataForSEO-Orts-/Maps-Rankings gegen ausdrückliche Kostenbestätigung.
+
+
 ### Added (Content-Gap-Analyse)
 - GSC-Query-URL-Paare mit indexierbaren Crawl-Seiten abgleichen und Suchanfragen nach lexikalischen Themenvarianten gruppieren.
 - Heuristische Handlungskategorien und Hinweise zu mehreren rankenden Landingpages, stets mit gemessenen GSC-Werten und Offenlegung der Grenzen.

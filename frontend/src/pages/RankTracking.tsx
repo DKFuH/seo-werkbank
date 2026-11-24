@@ -5,6 +5,7 @@ import RankProviderMeasurements from "../components/RankProviderMeasurements";
 import { fmtPos, Movement, PositionChart, type TrendPoint } from "../components/RankCharts";
 import { Badge, Button, Card, EmptyState, ErrorBox, Field, Input, Notice, PageHeader, SearchInput, Select, Spinner, Stat, Tabs } from "../components/ui";
 import { api } from "../lib/api";
+import LocalRankPanel from "../components/LocalRankPanel";
 import { useSite } from "../lib/context";
 import { fmtDate, fmtInt } from "../lib/format";
 
@@ -274,7 +275,7 @@ export default function RankTracking() {
           ]} />
           {tab === "portfolio" && <PortfolioTab siteId={site.id} />}
           {tab === "queries" && <QueriesTab siteId={site.id} />}
-          {tab === "provider" && <RankProviderMeasurements />}
+          {tab === "provider" && <><RankProviderMeasurements /><div className="mt-5"><LocalRankPanel /></div></>}
         </>
       )}
     </>

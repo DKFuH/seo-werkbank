@@ -74,6 +74,7 @@ export const NAV: NavGroup[] = [
   ] },
   { section: "Conversion", hint: "Besucher, Vertrauen, Wert", items: [
     { to: "/matomo", label: "Matomo", icon: i(BarChart3) },
+    { to: "/external-analytics", label: "GA4, Clarity & lokale SERPs", icon: i(Globe2) },
     { to: "/conversion-trust", label: "Conversion & Trust", icon: i(ShieldCheck) },
     { to: "/opportunity-value", label: "Wirtschaftliche Chancen", icon: i(BadgeEuro) },
   ] },

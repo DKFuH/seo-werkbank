@@ -104,3 +104,9 @@ Unter Windows die Frontend-Tests aus PowerShell mit einem `C:\`-Pfad starten, ni
 ## Lizenz
 
 MIT, siehe [LICENSE](LICENSE). Der Copyright-Vermerk von OpenSEOSuite bleibt erhalten.
+
+### Intelligence-Module (PRs #54–#57)
+
+Die Werkbank ergänzt die bestehenden GSC- und Crawl-Daten um **Content Decay, URL-Überschneidungen und Query-Trends**, **Indexstatus-Historie aus echten Google-URL-Inspection-Antworten** und **Sitemap-Vergleiche zwischen Crawls**. Redaktionelle Entwürfe erhalten einen deterministischen QA-Hinweisbericht; Backlink-Recovery ist ein manueller Maßnahmen-Workflow. Berichte lassen sich als unveränderliche HTML-/PDF-Datenstände archivieren und optional über einen Monitor periodisch erfassen.
+
+**Optionale Anbieter:** Google Analytics 4 und Microsoft Clarity sind über echte APIs mit separat verschlüsselten Zugangsdaten je Website angebunden. Lokale organische und Maps-Ranks können über den **kostenpflichtigen DataForSEO-Dienst** ausdrücklich einzeln gemessen werden. Keine Anbieter-Verbindung erzeugt ohne gültige Zugangsdaten Messwerte; bei Clarity und Google gelten API-Kontingente. Es werden keine selbst erfundenen Ranking-, Indexierungs- oder Conversion-Zahlen verwendet. [Methodik, Anleitungen und Grenzen](docs/INTELLIGENCE_MODULES.md).
