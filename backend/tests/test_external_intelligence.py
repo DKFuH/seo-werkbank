@@ -86,3 +86,29 @@ def test_clarity_response_is_aggregated_and_filters_unknown_fields(monkeypatch):
     result = asyncio.run(ext.clarity_overview({"token": "secret"}, days=3))
     assert result["metrics"][0]["rows"][0]["totalSessionCount"] == "12"
     assert "visitorEmail" not in str(result)
+
+
+def test_ga4_data_api_uses_real_provider_response(monkeypatch):
+    token_calls = []
+    async def mock_post(self, url, **kwargs):
+        request = httpx.Request("POST", url)
+        token_calls.append(url)
+        if url == ext.GA4_OAUTH_ENDPOINT:
+            assert kwargs["data"]["grant_type"] == "urn:ietf:params:oauth:grant-type:jwt-bearer"
+            return httpx.Response(200, json={"access_token": "temporary"}, request=request)
+        assert url == f"{ext.GA4_API}/12345:runReport"
+        assert kwargs["headers"]["Authorization"] == "Bearer temporary"
+        return httpx.Response(200, json={"rows": [{
+            "metricValues": [{"value": "42"}, {"value": "19"}, {"value": "73"}, {"value": "3"}]
+        }]}, request=request)
+    monkeypatch.setattr(httpx.AsyncClient, "post", mock_post)
+    monkeypatch.setattr(ext.jwt, "encode", lambda *args, **kwargs: "signed-jwt")
+    import asyncio
+    result = asyncio.run(ext.ga4_overview({
+        "property_id": "12345", "client_email": "reader@example.org",
+        "private_key": "mock-key"}, days=28))
+    assert len(token_calls) == 2
+    assert result["metrics"]["sessions"] == 42
+    assert result["metrics"]["conversions"] == 3
+    assert result["source"] == "google_analytics_data_api"
+    assert "temporary" not in str(result)
