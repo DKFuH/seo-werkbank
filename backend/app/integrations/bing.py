@@ -227,3 +227,32 @@ async def indexnow_submit(settings: dict, site_url: str, urls: list[str], client
             await client.aclose()
     return {"status_code": r.status_code, "ok": r.status_code in (200, 202), "submitted": len(body["urlList"]),
             "message": INDEXNOW_STATUS.get(r.status_code, f"Unerwartete Antwort HTTP {r.status_code}")}
+
+# Microsoft JSON API read operations, kept separate from Google metrics.
+READ_OPERATIONS = {
+    "traffic": ("GetRankAndTrafficStats", None),
+    "pages": ("GetPageStats", None),
+    "query_pages": ("GetQueryPageStats", "query"),
+    "url_info": ("GetUrlInfo", "url"),
+    "sitemaps": ("GetFeeds", None),
+}
+
+
+async def read_intelligence(settings: dict, site_url: str, operation: str, *,
+                            keyword: str | None = None, url: str | None = None,
+                            client: httpx.AsyncClient | None = None) -> dict:
+    if operation not in READ_OPERATIONS:
+        raise BingError("Nicht unterstützte Bing-Operation.")
+    method, required = READ_OPERATIONS[operation]
+    params = {"siteUrl": site_url}
+    if required == "query":
+        if not keyword or not keyword.strip():
+            raise BingError("Suchanfrage erforderlich.")
+        params["query"] = keyword.strip()
+    elif required == "url":
+        if not url or not same_host_urls([url], site_url)[0]:
+            raise BingError("URL derselben Website erforderlich.")
+        params["url"] = url
+    data = await call(settings, method, params=params, client=client)
+    return {"provider": "bing", "operation": operation, "site_url": site_url,
+            "data": data, "retrieved_at": datetime.now(UTC).isoformat()}
