@@ -25,6 +25,7 @@ const Serp = lazy(() => import("./pages/Serp"));
 const Content = lazy(() => import("./pages/Content"));
 const ContentRefresh = lazy(() => import("./pages/ContentRefresh"));
 const ContentGap = lazy(() => import("./pages/ContentGap"));
+const ContentIntelligence = lazy(() => import("./pages/ContentIntelligence"));
 const OpportunityValue = lazy(() => import("./pages/OpportunityValue"));
 const SeoWork = lazy(() => import("./pages/SeoWork"));
 const AiVisibility = lazy(() => import("./pages/AiVisibility"));
@@ -81,6 +82,7 @@ export default function App() {
             <Route path="/content" element={<Content />} />
             <Route path="/content-refresh" element={<ContentRefresh />} />
             <Route path="/content-gap" element={<ContentGap />} />
+            <Route path="/content-intelligence" element={<ContentIntelligence />} />
             <Route path="/opportunity-value" element={<OpportunityValue />} />
             <Route path="/seo-work" element={<SeoWork />} />
             <Route path="/ai-visibility" element={<AiVisibility />} />
