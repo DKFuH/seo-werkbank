@@ -3,7 +3,7 @@ import clsx from "clsx";
 import {
   Activity, Bell, FileSearch, FileText, Gauge, Globe2, Languages, LayoutDashboard, Link2, LogOut, MapPin, Menu, Moon, Network,
   PenLine, Search, Settings, Share2, ListTree, Sun, Swords, Braces, Bug, KeyRound, LineChart, X, Sigma, Bot, BarChart3,
-  ChevronRight, ClipboardList, Eye, FilePen, History, Microscope, Radar, RefreshCw, ShieldCheck, Target, TrendingUp, BadgeEuro,
+  Layers, ChevronRight, ClipboardList, Eye, FilePen, History, Microscope, Radar, RefreshCw, ShieldCheck, Target, TrendingUp, BadgeEuro,
   MapPinned, MessageSquareQuote, HeartPulse, Sparkles, Lightbulb, CircleHelp, Send,
 } from "lucide-react";
 import { type ReactNode, useEffect, useState } from "react";
@@ -66,6 +66,7 @@ export const NAV: NavGroup[] = [
     { to: "/content", label: "Content-Optimierung", icon: i(PenLine) },
     { to: "/wdf-idf", label: "WDF*IDF", icon: i(Sigma) },
     { to: "/content-refresh", label: "Content-Refresh", icon: i(RefreshCw) },
+    { to: "/content-gap", label: "Content-Gaps", icon: i(Layers) },
     { to: "/content-proposals", label: "Content-Entwürfe", icon: i(FilePen) },
     { to: "/content-studio", label: "Content Studio", icon: i(Lightbulb) },
     { to: "/research-quality", label: "Qualität & CRO", icon: i(MessageSquareQuote) },
