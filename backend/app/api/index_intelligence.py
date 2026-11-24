@@ -7,7 +7,6 @@ data rather than promising exhaustive XML sitemap coverage.
 from __future__ import annotations
 
 import asyncio
-from collections import Counter
 from datetime import UTC, datetime
 from urllib.parse import urlsplit
 
@@ -21,7 +20,6 @@ from ..integrations import gsc
 from ..jobs import JobLimitError, jobs
 from ..models import Crawl, Page, SeoResearchRecord, User
 from ..security.auth import current_user, get_site_for
-from .deps import latest_crawl
 
 router = APIRouter(tags=["index-intelligence"])
 
