@@ -9,6 +9,7 @@ import {
 } from "../components/ui";
 import { CsvImportButton, type ImportFields } from "../components/CsvImport";
 import { api } from "../lib/api";
+import LinkRecoveryPanel from "../components/LinkRecoveryPanel";
 import { type Job, useJob, useSite } from "../lib/context";
 import { fmtDate, fmtInt, shortUrl, timeAgo } from "../lib/format";
 
@@ -255,6 +256,7 @@ export default function Backlinks() {
         )}
       </div>
 
+      <LinkRecoveryPanel />
       <Modal open={confirmDelete} onClose={() => setConfirmDelete(false)} title="Alle Backlinks löschen?"
         footer={<>
           <Button onClick={() => setConfirmDelete(false)}>Abbrechen</Button>
