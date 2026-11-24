@@ -62,6 +62,11 @@ def analyze(pairs: list[dict], pages: list[dict], *,
         available[url] = meta
         indexed.append(meta)
 
+    token_index: dict[str, set[int]] = defaultdict(set)
+    for idx, page in enumerate(indexed):
+        for token in page["title_terms"] | page["body_terms"]:
+            token_index[token].add(idx)
+
     queries: dict[str, dict] = {}
     for row in pairs[:MAX_PAIRS]:
         key = " ".join((row.get("query") or "").casefold().split())
@@ -82,7 +87,10 @@ def analyze(pairs: list[dict], pages: list[dict], *,
         landing["clicks"] += float(row.get("clicks") or 0)
 
     items = []
-    for q in queries.values():
+    eligible = sorted((q for q in queries.values() if q["impressions"] >= min_impressions),
+                      key=lambda q: (-q["impressions"], q["query"]))
+    truncated = len(eligible) > MAX_CANDIDATES
+    for q in eligible[:MAX_CANDIDATES]:
         if q["impressions"] < min_impressions:
             continue
         tokens = words(q["query"])
@@ -94,7 +102,11 @@ def analyze(pairs: list[dict], pages: list[dict], *,
         # Fetch a bounded list of plausible *existing* targets independently of
         # whichever page happens to rank for the query.
         candidates = []
-        for p in indexed:
+        relevant = set()
+        for token in tokens:
+            relevant.update(token_index.get(token, set()))
+        for idx in relevant:
+            p = indexed[idx]
             title_cover = overlap(tokens, p["title_terms"])
             body_cover = overlap(tokens, p["body_terms"])
             signal = 0.7 * title_cover + 0.3 * body_cover
@@ -147,7 +159,7 @@ def analyze(pairs: list[dict], pages: list[dict], *,
     # into a fictitious search volume or SEO score.
     items.sort(key=lambda x: (-x["impressions"], x["query"]))
     clusters: list[dict] = []
-    for item in items[:MAX_CANDIDATES]:
+    for item in items:
         nearest = None
         best_sim = 0.0
         for cluster in clusters:
@@ -175,7 +187,7 @@ def analyze(pairs: list[dict], pages: list[dict], *,
         del c["_tokens"]
     clusters.sort(key=lambda x: (-x["impressions"], x["query"]))
     return {"clusters": clusters[:max_results], "total_clusters": len(clusters),
-            "queries_considered": len(items), "truncated": len(items) > MAX_CANDIDATES,
+            "queries_considered": len(items), "truncated": truncated,
             "crawl_pages_compared": len(indexed),
             "method": "GSC-Query-URL-Paare (Impressionen und positionsgewichteter Mittelwert), "
                       "lexikalische Token-Abdeckung in Title/H1/Headings/Body, "
