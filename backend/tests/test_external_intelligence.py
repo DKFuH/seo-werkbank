@@ -1,7 +1,6 @@
 """Optional provider credentials, live data parsing, local SERP cost gate."""
 from __future__ import annotations
 
-
 import httpx
 
 from app.db import session_scope
