@@ -8,6 +8,7 @@ import {
   Pagination, Spinner, Stat, StatusCode, Tabs, Url,
 } from "../components/ui";
 import { api } from "../lib/api";
+import IndexIntelligencePanel from "../components/IndexIntelligencePanel";
 import { useSite } from "../lib/context";
 import { fmtInt, fmtPct, shortUrl, titleCase } from "../lib/format";
 
@@ -182,6 +183,7 @@ export default function Sitemaps() {
         </Notice>
         {d.indexing_note && <Notice>{d.indexing_note}</Notice>}
       </div>
+      <IndexIntelligencePanel />
     </>
   );
 }

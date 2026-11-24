@@ -24,3 +24,29 @@ Positionen sind impressionsgewichtete Mittelwerte, kein einzelnes Ranking.
 Keine automatische Publikation oder unverifizierte Ranking-Empfehlung.
 
 Referenz: https://developers.google.com/webmaster-tools/v1/searchanalytics/query
+
+## Index Intelligence (Analyse → Sitemaps & Indexierung)
+
+**Sitemap-Historie** rekonstruiert die URL-Abdeckung aus den letzten
+abgeschlossenen Crawls. Es werden beobachtete Sitemap-URLs, Lastmod-Abdeckung,
+neu beobachtete und nicht mehr beobachtete URLs verglichen. Ein Crawl-Limit,
+blockierte URLs oder andere Crawl-Einstellungen können scheinbare Änderungen
+erzeugen. Keine Aussage über den Google-Index wird daraus abgeleitet.
+
+**Google URL Inspection Batch:** Bei vorhandener, berechtigter Google Search
+Console werden bis zu **10** URLs pro explizitem Job untersucht, priorisiert
+nach neu im Crawl, verändertem Content-Hash und Inlinks.
+Nur tatsächliche Google-URL-Inspection-Antworten werden als
+`google_url_inspection_api` persistiert. Historische Statusübergänge von
+`PASS` zu einem anderen Urteil werden als Prüfhinweis angezeigt.
+Der Job stellt **keine** Indexierungsanträge, führt keine Live-URL-Tests
+aus und respektiert zusätzliche Google-API-Kontingente.
+Bei Quoten-/Berechtigungsfehlern wird der Batch abgebrochen statt
+aggressiv wiederholt zu werden.
+
+Beide Module sind auf die angemeldete Website begrenzt. Vorhandene
+Infrastruktur: `SeoResearchRecord` zur Historisierung, keine zusätzliche
+Datenbankmigration.
+
+Quelle: https://developers.google.com/webmaster-tools/v1/urlInspection.index/inspect
+Quoten: https://developers.google.com/webmaster-tools/limits
