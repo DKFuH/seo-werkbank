@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from ..db import get_db
 from ..integrations import bing
-from ..models import Crawl, Page, User
+from ..models import Crawl, Page, User, SearchProviderSnapshot
 from ..security.auth import current_user, get_site_for
 from ..security.ssrf import UnsafeURLError
 from ..services.settings_store import get_setting
@@ -41,6 +41,9 @@ async def bing_overview(site_id: int, site_url: str | None = Query(None, max_len
             site_url = bing.match_site(await bing.sites(settings), site.url)
             if site_url is None:
                 raise HTTPException(400, "Keine Website mit gleicher Domain in Bing Webmaster Tools gefunden; bitte Website wählen.")
+        registered = [s for s in await bing.sites(settings) if s.get("verified")]
+        if site_url != bing.match_site(registered, site.url):
+            raise HTTPException(403, "Bing-Property gehört nicht zur gewählten Website.")
         return await bing.overview(settings, site_url)
     except bing.BingError as exc:
         raise _bad(exc) from exc
@@ -51,7 +54,7 @@ async def bing_overview(site_id: int, site_url: str | None = Query(None, max_len
 @router.get("/sites/{site_id}/bing/intelligence/{operation}")
 async def bing_intelligence(
     site_id: int,
-    operation: Literal["traffic", "pages", "query_pages", "url_info", "sitemaps"],
+    operation: Literal["traffic", "pages", "query_pages", "url_info", "sitemaps", "backlink_counts", "backlinks", "crawl_settings", "submission_quota", "page_queries"],
     keyword: str | None = Query(None, max_length=512),
     url: str | None = Query(None, max_length=2048),
     user: User = Depends(current_user),
@@ -188,3 +191,60 @@ async def indexnow_submit(site_id: int, body: IndexNowIn, user: User = Depends(c
     except bing.BingError as exc:
         raise _bad(exc) from exc
     return {**result, "rejected": rejected[:50], "rejected_count": len(rejected)}
+
+
+class BingSnapshotRequest(BaseModel):
+    operation: Literal["traffic", "pages", "query_pages", "url_info", "sitemaps",
+                       "backlink_counts", "backlinks", "crawl_settings", "submission_quota", "page_queries"]
+    keyword: str | None = Field(None, max_length=512)
+    url: str | None = Field(None, max_length=2048)
+
+
+@router.post("/sites/{site_id}/bing/snapshots", status_code=201)
+async def capture_bing_snapshot(site_id: int, body: BingSnapshotRequest,
+                                user: User = Depends(current_user), db: Session = Depends(get_db)) -> dict:
+    import json
+    site = get_site_for(db, user, site_id)
+    settings = get_setting(db, "bing")
+    try:
+        property_url = bing.match_site([s for s in await bing.sites(settings) if s.get("verified")], site.url)
+        if property_url is None:
+            raise HTTPException(400, "Keine verifizierte Bing-Website gefunden.")
+        payload = await bing.read_intelligence(settings, property_url, body.operation,
+                                               keyword=body.keyword, url=body.url)
+        if len(json.dumps(payload, ensure_ascii=False).encode("utf-8")) > 2_000_000:
+            raise HTTPException(413, "Bing-Antwort zu groß für einen Snapshot.")
+        snapshot = SearchProviderSnapshot(site_id=site.id, provider="bing",
+                                          operation=body.operation, property_url=property_url,
+                                          parameters={"keyword": body.keyword, "url": body.url}, payload=payload)
+        db.add(snapshot)
+        db.commit()
+        db.refresh(snapshot)
+        return {"id": snapshot.id, "provider": snapshot.provider, "operation": snapshot.operation}
+    except bing.BingError as exc:
+        raise _bad(exc) from exc
+
+
+@router.get("/sites/{site_id}/bing/snapshots")
+def list_bing_snapshots(site_id: int, limit: int = Query(25, ge=1, le=100),
+                       user: User = Depends(current_user), db: Session = Depends(get_db)) -> dict:
+    site = get_site_for(db, user, site_id)
+    rows = db.scalars(select(SearchProviderSnapshot).where(
+        SearchProviderSnapshot.site_id == site.id, SearchProviderSnapshot.provider == "bing"
+    ).order_by(SearchProviderSnapshot.id.desc()).limit(limit))
+    return {"items": [{"id": r.id, "provider": r.provider, "operation": r.operation,
+                       "property_url": r.property_url, "parameters": r.parameters,
+                       "created_at": r.created_at.isoformat()} for r in rows]}
+
+
+@router.get("/sites/{site_id}/bing/snapshots/{snapshot_id}")
+def get_bing_snapshot(site_id: int, snapshot_id: int,
+                      user: User = Depends(current_user), db: Session = Depends(get_db)) -> dict:
+    site = get_site_for(db, user, site_id)
+    row = db.scalar(select(SearchProviderSnapshot).where(
+        SearchProviderSnapshot.site_id == site.id, SearchProviderSnapshot.provider == "bing",
+        SearchProviderSnapshot.id == snapshot_id))
+    if row is None:
+        raise HTTPException(404, "Snapshot nicht gefunden.")
+    return {"id": row.id, "provider": row.provider, "operation": row.operation,
+            "created_at": row.created_at.isoformat(), "payload": row.payload}
