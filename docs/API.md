@@ -123,3 +123,19 @@ curl -s -o crawl.xlsx "$BASE/crawls/$CRAWL_ID/export?dataset=all&format=xlsx" -H
 - `POST /api/sites/{site_id}/content-gap/work` mit `{query,target_url,action}`: Erstellt ausschließlich eine geplante Content-Maßnahme auf der eigenen Website, keine CMS-Veröffentlichung. `action` ist `expand`, `new_candidate` oder `review`.
 
 Details: [Content-Gap-Analyse](CONTENT_GAPS.md).
+
+## Intelligence-Module (PRs #54–#57)
+
+Alle Endpunkte sind auf den Eigentümer der ausgewählten Website beschränkt und beginnen mit `/api`:
+
+- `GET /sites/{id}/content-intelligence?days=28`: GSC-Decay, URL-Überschneidung und Query-Trends.
+- `GET /sites/{id}/index-intelligence/candidates|history|sitemap-history`: Crawl-Vorschläge, Google-Indexstatus-Historie und Sitemap-Zeitreihe.
+- `POST /sites/{id}/index-intelligence/inspect` mit `{\"limit\": 1..10}`: Echte Google-URL-Inspection-Abfragen, kein Live-Test und keine Indexierungsanforderung.
+- `POST /sites/{id}/seo-work/{item_id}/editorial-qa`: Analyse eines **noch nicht gespeicherten** redaktionellen Entwurfs; `GET` analysiert gespeicherten Entwurf.
+- `GET/POST /sites/{id}/reports/snapshots` sowie `GET /sites/{id}/reports/snapshots/{snapshot_id}.html|.pdf`: archivierte Berichte ohne nachträgliche Messwertänderung.
+- `GET /sites/{id}/link-recovery`, `POST /sites/{id}/link-recovery/{backlink_id}/work`: importierte/verifizierte verlorene Links und manuelle Recovery-Maßnahmen.
+- `GET /sites/{id}/external-intelligence/status`, `PUT /sites/{id}/external-intelligence/config`, `DELETE /sites/{id}/external-intelligence/config/{provider}`: je Website verschlüsselte GA4-/Clarity-/DataForSEO-Anbieterzugänge, keine Geheimnisse in GET-Antworten.
+- `GET /sites/{id}/external-intelligence/ga4|clarity`: **nur echte externe Daten**, Clarity mit lokalem Tageslimit.
+- `POST /sites/{id}/external-intelligence/local-rank` mit `{\"target_id\": N, \"acknowledge_cost\":true}`: **zwei explizite kostenpflichtige** DataForSEO-Anfragen für Organic/Maps; Rank-Beobachtungen mit getrennter Anbieterherkunft.
+
+Kein Endpoint bewirkt CMS-Veröffentlichung, externen Outreach oder automatisches Disavow.
