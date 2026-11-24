@@ -552,3 +552,16 @@ class ReportSnapshot(Base):
     origin: Mapped[str] = mapped_column(String(24), default="manual")
     payload: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+
+
+class SearchProviderSnapshot(Base):
+    """Immutable provider evidence, never a merged Google/Bing metric."""
+    __tablename__ = "search_provider_snapshots"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    site_id: Mapped[int] = mapped_column(ForeignKey("sites.id", ondelete="CASCADE"), index=True)
+    provider: Mapped[str] = mapped_column(String(24))
+    operation: Mapped[str] = mapped_column(String(40))
+    property_url: Mapped[str] = mapped_column(String(2048))
+    parameters: Mapped[dict[str, Any]] = mapped_column(JSON)
+    payload: Mapped[dict[str, Any]] = mapped_column(JSON)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
