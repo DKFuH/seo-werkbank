@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from urllib.parse import urlsplit
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
@@ -12,6 +13,7 @@ from ..db import get_db
 from ..models import GscRow, Page, SeoWorkItem, User
 from ..security.auth import current_user, get_site_for
 from ..services.content_gap import analyze
+from ..services.content_refresh import page_key
 from .deps import latest_crawl
 
 router = APIRouter(tags=["content-gap"])
@@ -108,8 +110,6 @@ def save_gap_work(site_id: int, body: WorkFromGap, user: User = Depends(current_
                   db: Session = Depends(get_db)) -> dict:
     """Only create a reviewed *task*, never a page or publishing proposal."""
     site = get_site_for(db, user, site_id)
-    from ..services.content_refresh import page_key
-    from urllib.parse import urlsplit
     site_host = urlsplit(site.url).hostname
     target = urlsplit(body.target_url)
     if (target.scheme not in ("https", "http") or target.hostname != site_host or
