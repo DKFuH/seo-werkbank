@@ -6,7 +6,7 @@ from datetime import timedelta
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 from sqlalchemy import case, func, select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, undefer
 
 from ..db import get_db
 from ..models import GscRow, Page, SeoWorkItem, User
@@ -66,7 +66,7 @@ def content_gap(
         for query, url, clicks, impressions, weighted, weight in raw[:10000]
     ]
     pages = list(db.scalars(
-        select(Page).where(Page.crawl_id == crawl.id, Page.indexable.is_(True),
+        select(Page).options(undefer(Page.text)).where(Page.crawl_id == crawl.id, Page.indexable.is_(True),
                            Page.status_code == 200, Page.is_html.is_(True))
         .order_by(Page.id).limit(4001)
     ))
