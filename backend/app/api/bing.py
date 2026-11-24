@@ -46,6 +46,30 @@ async def bing_overview(site_id: int, site_url: str | None = Query(None, max_len
         raise _bad(exc) from exc
 
 
+
+# Read-only, documented JSON operations. Never accept arbitrary provider methods.
+@router.get("/sites/{site_id}/bing/intelligence/{operation}")
+async def bing_intelligence(
+    site_id: int,
+    operation: Literal["traffic", "pages", "query_pages", "url_info", "sitemaps"],
+    keyword: str | None = Query(None, max_length=512),
+    url: str | None = Query(None, max_length=2048),
+    user: User = Depends(current_user),
+    db: Session = Depends(get_db),
+) -> dict:
+    site = get_site_for(db, user, site_id)
+    settings = get_setting(db, "bing")
+    try:
+        registered = [s for s in await bing.sites(settings) if s.get("verified")]
+        site_url = bing.match_site(registered, site.url)
+        if site_url is None:
+            raise HTTPException(400, "Keine verifizierte Bing-Website gefunden.")
+        result = await bing.read_intelligence(settings, site_url, operation, keyword=keyword, url=url)
+        return result
+    except bing.BingError as exc:
+        raise _bad(exc) from exc
+
+
 # ----------------------------------------------------------------------------- IndexNow
 def _completed_crawls(db: Session, site_id: int) -> list[Crawl]:
     return list(db.scalars(select(Crawl).where(Crawl.site_id == site_id, Crawl.competitor_id.is_(None), Crawl.status == "completed")
