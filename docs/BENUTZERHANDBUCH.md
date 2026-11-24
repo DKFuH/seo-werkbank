@@ -1198,6 +1198,10 @@ die anderen. Zuordnung und Quellen: [Suchmaschinenbezogene Audit-Evidenz](SEARCH
 3. `Sichtbarkeit → Bing & IndexNow` öffnen. Die Bing-Website mit gleicher Domain wird automatisch gewählt.
 
 Angezeigt werden Suchanfragen (Bing liefert Wochenwerte, die Werkbank summiert sie je Anfrage) und die Crawl-Statistik des Bingbot.
+Unter **Bing Intelligence** können ausschließlich die angebotenen Leseoperationen ausdrücklich abgerufen und als site-scoped
+Snapshot gespeichert werden. Der Snapshot-Verlauf ist auch über die beiden read-only MCP-Werkzeuge lesbar. Die
+**Bing Content-Analyse** kombiniert eine begrenzte Page-Query-Stichprobe mit dem letzten Crawl; sie behandelt fehlende Wochen
+nicht als Null und unterdrückt zeitliche Signale für unvollständige URL-/Query-Serien. Bing- und GSC-Daten bleiben getrennt.
 
 ### 24.3 IndexNow
 

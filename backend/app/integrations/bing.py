@@ -258,7 +258,7 @@ async def read_intelligence(settings: dict, site_url: str, operation: str, *,
         if not url or not same_host_urls([url], site_url)[0]:
             raise BingError("URL derselben Website erforderlich.")
         params[required] = url
-    if operation == "backlinks":
+    if operation in ("backlink_counts", "backlinks"):
         params["page"] = 0
     data = await call(settings, method, params=params, client=client)
     return {"provider": "bing", "operation": operation, "site_url": site_url,

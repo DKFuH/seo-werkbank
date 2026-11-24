@@ -1,19 +1,26 @@
 """Bing Webmaster Tools data and IndexNow submissions per site."""
 from __future__ import annotations
 
+import json
 from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, undefer
 
 from ..db import get_db
 from ..integrations import bing
-from ..models import Crawl, Page, User, SearchProviderSnapshot
+from ..models import Crawl, Page, SearchProviderSnapshot, User
 from ..security.auth import current_user, get_site_for
 from ..security.ssrf import UnsafeURLError
+from ..services.bing_content import analyze_sample, normalize_page_queries
 from ..services.settings_store import get_setting
+
+BingOperation = Literal[
+    "traffic", "pages", "query_pages", "url_info", "sitemaps",
+    "backlink_counts", "backlinks", "crawl_settings", "submission_quota", "page_queries",
+]
 
 router = APIRouter(tags=["bing"])
 
@@ -54,7 +61,7 @@ async def bing_overview(site_id: int, site_url: str | None = Query(None, max_len
 @router.get("/sites/{site_id}/bing/intelligence/{operation}")
 async def bing_intelligence(
     site_id: int,
-    operation: Literal["traffic", "pages", "query_pages", "url_info", "sitemaps", "backlink_counts", "backlinks", "crawl_settings", "submission_quota", "page_queries"],
+    operation: BingOperation,
     keyword: str | None = Query(None, max_length=512),
     url: str | None = Query(None, max_length=2048),
     user: User = Depends(current_user),
@@ -81,8 +88,6 @@ async def bing_content_analysis(
     user: User = Depends(current_user), db: Session = Depends(get_db),
 ) -> dict:
     """Bounded, on-demand sample of actual Bing page-query pairs."""
-    from sqlalchemy.orm import undefer
-    from ..services.bing_content import normalize_page_queries, analyze_sample
     site = get_site_for(db, user, site_id)
     settings = get_setting(db, "bing")
     crawls = _completed_crawls(db, site.id)
@@ -105,7 +110,10 @@ async def bing_content_analysis(
         targets = sorted(totals, key=lambda p: (-totals[p], p))[:page_limit]
         rows = []
         for page in targets:
-            data = await bing.call(settings, "GetPageQueryStats", params={"siteUrl": site_url, "page": page})
+            response = await bing.read_intelligence(
+                settings, site_url, "page_queries", url=page,
+            )
+            data = response.get("data")
             if not isinstance(data, list):
                 raise bing.BingError("Unerwartetes Bing-Query-Datenformat.")
             rows.extend(normalize_page_queries(page, data))
@@ -194,8 +202,7 @@ async def indexnow_submit(site_id: int, body: IndexNowIn, user: User = Depends(c
 
 
 class BingSnapshotRequest(BaseModel):
-    operation: Literal["traffic", "pages", "query_pages", "url_info", "sitemaps",
-                       "backlink_counts", "backlinks", "crawl_settings", "submission_quota", "page_queries"]
+    operation: BingOperation
     keyword: str | None = Field(None, max_length=512)
     url: str | None = Field(None, max_length=2048)
 
@@ -203,7 +210,6 @@ class BingSnapshotRequest(BaseModel):
 @router.post("/sites/{site_id}/bing/snapshots", status_code=201)
 async def capture_bing_snapshot(site_id: int, body: BingSnapshotRequest,
                                 user: User = Depends(current_user), db: Session = Depends(get_db)) -> dict:
-    import json
     site = get_site_for(db, user, site_id)
     settings = get_setting(db, "bing")
     try:

@@ -5,6 +5,13 @@ uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased] - SEO-Werkbank
 
+### Added (Bing Webmaster intelligence)
+- Site-scoped, allowlisted Bing read operations for traffic, pages, query/URL mappings, URL information, sitemaps,
+  backlinks, crawl settings and submission quota, always labelled separately from Google data.
+- On-demand, immutable Bing evidence snapshots with migration `0015`, tenant-scoped history, read-only MCP tools and UI.
+- Bounded Bing content analysis using real page-query observations and the latest crawl. Temporal signals require complete
+  weekly coverage per URL/query series; missing observations are never treated as confirmed zero values.
+
 ### Added (Intelligence PRs #54–#57)
 - Content Decay, zeitliche Keyword-URL-Überschneidung, GSC-Query-Trend-Radar.
 - Index Intelligence mit expliziten Google-URL-Inspection-Batches und Sitemap-Historie.
