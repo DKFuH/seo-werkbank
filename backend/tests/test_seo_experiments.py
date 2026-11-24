@@ -1,7 +1,7 @@
 from datetime import date
 
 from app.db import session_scope
-from app.models import GscRow
+from app.models import GscRow, SearchProviderSnapshot
 
 
 def test_seo_experiments_crud_and_metrics(client, auth, fixture_site):
@@ -96,3 +96,30 @@ def test_seo_experiments_crud_and_metrics(client, auth, fixture_site):
     del_res = client.delete(f"/api/sites/{site_id}/experiments/{exp_id}", headers=auth)
     assert del_res.status_code == 204
     assert client.get(f"/api/sites/{site_id}/experiments", headers=auth).json()["count"] == 0
+
+
+def test_experiment_metrics_can_select_bing(client, auth, fixture_site):
+    site = client.post("/api/sites", headers=auth, json={"name": "Bing Exp", "url": fixture_site.url}).json()
+    target = fixture_site.url + "/bing-page"
+    with session_scope() as db:
+        db.add(SearchProviderSnapshot(
+            site_id=site["id"], provider="bing", operation="page_queries",
+            property_url=fixture_site.url, parameters={"url": target},
+            payload={"data": [
+                {"Date": "2026-10-01", "Query": "bing test", "Clicks": 2, "Impressions": 20, "AvgImpressionPosition": 12},
+                {"Date": "2026-10-15", "Query": "bing test", "Clicks": 5, "Impressions": 25, "AvgImpressionPosition": 8},
+            ]},
+        ))
+        db.commit()
+    experiment = client.post(f"/api/sites/{site['id']}/experiments", headers=auth, json={
+        "title": "Bing Test", "category": "content", "applied_date": "2026-10-15", "target_url": target,
+    }).json()
+    result = client.get(
+        f"/api/sites/{site['id']}/experiments/{experiment['id']}/metrics?days=14&engine=bing",
+        headers=auth,
+    ).json()
+    assert result["has_data"] is True
+    assert result["active_engine"] == "bing"
+    assert result["provider"] == "Bing Webmaster Tools"
+    assert result["before_window"]["metrics"]["clicks"] == 2
+    assert result["after_window"]["metrics"]["clicks"] == 5

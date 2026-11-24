@@ -24,6 +24,8 @@ CLARITY_INIT_PATTERN = re.compile(r"""clarity\(\s*["']init["']\s*,\s*["']([a-z0-
 CLARITY_BOOTSTRAP_PATTERN = re.compile(r"""["']clarity["']\s*,\s*["']script["']\s*,\s*["']([a-z0-9]+)["']""", re.I)
 
 META_PIXEL_PATTERN = re.compile(r"""fbq\(\s*["']init["']\s*,\s*["']([0-9]{10,20})["']""", re.I)
+BING_UET_PATTERN = re.compile(r"""bat\.bing\.com/action/0\?ti=([0-9]+)""")
+BING_UET_INIT_PATTERN = re.compile(r"""tagId\s*[:=]\s*["']?([0-9]{6,12})["']?""")
 MATOMO_SITE_ID_PATTERN = re.compile(r"""_paq\.push\(\s*\[\s*["']setSiteId["']\s*,\s*["']?([0-9]+)["']?\s*\]\s*\)""")
 MATOMO_URL_PATTERN = re.compile(r"""_paq\.push\(\s*\[\s*["']setTrackerUrl["']\s*,\s*["']([^"']+)["']\s*\]\s*\)""")
 
@@ -42,6 +44,7 @@ CMP_SIGNATURES: dict[str, list[str]] = {
 TRACKER_DOMAINS = {
     "google_analytics": ("google-analytics.com", "analytics.google.com"),
     "google_tag_manager": ("googletagmanager.com",),
+    "bing_advertising": ("bat.bing.com",),
     "clarity": ("clarity.ms",),
     "meta_pixel": ("connect.facebook.net", "facebook.com/tr"),
     "matomo": ("matomo.js", "piwik.js"),
@@ -83,6 +86,8 @@ def inspect_html_tracking(html: str, url: str) -> dict[str, Any]:
         + CLARITY_BOOTSTRAP_PATTERN.findall(full_html)
     ))
     meta_pixel_ids = sorted(set(META_PIXEL_PATTERN.findall(full_html)))
+    bing_uet_ids = sorted(set(BING_UET_PATTERN.findall(full_html) + BING_UET_INIT_PATTERN.findall(full_html)))
+
 
     matomo_sites = sorted(set(MATOMO_SITE_ID_PATTERN.findall(full_html)))
     matomo_urls = sorted(set(MATOMO_URL_PATTERN.findall(full_html)))
@@ -194,6 +199,7 @@ def inspect_html_tracking(html: str, url: str) -> dict[str, Any]:
             },
             "clarity": clarity_ids,
             "meta_pixel": meta_pixel_ids,
+            "bing_uet": bing_uet_ids,
         },
         "cmps_detected": detected_cmps,
         "duplicates": duplicate_warnings,
@@ -233,7 +239,7 @@ def evaluate_consent_requests(samples: list[dict]) -> dict[str, Any]:
         h = host.lower()
         return any(d in h for d in (
             "google-analytics", "analytics.google", "googletagmanager", "clarity.ms",
-            "doubleclick", "facebook.net", "matomo", "pixel", "hotjar"
+            "doubleclick", "facebook.net", "matomo", "pixel", "hotjar", "bat.bing.com",
         ))
 
     if initial:

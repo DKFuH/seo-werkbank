@@ -1,7 +1,7 @@
 from datetime import date
 
 from app.db import session_scope
-from app.models import GscRow
+from app.models import GscRow, SearchProviderSnapshot
 
 
 def test_dependency_audit_landingpage_and_brand(client, auth, fixture_site):
@@ -84,3 +84,24 @@ def test_dependency_audit_landingpage_and_brand(client, auth, fixture_site):
     st_custom = res_custom.json()["search_term_concentration"]
     assert st_custom["brand_tokens_used"] == ["arbeitsplatte"]
     assert st_custom["brand_share"] == 0.05  # Only 5 clicks on arbeitsplatte
+
+
+def test_dependency_audit_can_select_bing_and_labels_source(client, auth, fixture_site):
+    site = client.post("/api/sites", headers=auth, json={"name": "Bing Brand", "url": fixture_site.url}).json()
+    target = fixture_site.url + "/bing"
+    with session_scope() as db:
+        db.add(SearchProviderSnapshot(
+            site_id=site["id"], provider="bing", operation="page_queries",
+            property_url=fixture_site.url, parameters={"url": target},
+            payload={"data": [{"Date": "2026-11-10", "Query": "bing brand", "Clicks": 7,
+                               "Impressions": 70, "AvgImpressionPosition": 3}]},
+        ))
+        db.commit()
+    result = client.get(
+        f"/api/sites/{site['id']}/dependency-audit?provider=bing", headers=auth,
+    ).json()
+    assert result["has_data"] is True
+    assert result["provider"] == "Bing Webmaster Tools"
+    assert result["total_clicks"] == 7
+    assert result["landingpage_concentration"]["top_pages"][0]["url"] == target
+    assert result["channel_resilience"]["bing"]["active"] is True

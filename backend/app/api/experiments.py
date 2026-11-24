@@ -1,4 +1,4 @@
-"""API endpoints for SEO Experiment Tracking and GSC-based Before/After evaluations."""
+"""API endpoints for SEO experiments and provider-specific before/after evaluations."""
 from __future__ import annotations
 
 from datetime import date, datetime
@@ -176,12 +176,13 @@ def experiment_metrics(
     site_id: int,
     experiment_id: int,
     days: int = Query(28, ge=7, le=90),
+    engine: Literal["google", "bing", "both"] = Query("google"),
     user: User = Depends(current_user),
     db: Session = Depends(get_db),
 ) -> dict:
     site = get_site_for(db, user, site_id)
     record = _experiment_for(db, site.id, experiment_id)
-    return evaluate_experiment(db, site.id, record, window_days=days)
+    return evaluate_experiment(db, site.id, record, window_days=days, engine=engine)
 
 
 @router.get("/sites/{site_id}/experiments/timeline-annotations")

@@ -1,18 +1,20 @@
-"""SEO Experiment Tracking and Before/After GSC performance analysis.
+"""SEO Experiment Tracking and Before/After performance analysis for Google and Bing.
 
 Tracks dated SEO changes (e.g. Title/H1 updates, content expansion, internal links, schema)
-and measures actual GSC impressions, clicks, CTR and average position across equal time windows.
+and measures actual impressions, clicks, CTR and average position across equal time windows.
+Supports Google Search Console and Microsoft Bing Webmaster Tools as equal search providers.
 """
 from __future__ import annotations
 
 from collections import defaultdict
 from datetime import date, datetime, timedelta
-from typing import Any
+from typing import Any, Literal
 
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ..models import GscRow, SeoResearchRecord
+from .bing_content import get_bing_observations
 
 
 def calculate_window_metrics(rows: list[dict]) -> dict[str, Any]:
@@ -50,68 +52,40 @@ def calculate_metrics_delta(before: dict[str, Any], after: dict[str, Any]) -> di
     }
 
 
-def evaluate_experiment(
-    db: Session,
-    site_id: int,
-    experiment: SeoResearchRecord,
-    window_days: int = 28,
+def _evaluate_row_series(
+    rows: list[dict],
+    applied_date: date,
+    window_days: int,
+    source_label: str,
+    target_url: str | None = None,
 ) -> dict[str, Any]:
-    """Calculates before/after performance for a dated SEO experiment using GSC data."""
-    payload = experiment.payload or {}
-    applied_str = payload.get("applied_date")
-    if not applied_str:
-        return {
-            "has_data": False,
-            "reason": "Kein Änderungsdatum (applied_date) im Experiment hinterlegt",
-        }
-
-    try:
-        if isinstance(applied_str, datetime):
-            applied_date = applied_str.date()
-        elif isinstance(applied_str, date):
-            applied_date = applied_str
-        else:
-            applied_date = date.fromisoformat(str(applied_str)[:10])
-    except ValueError:
-        return {"has_data": False, "reason": f"Ungültiges Datumsformat: {applied_str}"}
-
-    target_url = payload.get("target_url")
-
-    # Determine GSC source precedence (api before csv)
-    base_criteria = [
-        GscRow.site_id == site_id,
-        GscRow.dataset == "query_page",
-        GscRow.day.is_not(None),
-        GscRow.impressions > 0,
-    ]
     if target_url:
-        base_criteria.append(GscRow.page == target_url)
+        rows = [r for r in rows if r.get("page") == target_url]
 
-    sources = {r[0] for r in db.execute(select(GscRow.source).where(*base_criteria).distinct())}
-    if not sources:
+    if not rows:
         return {
             "has_data": False,
-            "reason": "Keine datierten GSC-Query-URL-Daten für die Auswertung vorhanden",
+            "provider": source_label,
+            "reason": f"Keine {source_label}-Daten für den Zielbereich gefunden",
             "applied_date": applied_date.isoformat(),
             "target_url": target_url,
         }
 
-    source = "api" if "api" in sources else "csv"
-    criteria = [*base_criteria, GscRow.source == source]
+    dated_rows = [r for r in rows if isinstance(r.get("day"), date)]
+    if not dated_rows:
+        return {
+            "has_data": False,
+            "provider": source_label,
+            "reason": f"Keine datierten {source_label}-Zeilen gefunden",
+        }
 
-    newest_day = db.scalar(select(func.max(GscRow.day)).where(*criteria))
-    oldest_day = db.scalar(select(func.min(GscRow.day)).where(*criteria))
+    newest_day = max(r["day"] for r in dated_rows)
 
-    if not newest_day or not oldest_day:
-        return {"has_data": False, "reason": "Keine datierten GSC-Zeilen gefunden"}
-
-    # Define before and after windows
     before_start = applied_date - timedelta(days=window_days)
     before_end = applied_date - timedelta(days=1)
     after_start = applied_date
     after_end = applied_date + timedelta(days=window_days - 1)
 
-    # Status of observation
     if newest_day < applied_date:
         run_status = "waiting_for_data"
         days_elapsed = 0
@@ -122,46 +96,23 @@ def evaluate_experiment(
         run_status = "completed"
         days_elapsed = window_days
 
-    # Fetch rows for both windows
-    fetch_start = before_start
     fetch_end = min(newest_day, after_end)
 
-    fetched = list(
-        db.scalars(
-            select(GscRow)
-            .where(*criteria, GscRow.day.between(fetch_start, fetch_end))
-            .order_by(GscRow.day.asc())
-            .limit(20000)
-        )
-    )
-
-    rows = [
-        {
-            "day": r.day,
-            "query": r.query,
-            "page": r.page,
-            "clicks": r.clicks,
-            "impressions": r.impressions,
-            "position": r.position,
-        }
-        for r in fetched
-    ]
-
-    before_rows = [r for r in rows if r["day"] and before_start <= r["day"] <= before_end]
-    after_rows = [r for r in rows if r["day"] and after_start <= r["day"] <= fetch_end]
+    before_rows = [r for r in dated_rows if before_start <= r["day"] <= before_end]
+    after_rows = [r for r in dated_rows if after_start <= r["day"] <= fetch_end]
 
     before_metrics = calculate_window_metrics(before_rows)
     after_metrics = calculate_window_metrics(after_rows)
     delta = calculate_metrics_delta(before_metrics, after_metrics)
 
-    # Daily aggregation for chart timeline
     daily: dict[str, dict[str, Any]] = defaultdict(lambda: {"clicks": 0, "impressions": 0, "positions": []})
-    for r in rows:
-        d_str = r["day"].isoformat()
-        daily[d_str]["clicks"] += int(r.get("clicks") or 0)
-        daily[d_str]["impressions"] += int(r.get("impressions") or 0)
-        if r.get("position") is not None:
-            daily[d_str]["positions"].append((float(r["position"]), float(r.get("impressions") or 1)))
+    for r in dated_rows:
+        if before_start <= r["day"] <= fetch_end:
+            d_str = r["day"].isoformat()
+            daily[d_str]["clicks"] += int(r.get("clicks") or 0)
+            daily[d_str]["impressions"] += int(r.get("impressions") or 0)
+            if r.get("position") is not None:
+                daily[d_str]["positions"].append((float(r["position"]), float(r.get("impressions") or 1)))
 
     timeline = []
     curr = before_start
@@ -186,15 +137,11 @@ def evaluate_experiment(
 
     return {
         "has_data": True,
-        "experiment_id": experiment.id,
-        "title": experiment.title,
-        "category": payload.get("category", "other"),
-        "target_url": target_url,
+        "provider": source_label,
         "applied_date": applied_date.isoformat(),
         "run_status": run_status,
         "window_days": window_days,
         "days_elapsed_post_change": days_elapsed,
-        "gsc_source": source,
         "before_window": {
             "start": before_start.isoformat(),
             "end": before_end.isoformat(),
@@ -208,19 +155,139 @@ def evaluate_experiment(
         },
         "delta": delta,
         "timeline": timeline,
-        "interpretation": _interpret_delta(delta, run_status, days_elapsed, window_days),
+        "interpretation": _interpret_delta(delta, run_status, days_elapsed, window_days, source_label),
     }
 
 
-def _interpret_delta(delta: dict[str, Any], status: str, elapsed: int, total_days: int) -> str:
+def _get_google_rows(db: Session, site_id: int, target_url: str | None) -> tuple[list[dict], str | None]:
+    base_criteria = [
+        GscRow.site_id == site_id,
+        GscRow.dataset == "query_page",
+        GscRow.day.is_not(None),
+        GscRow.impressions > 0,
+    ]
+    if target_url:
+        base_criteria.append(GscRow.page == target_url)
+
+    sources = {r[0] for r in db.execute(select(GscRow.source).where(*base_criteria).distinct())}
+    if not sources:
+        return [], None
+
+    source = "api" if "api" in sources else "csv"
+    criteria = [*base_criteria, GscRow.source == source]
+
+    fetched = list(
+        db.scalars(
+            select(GscRow)
+            .where(*criteria)
+            .order_by(GscRow.day.asc())
+            .limit(30000)
+        )
+    )
+    rows = [
+        {
+            "day": r.day,
+            "query": r.query,
+            "page": r.page,
+            "clicks": r.clicks,
+            "impressions": r.impressions,
+            "position": r.position,
+        }
+        for r in fetched
+    ]
+    return rows, f"Google Search Console ({source.upper()})"
+
+
+def evaluate_experiment(
+    db: Session,
+    site_id: int,
+    experiment: SeoResearchRecord,
+    window_days: int = 28,
+    engine: Literal["google", "bing", "both"] = "google",
+) -> dict[str, Any]:
+    """Calculates before/after performance for a dated SEO experiment using Google or Bing."""
+    payload = experiment.payload or {}
+    applied_str = payload.get("applied_date")
+    if not applied_str:
+        return {
+            "has_data": False,
+            "reason": "Kein Änderungsdatum (applied_date) im Experiment hinterlegt",
+        }
+
+    try:
+        if isinstance(applied_str, datetime):
+            applied_date = applied_str.date()
+        elif isinstance(applied_str, date):
+            applied_date = applied_str
+        else:
+            applied_date = date.fromisoformat(str(applied_str)[:10])
+    except ValueError:
+        return {"has_data": False, "reason": f"Ungültiges Datumsformat: {applied_str}"}
+
+    target_url = payload.get("target_url")
+    google_rows, google_label = _get_google_rows(db, site_id, target_url)
+    bing_observations = get_bing_observations(db, site_id)
+    if target_url:
+        bing_rows = [row for row in bing_observations if row.get("page") == target_url]
+    else:
+        traffic_rows = [row for row in bing_observations if row.get("provider_operation") == "traffic"]
+        bing_rows = traffic_rows or [row for row in bing_observations if row.get("provider_operation") == "page_queries"]
+
+    if engine == "bing":
+        eval_bing = _evaluate_row_series(
+            bing_rows, applied_date, window_days, "Bing Webmaster Tools", target_url
+        )
+        return {
+            **eval_bing,
+            "experiment_id": experiment.id,
+            "title": experiment.title,
+            "category": payload.get("category", "other"),
+            "target_url": target_url,
+            "active_engine": "bing",
+        }
+
+    if engine == "both":
+        eval_google = _evaluate_row_series(
+            google_rows, applied_date, window_days, google_label or "Google Search Console", target_url
+        )
+        eval_bing = _evaluate_row_series(
+            bing_rows, applied_date, window_days, "Bing Webmaster Tools", target_url
+        )
+        return {
+            "has_data": eval_google["has_data"] or eval_bing["has_data"],
+            "experiment_id": experiment.id,
+            "title": experiment.title,
+            "category": payload.get("category", "other"),
+            "target_url": target_url,
+            "active_engine": "both",
+            "applied_date": applied_date.isoformat(),
+            "google": eval_google,
+            "bing": eval_bing,
+        }
+
+    # Default: Google
+    eval_google = _evaluate_row_series(
+        google_rows, applied_date, window_days, google_label or "Google Search Console", target_url
+    )
+    return {
+        **eval_google,
+        "experiment_id": experiment.id,
+        "title": experiment.title,
+        "category": payload.get("category", "other"),
+        "target_url": target_url,
+        "active_engine": "google",
+    }
+
+
+def _interpret_delta(delta: dict[str, Any], status: str, elapsed: int, total_days: int, provider: str) -> str:
     c_pct = delta.get("clicks_pct")
     i_pct = delta.get("impressions_pct")
     pos_ch = delta.get("position_change")
 
     if status == "waiting_for_data":
-        return "Experiment angelegt. Noch keine GSC-Daten nach dem Änderungsdatum vorhanden."
+        return f"Experiment angelegt. Noch keine {provider}-Daten nach dem Änderungsdatum vorhanden."
 
-    prefix = f"Zwischenstand ({elapsed} von {total_days} Tagen beobachtet): " if status == "in_progress" else "Abschlussbewertung: "
+    prefix = f"{provider} Zwischenstand ({elapsed} von {total_days} Tagen): " if status == "in_progress" else f"{provider} Auswertung: "
 
     points = []
     if c_pct is not None:
@@ -231,6 +298,6 @@ def _interpret_delta(delta: dict[str, Any], status: str, elapsed: int, total_day
         points.append(f"Position {'verbessert um ' + str(abs(pos_ch)) if pos_ch < 0 else 'verschlechtert um ' + str(pos_ch)}")
 
     if not points:
-        return prefix + "Zu wenige GSC-Daten für eine belastbare Vorher-Nachher-Differenz."
+        return prefix + "Zu wenige Daten für eine belastbare Vorher-Nachher-Differenz."
 
-    return prefix + "; ".join(points) + ". Kausalität durch externe Faktoren (Saisonalität, Algorithmus-Updates) manuell gegenprüfen."
+    return prefix + "; ".join(points) + ". Externe Einflüsse (Saisonalität, Algorithmus-Updates) berücksichtigen."

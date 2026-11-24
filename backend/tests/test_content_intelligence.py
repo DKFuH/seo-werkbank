@@ -2,7 +2,7 @@
 from datetime import date, timedelta
 
 from app.db import session_scope
-from app.models import GscRow
+from app.models import GscRow, SearchProviderSnapshot
 from app.services.content_intelligence import cannibalisation, decay, trends
 
 
@@ -75,3 +75,30 @@ def test_site_isolation_and_api_preference(client, auth, fixture_site):
         "password": "correct horse battery"}).json()
     other_auth = {"Authorization": "Bearer " + another["access_token"]}
     assert client.get(f"/api/sites/{sid}/content-intelligence", headers=other_auth).status_code == 404
+
+
+def test_content_intelligence_can_select_bing(client, auth, fixture_site):
+    site = client.post("/api/sites", headers=auth, json={"name": "Bing Content", "url": fixture_site.url}).json()
+    target = fixture_site.url + "/bing-content"
+    with session_scope() as db:
+        db.add(SearchProviderSnapshot(
+            site_id=site["id"], provider="bing", operation="page_queries",
+            property_url=fixture_site.url, parameters={"url": target},
+            payload={"data": [
+                {"Date": "2026-10-11", "Query": "bing content", "Clicks": 10, "Impressions": 50, "AvgImpressionPosition": 3},
+                {"Date": "2026-10-18", "Query": "bing content", "Clicks": 10, "Impressions": 50, "AvgImpressionPosition": 3},
+                {"Date": "2026-10-25", "Query": "bing content", "Clicks": 2, "Impressions": 45, "AvgImpressionPosition": 10},
+                {"Date": "2026-11-01", "Query": "bing content", "Clicks": 5, "Impressions": 90, "AvgImpressionPosition": 10},
+            ]},
+        ))
+        db.commit()
+    response = client.get(
+        f"/api/sites/{site['id']}/content-intelligence?days=14&provider=bing", headers=auth,
+    )
+    assert response.status_code == 200, response.text
+    result = response.json()
+    assert result["has_data"] is True
+    assert result["provider"] == "bing"
+    assert result["provider_label"] == "Bing Webmaster Tools"
+    assert result["source"] == "snapshot"
+    assert result["decay"][0]["url"] == target

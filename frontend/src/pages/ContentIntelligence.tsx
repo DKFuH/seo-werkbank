@@ -33,6 +33,8 @@ type Trend = {
 type Result = {
   has_data: boolean;
   reason?: string;
+  provider?: "google" | "bing";
+  provider_label?: string;
   source?: string;
   start_date?: string;
   split_date?: string;
@@ -72,6 +74,8 @@ type ExperimentMetrics = {
   delta: { clicks_pct: number | null; impressions_pct: number | null; position_change: number | null; ctr_change_pp: number | null };
   timeline: { date: string; is_experiment_marker: boolean; period: string; clicks: number; impressions: number; avg_position: number | null }[];
   interpretation: string;
+  provider?: string;
+  active_engine?: "google" | "bing";
 };
 
 const fmt = (n: number | null | undefined) => (n == null ? "–" : n.toLocaleString("de-DE", { maximumFractionDigits: 2 }));
@@ -80,6 +84,7 @@ export default function ContentIntelligence() {
   const { site } = useSite();
   const qc = useQueryClient();
   const [days, setDays] = useState(28);
+  const [provider, setProvider] = useState<"google" | "bing">("google");
   const [tab, setTab] = useState<"decay" | "cannibalisation" | "trends" | "experiments">("decay");
 
   // Experiment form state
@@ -91,11 +96,12 @@ export default function ContentIntelligence() {
   const [expHypothesis, setExpHypothesis] = useState("");
   const [expNotes, setExpNotes] = useState("");
   const [activeExpMetricsId, setActiveExpMetricsId] = useState<number | null>(null);
+  const providerLabel = provider === "google" ? "Google Search Console" : "Bing Webmaster Tools";
 
   const result = useQuery<Result>({
-    queryKey: ["content-intelligence", site?.id, days],
+    queryKey: ["content-intelligence", site?.id, days, provider],
     enabled: !!site,
-    queryFn: () => api.get(`/sites/${site!.id}/content-intelligence`, { days }),
+    queryFn: () => api.get(`/sites/${site!.id}/content-intelligence`, { days, provider }),
   });
 
   const experiments = useQuery<{ items: SeoExperiment[]; count: number }>({
@@ -105,9 +111,9 @@ export default function ContentIntelligence() {
   });
 
   const activeMetrics = useQuery<ExperimentMetrics>({
-    queryKey: ["seo-experiment-metrics", site?.id, activeExpMetricsId, days],
+    queryKey: ["seo-experiment-metrics", site?.id, activeExpMetricsId, days, provider],
     enabled: !!site && activeExpMetricsId !== null,
-    queryFn: () => api.get(`/sites/${site!.id}/experiments/${activeExpMetricsId}/metrics`, { days }),
+    queryFn: () => api.get(`/sites/${site!.id}/experiments/${activeExpMetricsId}/metrics`, { days, engine: provider }),
   });
 
   const addExperiment = useMutation({
@@ -152,7 +158,15 @@ export default function ContentIntelligence() {
         </Card>
       )}
 
-      <Card title="Vergleichszeitraum">
+      <Card title="Datenquelle und Vergleichszeitraum">
+        <div className="flex flex-wrap items-center gap-4">
+        <label className="flex items-center gap-3 text-sm">
+          Suchmaschine
+          <Select value={provider} onChange={(e) => setProvider(e.target.value as "google" | "bing")} className="w-52" aria-label="Suchdatenquelle">
+            <option value="google">Google Search Console</option>
+            <option value="bing">Bing Webmaster Tools</option>
+          </Select>
+        </label>
         <label className="flex items-center gap-3 text-sm">
           Tage je Vergleichsfenster
           <Select value={days} onChange={(e) => setDays(Number(e.target.value))} className="w-36">
@@ -163,6 +177,8 @@ export default function ContentIntelligence() {
             ))}
           </Select>
         </label>
+        </div>
+        <p className="mt-2 text-xs text-slate-500">Google und Bing werden getrennt ausgewertet; Durchschnittspositionen werden nicht zwischen Suchmaschinen vermischt.</p>
       </Card>
 
       <div role="tablist" aria-label="Content-Auswertung" className="flex flex-wrap gap-2">
@@ -193,7 +209,7 @@ export default function ContentIntelligence() {
         <div className="space-y-4">
           <Card
             title="SEO-Experimente & Vorher-Nachher-Messung"
-            description="Datiere deine Onpage-, Content- oder Schema-Maßnahmen und vergleiche automatisch die GSC-Klicks und Positionen vor und nach der Änderung."
+            description={`Datiere deine Maßnahmen und vergleiche Klicks und Positionen vor und nach der Änderung – aktuell aus ${provider === "google" ? "Google Search Console" : "Bing Webmaster Tools"}.`}
             actions={
               <Button variant="primary" onClick={() => setShowAddExp((v) => !v)}>
                 {showAddExp ? "Abbrechen" : "Neues Experiment anlegen"}
@@ -281,16 +297,21 @@ export default function ContentIntelligence() {
                 </Button>
               }
             >
-              {activeMetrics.isLoading && <Spinner label="Berechne Vorher-Nachher-Metriken aus GSC-Daten…" />}
+              {activeMetrics.isLoading && <Spinner label={`Berechne Vorher-Nachher-Metriken aus ${provider === "google" ? "Google" : "Bing"}…`} />}
               {activeMetrics.error && <ErrorBox error={activeMetrics.error} />}
               {activeMetrics.data && !activeMetrics.data.has_data && (
-                <EmptyState title="Keine GSC-Daten für dieses Zeitfenster" description={activeMetrics.data.reason} />
+                <EmptyState
+                  title="Keine Daten für dieses Zeitfenster"
+                  description={activeMetrics.data.reason}
+                  action={<Badge tone="blue">Geprüfte Quelle: {activeMetrics.data.provider ?? providerLabel}</Badge>}
+                />
               )}
               {activeMetrics.data?.has_data && (
                 <div className="space-y-4">
                   <div className="flex flex-wrap items-center justify-between gap-2 border-b pb-3 dark:border-slate-800">
                     <div>
                       <h3 className="font-semibold">{activeMetrics.data.title}</h3>
+                      <Badge tone="blue">{activeMetrics.data.provider ?? (provider === "google" ? "Google Search Console" : "Bing Webmaster Tools")}</Badge>
                       <p className="text-xs text-slate-500">
                         Änderungsdatum: {activeMetrics.data.applied_date} · Fenster: {activeMetrics.data.window_days} Tage vor vs. nach Änderung
                         {activeMetrics.data.target_url ? ` · Ziel-URL: ${activeMetrics.data.target_url}` : " · Website-weit"}
@@ -461,18 +482,22 @@ export default function ContentIntelligence() {
             </Card>
           )}
           {result.error && <ErrorBox error={result.error} onRetry={() => result.refetch()} />}
-          {data && !data.has_data && <Card><EmptyState title="Keine datierten GSC-Query-URL-Daten" description={data.reason} /></Card>}
+          {data && !data.has_data && <Card><EmptyState
+            title="Keine datierten Query-URL-Daten"
+            description={data.reason}
+            action={<Badge tone="blue">Geprüfte Quelle: {data.provider_label ?? providerLabel}</Badge>}
+          /></Card>}
           {data?.has_data && (
             <>
               <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
                 <Stat label="Seiten mit Rückgang" value={fmt(data.decay.length)} />
                 <Stat label="URL-Überschneidungen" value={fmt(data.cannibalisation.length)} />
                 <Stat label="Wachsende Keywords" value={fmt(data.trends.length)} />
-                <Stat label="GSC-Zeilen geprüft" value={fmt(data.observations)} />
+                <Stat label={`${provider === "google" ? "Google" : "Bing"}-Zeilen geprüft`} value={fmt(data.observations)} />
               </div>
               <Card title="Datenherkunft und Interpretation">
                 <p className="text-sm">
-                  Quelle: GSC {data.source?.toUpperCase()} · {data.start_date} bis {data.end_date}; neuester Zeitraum ab {data.split_date}.
+                  Quelle: {data.provider_label ?? (provider === "google" ? "Google Search Console" : "Bing Webmaster Tools")} ({data.source?.toUpperCase()}) · {data.start_date} bis {data.end_date}; neuester Zeitraum ab {data.split_date}.
                 </p>
                 {(data.notes ?? []).map((note, i) => (
                   <p className="mt-1 text-xs text-slate-500" key={i}>

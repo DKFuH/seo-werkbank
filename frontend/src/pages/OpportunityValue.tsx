@@ -27,7 +27,7 @@ type DependencyAuditResult = {
   start_date: string;
   end_date: string;
   days_evaluated: number;
-  gsc_source: string;
+  provider: string;
   total_clicks: number;
   total_impressions: number;
   landingpage_concentration: {
@@ -71,8 +71,10 @@ type DependencyAuditResult = {
     }[];
   };
   channel_resilience: {
-    google_gsc_active: boolean;
-    bing_webmaster_active: boolean;
+    google: { active: boolean; clicks: number; impressions: number; click_share: number; source?: string | null };
+    bing: { active: boolean; clicks: number; impressions: number; click_share: number };
+    total_clicks: number;
+    window_note?: string;
     channel_assessment: string;
   };
   method: string;
@@ -87,6 +89,7 @@ export default function OpportunityValue() {
   const { site } = useSite();
   const [mainTab, setMainTab] = useState<"chancen" | "klumpenrisiko">("chancen");
   const [days, setDays] = useState(28);
+  const [dependencyProvider, setDependencyProvider] = useState<"google" | "bing">("google");
   const [rates, setRates] = useState<Rates>(initialRates);
   const [fit, setFit] = useState<Record<string, string>>({});
   const [customBrand, setCustomBrand] = useState("");
@@ -99,10 +102,11 @@ export default function OpportunityValue() {
   });
 
   const dependencyData = useQuery<DependencyAuditResult>({
-    queryKey: ["dependency-audit", site?.id, days, activeBrandFilter],
+    queryKey: ["dependency-audit", site?.id, days, activeBrandFilter, dependencyProvider],
     queryFn: () =>
       api.get("/sites/" + site!.id + "/dependency-audit", {
         days,
+        provider: dependencyProvider,
         brand_term: activeBrandFilter.trim() || undefined,
       }),
     enabled: !!site?.id && mainTab === "klumpenrisiko",
@@ -169,14 +173,20 @@ export default function OpportunityValue() {
         </button>
       </div>
 
-      <Card title="GSC-Beobachtungszeitraum">
-        <Select value={days} onChange={(e) => setDays(Number(e.target.value))} aria-label="GSC-Zeitraum" className="w-48">
+      <Card title="Beobachtungszeitraum">
+        <div className="flex flex-wrap gap-3">
+        <Select value={days} onChange={(e) => setDays(Number(e.target.value))} aria-label="Suchdaten-Zeitraum" className="w-48">
           {[7, 14, 28, 56, 90, 180].map((n) => (
             <option key={n} value={n}>
               {n} Tage
             </option>
           ))}
         </Select>
+        {mainTab === "klumpenrisiko" && <Select value={dependencyProvider} onChange={(e) => setDependencyProvider(e.target.value as "google" | "bing")} aria-label="Suchdatenquelle" className="w-56">
+          <option value="google">Google Search Console</option>
+          <option value="bing">Bing Webmaster Tools</option>
+        </Select>}
+        </div>
       </Card>
 
       {!site && (
@@ -189,13 +199,17 @@ export default function OpportunityValue() {
         <div className="space-y-4">
           {dependencyData.isLoading && (
             <Card>
-              <Spinner label="Berechne Klumpenrisiko aus GSC-Daten…" />
+              <Spinner label={`Berechne Klumpenrisiko aus ${dependencyProvider === "google" ? "Google" : "Bing"}-Daten…`} />
             </Card>
           )}
           {dependencyData.error && <ErrorBox error={dependencyData.error} onRetry={() => dependencyData.refetch()} />}
           {dependencyData.data && !dependencyData.data.has_data && (
             <Card>
-              <EmptyState title="Keine GSC-Daten vorhanden" description={dependencyData.data.reason} />
+              <EmptyState
+                title="Keine Suchdaten vorhanden"
+                description={dependencyData.data.reason}
+                action={<Badge tone="blue">Geprüfte Quelle: {dependencyData.data.provider ?? (dependencyProvider === "google" ? "Google Search Console" : "Bing Webmaster Tools")}</Badge>}
+              />
             </Card>
           )}
           {dependencyData.data?.has_data && (
@@ -203,7 +217,7 @@ export default function OpportunityValue() {
               {/* Landingpage Concentration Section */}
               <Card
                 title="1. Landingpage-Klumpenrisiko (URL-Konzentration)"
-                description="Wie stark hängt der organische Gesamterfolg von nur wenigen Seiten ab?"
+                description={`Wie stark hängt der organische Gesamterfolg bei ${dependencyData.data.provider} von nur wenigen Seiten ab?`}
               >
                 <div className="mb-4 flex flex-wrap items-center gap-2">
                   <Badge
@@ -373,9 +387,14 @@ export default function OpportunityValue() {
 
               {/* Search Engine Resilience */}
               <Card title="3. Suchmaschinen-Resilienz">
+                <div className="mb-3 grid grid-cols-2 gap-3">
+                  <Stat label="Google-Klickanteil" value={pctFmt(dependencyData.data.channel_resilience.google.click_share)} hint={`${fmtInt(dependencyData.data.channel_resilience.google.clicks)} Klicks`} />
+                  <Stat label="Bing-Klickanteil" value={pctFmt(dependencyData.data.channel_resilience.bing.click_share)} hint={`${fmtInt(dependencyData.data.channel_resilience.bing.clicks)} Klicks`} />
+                </div>
                 <p className="text-sm text-slate-700 dark:text-slate-300">
                   {dependencyData.data.channel_resilience.channel_assessment}
                 </p>
+                {dependencyData.data.channel_resilience.window_note && <p className="mt-2 text-xs text-slate-500">{dependencyData.data.channel_resilience.window_note}</p>}
                 <p className="mt-2 text-xs text-slate-500">{dependencyData.data.method}</p>
               </Card>
             </>

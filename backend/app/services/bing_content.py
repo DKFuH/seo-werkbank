@@ -85,3 +85,63 @@ def analyze_sample(rows: list[dict], pages: list[dict], weeks: int = 4, limit: i
             "method": "Bing page-query observations and lexical crawl coverage",
             "notes": ["Bounded Bing sample, not complete site traffic; missing rows are not verified zero. "
                       "Signals are descriptive, not proof of cannibalisation or missing content."]}
+
+
+def get_bing_observations(db, site_id: int) -> list[dict]:
+    """Loads and normalizes all stored Bing query/page observations from SearchProviderSnapshots."""
+    from sqlalchemy import select
+
+    from ..models import SearchProviderSnapshot
+
+    snapshots = db.scalars(
+        select(SearchProviderSnapshot).where(
+            SearchProviderSnapshot.site_id == site_id,
+            SearchProviderSnapshot.provider == "bing",
+        ).order_by(SearchProviderSnapshot.id.desc())
+    ).all()
+
+    observations = []
+    seen = set()
+
+    for snap in snapshots:
+        payload = snap.payload or {}
+        raw_list = payload.get("data") if isinstance(payload, dict) else payload
+        if not isinstance(raw_list, list):
+            raw_list = payload.get("d") if isinstance(payload, dict) else None
+        if not isinstance(raw_list, list):
+            continue
+
+        if snap.operation == "page_queries":
+            page = (snap.parameters or {}).get("url") or snap.property_url
+            for row in normalize_page_queries(page, raw_list):
+                row["provider_operation"] = snap.operation
+                key = (row["day"], row["query"], row["page"])
+                if key not in seen:
+                    seen.add(key)
+                    observations.append(row)
+        elif snap.operation in ("traffic", "pages", "query_pages"):
+            for raw in raw_list:
+                if not isinstance(raw, dict):
+                    continue
+                d_str = parse_ms_date(raw.get("Date"))
+                if not d_str:
+                    continue
+                try:
+                    day = date.fromisoformat(d_str[:10])
+                    query = str(raw.get("Query") or "").strip()
+                    clicks = int(raw.get("Clicks") or 0)
+                    impressions = int(raw.get("Impressions") or 0)
+                    pos = raw.get("AvgImpressionPosition")
+                    position = float(pos) if pos is not None and math.isfinite(float(pos)) and float(pos) > 0 else None
+                except (ValueError, TypeError, OverflowError):
+                    continue
+                page = str(raw.get("Page") or raw.get("Url") or "").strip()
+                key = (day, query, page)
+                if key not in seen:
+                    seen.add(key)
+                    observations.append({
+                        "day": day, "query": query, "page": page,
+                        "clicks": clicks, "impressions": impressions, "position": position,
+                        "provider_operation": snap.operation,
+                    })
+    return observations
