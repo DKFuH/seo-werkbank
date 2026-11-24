@@ -132,6 +132,18 @@ async def get_keywords(site_id: int) -> dict:
     return data
 
 
+
+async def get_bing_snapshots(site_id: int, limit: int = 25) -> dict:
+    """Read stored Bing evidence metadata; no live provider calls or writes."""
+    return await api_get(f"/api/sites/{_id(site_id)}/bing/snapshots",
+                         params={"limit": _limit(limit)})
+
+
+async def get_bing_snapshot(site_id: int, snapshot_id: int) -> dict:
+    """Read one owned, stored Bing snapshot, distinct from GSC."""
+    return await api_get(f"/api/sites/{_id(site_id)}/bing/snapshots/{_id(snapshot_id)}")
+
+
 def build_server():
     """Create the optional MCP v2 server only when explicitly started."""
     try:
@@ -141,7 +153,7 @@ def build_server():
 
     server = MCPServer("SEO-Werkbank (read-only)")
     for tool in (list_owned_sites, get_site_overview, get_crawl_issues, get_crawl_pages,
-                 get_gsc_insights, get_backlinks, get_keywords):
+                 get_gsc_insights, get_backlinks, get_keywords, get_bing_snapshots, get_bing_snapshot):
         server.tool()(tool)
     return server
 

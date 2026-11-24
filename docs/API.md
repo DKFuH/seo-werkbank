@@ -32,6 +32,10 @@ Sämtliche Pfade in dieser Tabelle haben das Präfix `/api`, benötigen ein auth
 | Schema | `PUT/DELETE /sites/{site_id}/schema-manager/templates/{template_id}` | Template ändern/löschen |
 | Bing | `GET /bing/sites` | Websites des Bing-API-Schlüssels (Einstellung `bing.api_key`) |
 | Bing | `GET /sites/{site_id}/bing/overview?site_url=…` | Suchanfragen (Wochenwerte je Anfrage summiert, Position impressionsgewichtet) und Bingbot-Crawlstatistik; ohne `site_url` Zuordnung über die Domain |
+| Bing | `GET /sites/{site_id}/bing/intelligence/{operation}` | Allowlist-Lesezugriff auf Bing-Originaldaten; je nach Operation `keyword` oder gleichhostige `url` erforderlich; keine Management-Mutationen |
+| Bing | `GET /sites/{site_id}/bing/content-analysis` | Begrenzte Stichprobe realer Page-Query-Wochenwerte plus letzter Crawl; zeitliche Signale nur bei vollständiger Serienabdeckung |
+| Bing | `POST/GET /sites/{site_id}/bing/snapshots` | Bing-Antwort ausdrücklich abrufen und unveränderlich site-scoped speichern bzw. Metadaten auflisten |
+| Bing | `GET /sites/{site_id}/bing/snapshots/{snapshot_id}` | Eigenen gespeicherten Snapshot lesen; Providerdaten bleiben von GSC getrennt |
 | IndexNow | `GET /sites/{site_id}/indexnow/status` | Schlüsseldatei prüfen und Kandidaten seit dem vorherigen Crawl: `new`, `changed`, `removed` (404/410, vorher indexierbar) mit Zählern |
 | IndexNow | `POST /sites/{site_id}/indexnow/submit` | Body `source`: `manual\|new\|changed\|removed\|new_changed\|all`, bei `manual` zusätzlich `urls`; nur URLs des eigenen Hosts, Antwort mit IndexNow-Status. Hinweis, keine Indexierungsgarantie |
 | Schema | `POST /sites/{site_id}/schema-manager/templates/{template_id}/preview` | Bis zu 30 passende Seiten vorbefüllt ansehen, keine Veröffentlichung |

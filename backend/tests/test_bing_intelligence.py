@@ -25,6 +25,27 @@ def test_read_intelligence_query_pages():
     asyncio.run(run())
 
 
+@pytest.mark.parametrize("operation,method", [
+    ("backlink_counts", "GetLinkCounts"),
+    ("backlinks", "GetUrlLinks"),
+])
+def test_paginated_link_operations_start_with_first_page(operation, method):
+    async def run():
+        def handler(request):
+            assert request.url.path.endswith("/" + method)
+            assert request.url.params["page"] == "0"
+            return httpx.Response(200, json={"d": {"Links": [], "TotalPages": 0}})
+
+        kwargs = {"url": "https://example.com/page"} if operation == "backlinks" else {}
+        async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+            await bing.read_intelligence(
+                {"api_key": "test"}, "https://example.com/", operation,
+                client=client, **kwargs,
+            )
+
+    asyncio.run(run())
+
+
 @pytest.mark.parametrize("operation,kwargs", [
     ("SubmitUrl", {}),
     ("query_pages", {}),

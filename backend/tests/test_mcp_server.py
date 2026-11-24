@@ -53,12 +53,17 @@ async def test_readonly_paths_auth_and_redirect(monkeypatch):
     assert seen[0].method == "GET"
     assert seen[0].headers["authorization"] == "Bearer test-local-user-token"
     assert seen[0].url.path == "/api/sites/2/backlinks"
+    assert await m.get_bing_snapshots(2, limit=10) == {"items": [{"id": 2}]}
+    assert seen[1].url.path == "/api/sites/2/bing/snapshots"
+    assert seen[1].url.params["limit"] == "10"
+    assert await m.get_bing_snapshot(2, 7) == {"items": [{"id": 2}]}
+    assert seen[2].url.path == "/api/sites/2/bing/snapshots/7"
     with pytest.raises(ValueError):
         await m.api_get("/api/redirect")
-    assert len(seen) == 2
+    assert len(seen) == 4
     with pytest.raises(ValueError):
         await m.api_get("/api/sites/../settings")
-    assert len(seen) == 2
+    assert len(seen) == 4
 
 
 @pytest.mark.asyncio
