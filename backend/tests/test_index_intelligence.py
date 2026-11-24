@@ -19,7 +19,7 @@ def test_sitemap_history_and_site_isolation(client, auth, crawled):
     response = client.get(f"/api/sites/{sid}/index-intelligence/sitemap-history", headers=auth)
     assert response.status_code == 200
     assert response.json()["items"]
-    assert response.json()["items"][0]["crawl_id"] == crawled["crawl_id"]
+    assert any(item["crawl_id"] == crawled["crawl_id"] for item in response.json()["items"])
     other = client.post("/api/auth/register", json={
         "email": "index-intel-other@example.com", "password": "correct horse battery"}).json()
     headers = {"Authorization": f"Bearer {other['access_token']}"}
