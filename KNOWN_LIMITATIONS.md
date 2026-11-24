@@ -15,6 +15,10 @@ the current implementation.
 - **Indexed-page counts** cannot be verified without Search Console; sitemap size and indexable crawled pages are shown instead.
 - **Google Trends** is not integrated. **Google Analytics 4** is not integrated. Bing Webmaster Tools, IndexNow and Google URL Inspection have implemented integrations but still depend on credentials, permissions and provider availability. **Google Business Profile** requires Google-granted API access and is not implemented.
 - **Google Ads Keyword Planner** has no direct API integration; use its CSV export.
+- **Bing intelligence is a bounded, on-demand provider sample.** The JSON/HTTP operation signatures are covered by automated
+  contract tests, but not every operation and response shape has been verified against an authorized live account. Stored
+  snapshots are evidence of the returned payload, not proof of complete site coverage. Temporal content signals are suppressed
+  unless each contributing URL/query series covers every expected week in both comparison windows.
 
 ## Estimates (always labelled in the UI)
 

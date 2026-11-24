@@ -114,7 +114,7 @@ async def call(settings: dict, method: str, *, params: dict | None = None, body:
     except ValueError:
         out = {}
     if r.status_code != 200:
-        msg = out.get("Message") if isinstance(out, dict) else None
+        msg = None  # Provider errors may echo credential-bearing URLs.
         if r.status_code in (401, 403):
             msg = msg or "API-Schlüssel ungültig oder ohne Zugriff auf diese Website"
         raise BingError(f"Bing Webmaster API: HTTP {r.status_code}" + (f" – {msg}" if msg else ""))
@@ -235,6 +235,11 @@ READ_OPERATIONS = {
     "query_pages": ("GetQueryPageStats", "query"),
     "url_info": ("GetUrlInfo", "url"),
     "sitemaps": ("GetFeeds", None),
+    "backlink_counts": ("GetLinkCounts", None),
+    "backlinks": ("GetUrlLinks", "url"),
+    "crawl_settings": ("GetCrawlSettings", None),
+    "submission_quota": ("GetUrlSubmissionQuota", None),
+    "page_queries": ("GetPageQueryStats", "page"),
 }
 
 
@@ -249,10 +254,12 @@ async def read_intelligence(settings: dict, site_url: str, operation: str, *,
         if not keyword or not keyword.strip():
             raise BingError("Suchanfrage erforderlich.")
         params["query"] = keyword.strip()
-    elif required == "url":
+    elif required in ("url", "page"):
         if not url or not same_host_urls([url], site_url)[0]:
             raise BingError("URL derselben Website erforderlich.")
-        params["url"] = url
+        params[required] = url
+    if operation in ("backlink_counts", "backlinks"):
+        params["page"] = 0
     data = await call(settings, method, params=params, client=client)
     return {"provider": "bing", "operation": operation, "site_url": site_url,
             "data": data, "retrieved_at": datetime.now(UTC).isoformat()}
