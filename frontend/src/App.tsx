@@ -43,6 +43,7 @@ const ContentStudio = lazy(() => import("./pages/ContentStudio"));
 const WdfIdf = lazy(() => import("./pages/WdfIdf"));
 const Geo = lazy(() => import("./pages/Geo"));
 const Matomo = lazy(() => import("./pages/Matomo"));
+const ExternalAnalytics = lazy(() => import("./pages/ExternalAnalytics"));
 const Competitors = lazy(() => import("./pages/Competitors"));
 const Backlinks = lazy(() => import("./pages/Backlinks"));
 const SearchConsole = lazy(() => import("./pages/SearchConsole"));
@@ -100,6 +101,7 @@ export default function App() {
             <Route path="/wdf-idf" element={<WdfIdf />} />
             <Route path="/geo" element={<Geo />} />
             <Route path="/matomo" element={<Matomo />} />
+            <Route path="/external-analytics" element={<ExternalAnalytics />} />
             <Route path="/competitors" element={<Competitors />} />
             <Route path="/backlinks" element={<Backlinks />} />
             <Route path="/search-console" element={<SearchConsole />} />
