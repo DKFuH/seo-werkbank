@@ -18,8 +18,9 @@ from ..crawler.fetcher import Fetcher
 from ..crawler.parser import parse_html
 from ..crawler.render import Renderer, playwright_available
 from ..db import get_db
-from ..models import Page, User
+from ..models import Link, Page, User
 from ..security.auth import current_user, get_site_for
+from ..services.tracking_audit import evaluate_consent_requests, inspect_html_tracking
 from .deps import checked_url, latest_crawl
 
 router = APIRouter(tags=["technical-diagnostics"])
@@ -33,6 +34,13 @@ TRACKER_WORDS = ("analytics", "collect", "pixel", "gtm", "matomo", "tagmanager",
 class ScanIn(BaseModel):
     url: str = Field(min_length=10, max_length=2048)
     choices: list[str] = Field(default_factory=lambda: ["initial"], min_length=1, max_length=3)
+
+
+class TrackingAuditIn(BaseModel):
+    url: str = Field(min_length=10, max_length=2048)
+    run_browser_consent: bool = Field(default=False)
+    choices: list[str] = Field(default_factory=lambda: ["initial", "accept", "reject"], min_length=1, max_length=3)
+
 
 
 def _site_url(site, url: str) -> str:
@@ -167,3 +175,90 @@ def images(site_id: int, limit: int = Query(200, ge=1, le=300),
             for p in pages]
     return {"crawl_id": crawl.id, "pages": [x for x in rows if x["issues"]],
             "method": "HTML image markup only. The first image is not proven to be LCP, no real viewport or CLS measurement."}
+
+
+@router.post("/sites/{site_id}/diagnostics/tracking-audit")
+async def tracking_audit(site_id: int, body: TrackingAuditIn, user: User = Depends(current_user),
+                         db: Session = Depends(get_db)) -> dict:
+    """Detailed deterministic audit of tracking tags, CMPs, duplicate configurations, and consent leakage."""
+    site = get_site_for(db, user, site_id)
+    url = _site_url(site, body.url)
+
+    # 1. Fetch raw HTML for deterministic static tag inspection
+    async with Fetcher(timeout_s=18, retries=0, concurrency=1, max_body_bytes=2_000_000) as fetcher:
+        response = await fetcher.fetch_following(url, max_body=2_000_000)
+    if response.status != 200 or not response.is_html:
+        raise HTTPException(422, "Die angegebene URL liefert keine abrufbare HTML-Seite")
+
+    html = response.body.decode("utf-8", "replace")
+    static_report = inspect_html_tracking(html, url)
+
+    # 2. Optional Playwright dynamic network consent trace
+    browser_report = None
+    if body.run_browser_consent:
+        if not playwright_available():
+            raise HTTPException(422, "Playwright/Chromium ist für den Browser-Consent-Trace nicht verfügbar")
+        valid_choices = [c for c in body.choices if c in ("initial", "accept", "reject")]
+        if not valid_choices:
+            valid_choices = ["initial"]
+        samples = [await _render_scan(url, "SEO-Werkbank-Diagnostic/1.0", choice) for choice in valid_choices]
+        browser_report = {
+            "samples": samples,
+            "evaluation": evaluate_consent_requests(samples),
+        }
+
+    return {
+        "url": url,
+        "static_inspection": static_report,
+        "browser_trace": browser_report,
+        "playwright_supported": playwright_available(),
+        "method": "Kombinierte statische HTML-Analyse (Tags, CMPs, Doppelungen, tel/mailto) "
+                  "und optionaler isolierter Playwright-Netzwerk-Trace. Keine Rechtsberatung.",
+    }
+
+
+@router.get("/sites/{site_id}/diagnostics/tracking-overview")
+def tracking_overview(site_id: int, user: User = Depends(current_user),
+                      db: Session = Depends(get_db)) -> dict:
+    """Aggregates tracking signals and contact links across pages from the latest crawl."""
+    site = get_site_for(db, user, site_id)
+    crawl = latest_crawl(db, site.id)
+    if crawl is None:
+        return {
+            "crawl_id": None,
+            "pages_audited": 0,
+            "summary": None,
+            "conversion_links": {"tel_count": 0, "tel_examples": [], "mailto_count": 0, "mailto_examples": []},
+            "method": "Erst einen Crawl ausführen",
+        }
+
+    pages = db.scalars(select(Page).where(Page.crawl_id == crawl.id, Page.is_html.is_(True))
+                       .order_by(Page.id).limit(500)).all()
+
+    # Aggregate tel: and mailto: links from crawl links
+    tel_links = db.execute(
+        select(Link.target_url, Page.url)
+        .join(Page, Link.source_page_id == Page.id)
+        .where(Page.crawl_id == crawl.id, Link.target_url.like("tel:%"))
+        .limit(200)
+    ).all()
+
+    mailto_links = db.execute(
+        select(Link.target_url, Page.url)
+        .join(Page, Link.source_page_id == Page.id)
+        .where(Page.crawl_id == crawl.id, Link.target_url.like("mailto:%"))
+        .limit(200)
+    ).all()
+
+    return {
+        "crawl_id": crawl.id,
+        "pages_audited": len(pages),
+        "conversion_links": {
+            "tel_count": len(tel_links),
+            "tel_examples": [{"target": t[0], "page": t[1]} for t in tel_links[:10]],
+            "mailto_count": len(mailto_links),
+            "mailto_examples": [{"target": m[0], "page": m[1]} for m in mailto_links[:10]],
+        },
+        "method": "Gecrawlte HTML-Seiten und interne Link-Ziele aus der Datenbank.",
+    }
+

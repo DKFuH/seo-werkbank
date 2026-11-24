@@ -27,6 +27,12 @@ Ordered by expected value to users. Items move to `CHANGELOG.md` when shipped. S
 - White-label PDF reports (logo, colours), scheduled report delivery.
 - Plugin interface for custom audit rules.
 
+## Delivered (24 November 2026)
+
+- **Tracking & Consent Audit:** Deterministischer HTML- und Browser-Audit (GA4, GTM, Matomo, Clarity, CMPs), Consent-Leakage-Prüfung, doppelte Tag-Initialisierungen und Conversion-Ziele (`tel:`, `mailto:`, Formulare).
+- **SEO Experiment Tracking:** Datiertes Maßnahmen-Logging, Vorher-Nachher-Performanceanalyse aus GSC-Daten (Klicks, Impressionen, Position, CTR), Timeline-Tagesverlauf und Annotationen.
+- **Klumpenrisiko-Analyse (Dependency Audit):** Landingpage-Konzentration (Top 1, Top 3, Pareto-Quote, Single Points of Failure), Brand vs. Non-Brand-Abhängigkeit und Suchmaschinen-Resilienz.
+
 ## Delivered (PRs #40–#49, 23 November 2026)
 
 - Rule provenance and Google/Bing/Brave/GEO profile scores; Bing Webmaster Tools and IndexNow (new, changed, removed URLs).

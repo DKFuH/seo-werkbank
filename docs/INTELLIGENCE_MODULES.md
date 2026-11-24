@@ -134,3 +134,56 @@ die Werkbank schickt keine automatischen bezahlten Abfragen.
 
 Quelle: https://docs.dataforseo.com/v3/serp/google/organic/live/advanced/
 und https://docs.dataforseo.com/v3/serp/google/maps/live/advanced/
+
+## Tracking & Consent Audit (Analyse → Tracking & Consent)
+
+Unter **Analyse → Tracking, Consent & Diagnosen** führt die Werkbank
+einen deterministischen technischen Audit der Website durch:
+1. **Tag-Erkennung:** Identifiziert Google Analytics 4 (`G-...`),
+   Google Tag Manager (`GTM-...`), Matomo / Piwik (`setSiteId`, Tracker-URLs),
+   Microsoft Clarity, Meta Pixel und legacy Universal Analytics.
+2. **Consent-Leakage-Prüfung:** Unterscheidet statisch ungeblockte Skripte
+   (ohne CMP-Blockier-Attribute wie `type="text/plain"` oder `data-cookieconsent`)
+   und dynamische Netzwerk-Requests vor jeder Nutzerzustimmung (`initial`).
+   Erkennt, ob Tracker-Requests trotz expliziter Ablehnung (`reject`) weiterfeuern.
+3. **Doppelte Tag-Initialisierungen:** Erkennt mehrfach eingebundene GTM-Container,
+   mehrfache `gtag('config')`-Aufrufe und doppelte Matomo-`trackPageView`-Trigger,
+   die Klick- und Pageview-Zahlen künstlich aufblähen.
+4. **Interaktions- und Conversion-Ziele:** Prüft `tel:`- und `mailto:`-Links
+   sowie Formulare auf vorhandenes Klick-Tracking (`onclick`, `data-track`, etc.).
+   Liefert zusätzlich eine gecrawlte Übersicht aller Telefon- und E-Mail-Ziele.
+
+Keine Rechtsberatung. Die Prüfung liefert technische Indizien.
+
+## SEO Experiment Tracking (Content → Content Intelligence)
+
+Erlaubt das datierte Erfassen von Optimierungsmaßnahmen (Title/Meta, Content,
+interne Verlinkung, Schema-Markup, technische Änderungen) und misst die
+tatsächliche GSC-Performance in symmetrischen Zeitfenstern vor und nach dem
+Änderungsdatum (`applied_date`).
+- Berechnet Klicks, Impressionen, gewichtete Durchschnittsposition und CTR
+  für das Vorher- und Nachher-Fenster (14, 28, 56 oder 90 Tage).
+- Liefert eine Tages-Timeline mit Markierung des Änderungstages (`★ ÄNDERUNG`).
+- Stellt einen Endpunkt für schlanke Timeline-Annotationen (`/timeline-annotations`)
+  bereit, um Maßnahmen auf GSC-Charts einzublenden.
+- Auswertung unterscheidet `waiting_for_data`, `in_progress` und `completed`.
+
+Die Daten basieren ausschließlich auf echten `GscRow`-Zeilen. Ein Klickanstieg
+beweist keine Alleinkausalität (Saisonalität und SERP-Änderungen beachten).
+
+## Klumpenrisiko- & Abhängigkeits-Audit (Conversion → Wirtschaftliche Chancen)
+
+Berechnet die unternehmerische Abhängigkeit und Resilienz der organischen Suchgewinnung
+aus tatsächlichen GSC-Suchanfrage-URL-Paaren:
+1. **Landingpage-Konzentration:** Weist den kumulierten Traffic-Anteil der Top 1,
+   Top 3, Top 5 und Top 10 URLs aus. Ermittelt den Pareto-Fokus (*„X von Y Seiten
+   erzielen 80 % aller Klicks“*) und markiert Single Points of Failure (URLs mit ≥ 25 %
+   des Gesamttraffics).
+2. **Brand vs. Non-Brand Abhängigkeit:** Filtert Suchbegriffe automatisch nach
+   Markenbestandteilen (aus Site-Name und Domain) oder benutzerdefinierten Begriffen.
+   Klassifiziert den Anteil generischer Neukundengewinnung gegenüber reinen Markensuchen.
+3. **Suchmaschinen-Resilienz:** Dokumentiert die Abhängigkeit von Google gegenüber
+   Bing Webmaster Tools.
+
+Alle Metriken sind 100 % mathematisch deterministisch. Keine erfundenen Scores.
+
