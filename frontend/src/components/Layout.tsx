@@ -67,6 +67,7 @@ export const NAV: NavGroup[] = [
     { to: "/wdf-idf", label: "WDF*IDF", icon: i(Sigma) },
     { to: "/content-refresh", label: "Content-Refresh", icon: i(RefreshCw) },
     { to: "/content-gap", label: "Content-Gaps", icon: i(Layers) },
+    { to: "/content-intelligence", label: "Content Intelligence", icon: i(TrendingUp) },
     { to: "/content-proposals", label: "Content-Entwürfe", icon: i(FilePen) },
     { to: "/content-studio", label: "Content Studio", icon: i(Lightbulb) },
     { to: "/research-quality", label: "Qualität & CRO", icon: i(MessageSquareQuote) },
