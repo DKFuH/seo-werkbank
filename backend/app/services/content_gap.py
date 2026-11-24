@@ -40,7 +40,8 @@ def _page_metadata(p: dict) -> dict:
 
 
 def analyze(pairs: list[dict], pages: list[dict], *,
-            min_impressions: int = 10, max_results: int = 80) -> dict:
+            min_impressions: int = 10, max_results: int = 80,
+            source_label: str = "GSC") -> dict:
     """Return documented evidence for each query, clustered only by near-token overlap.
 
     Pairs *already* aggregated by a site-scoped SQL query for the chosen period.
@@ -124,7 +125,7 @@ def analyze(pairs: list[dict], pages: list[dict], *,
         overlap_warning = len(substantial) > 1
         if not ranked:
             category = "review"
-            reasoning = "Rankende GSC-URL fehlt im letzten indexierbaren Crawl; erst URL/Crawl prüfen."
+            reasoning = f"Rankende {source_label}-URL fehlt im letzten indexierbaren Crawl; erst URL/Crawl prüfen."
         elif ranked_title >= 0.75 and ranked_body >= 0.5:
             category = "no_action"
             reasoning = "Suchbegriffe kommen in Überschriften und Text vor; Suchintention trotzdem prüfen."
@@ -189,7 +190,7 @@ def analyze(pairs: list[dict], pages: list[dict], *,
     return {"clusters": clusters[:max_results], "total_clusters": len(clusters),
             "queries_considered": len(items), "truncated": truncated,
             "crawl_pages_compared": len(indexed),
-            "method": "GSC-Query-URL-Paare (Impressionen und positionsgewichteter Mittelwert), "
+            "method": f"{source_label}-Query-URL-Paare (Impressionen und positionsgewichteter Mittelwert), "
                       "lexikalische Token-Abdeckung in Title/H1/Headings/Body, "
                       "vorsichtige Query-Gruppierung. Keine semantische Intent-Bestätigung, "
-                      "keine GSC-Suchvolumen oder garantierte Content-Lücke."}
+                      f"keine {source_label}-Suchvolumen oder garantierte Content-Lücke."}

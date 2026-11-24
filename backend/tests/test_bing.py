@@ -62,8 +62,9 @@ def test_overview_aggregates_weekly_query_rows(monkeypatch):
 
 def test_bing_errors_are_readable(monkeypatch):
     _mock(monkeypatch, lambda r: httpx.Response(401, json={"ErrorCode": 3, "Message": "InvalidApiKey"}))
-    with pytest.raises(bing.BingError, match="HTTP 401 – InvalidApiKey"):
+    with pytest.raises(bing.BingError, match="HTTP 401 – API-Schlüssel ungültig") as error:
         asyncio.run(bing.sites({"api_key": "falsch"}))
+    assert "InvalidApiKey" not in str(error.value)
     with pytest.raises(bing.BingError, match="nicht eingerichtet"):
         asyncio.run(bing.sites({"api_key": ""}))
 

@@ -61,7 +61,7 @@ def decay(rows: list[dict], split: date, min_previous_impressions: int = 40,
 
 
 def cannibalisation(rows: list[dict], split: date, min_impressions: int = 20,
-                    limit: int = 100) -> list[dict]:
+                    limit: int = 100, source_label: str = "GSC") -> list[dict]:
     """URL share and winner changes are overlap signals, *not* proof of harmful cannibalisation."""
     groups: dict[str, dict[str, dict[str, list[dict]]]] = defaultdict(
         lambda: defaultdict(lambda: {"before": [], "after": []}))
@@ -93,12 +93,14 @@ def cannibalisation(rows: list[dict], split: date, min_impressions: int = 20,
                     "urls": sorted(entries, key=lambda x: -x["total"])[:8],
                     "previous_leader": previous, "current_leader": current,
                     "leader_changed": bool(previous and current and previous != current),
-                    "interpretation": "Mehrere GSC-URLs sind ein Überschneidungs-Indiz; Site-Links, Gerätemix und "
-                                      "Suchintention können dies ohne schädliche Kannibalisierung erklären."})
+                    "interpretation": f"Mehrere {source_label}-URLs sind ein Überschneidungs-Indiz; "
+                                      "Site-Links, Gerätemix und Suchintention können dies ohne schädliche "
+                                      "Kannibalisierung erklären."})
     return sorted(out, key=lambda x: (-int(x["leader_changed"]), -x["impressions"], x["query"]))[:limit]
 
 
-def trends(rows: list[dict], split: date, min_recent_impressions: int = 10, limit: int = 100) -> list[dict]:
+def trends(rows: list[dict], split: date, min_recent_impressions: int = 10,
+           limit: int = 100, source_label: str = "GSC") -> list[dict]:
     groups: dict[str, dict[str, list[dict]]] = defaultdict(lambda: {"before": [], "after": []})
     for row in rows:
         if row.get("query") and isinstance(row.get("day"), date):
@@ -114,6 +116,6 @@ def trends(rows: list[dict], split: date, min_recent_impressions: int = 10, limi
             continue
         out.append({"query": query, "before": b, "after": a,
                     "growth_pct": pct, "new_in_sample": b["impressions"] == 0,
-                    "interpretation": "Nur neu oder zunehmend in den vorhandenen GSC-Daten; "
+                    "interpretation": f"Nur neu oder zunehmend in den vorhandenen {source_label}-Daten; "
                                       "keine Aussage über externen Suchtrend oder Suchvolumen."})
     return sorted(out, key=lambda x: (-x["after"]["impressions"], x["query"]))[:limit]

@@ -20,9 +20,18 @@ Angezeigt werden:
   summiert Klicks und Impressionen je Anfrage; die Position ist nach
   Impressionen gewichtet.
 - **Crawling durch Bingbot:** gecrawlte Seiten, Seiten im Index, Crawl-Fehler.
+- **Bing Intelligence:** ausdrücklich ausgelöste, nur lesende Abrufe für die in der Oberfläche angebotenen Datensätze. Jede
+  Antwort kann als unveränderlicher Snapshot gespeichert und später erneut gelesen werden; sie wird nie mit GSC-Werten
+  zusammengeführt.
+- **Content-Analyse:** eine begrenzte Stichprobe der stärksten Bing-Seiten wird mit echten Page-Query-Wochenwerten und dem
+  letzten Crawl verglichen. Content-Lücken bleiben lexikalische Prüfkandidaten. Decay-, Trend- und URL-Überschneidungssignale
+  erscheinen nur für Serien, die in beiden Vergleichsfenstern jede erwartete Woche abdecken.
 
 Grenze: Bing akzeptiert den API-Schlüssel nur als URL-Parameter. Er wird
 ausschließlich an `ssl.bing.com` gesendet und nicht protokolliert.
+Die dokumentierten JSON/HTTP-Signaturen sind mit Mock- und Vertragstests abgedeckt; ein autorisierter Live-Test sämtlicher
+Operationen und Antwortformen steht weiterhin aus. Ein Snapshot belegt nur die erhaltene Providerantwort zum Abrufzeitpunkt,
+nicht Vollständigkeit, Kausalität, Linkverlust oder einen externen Suchtrend. Snapshot-Payloads sind auf 2 MB begrenzt.
 
 ## IndexNow
 

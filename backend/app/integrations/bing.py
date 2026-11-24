@@ -114,7 +114,7 @@ async def call(settings: dict, method: str, *, params: dict | None = None, body:
     except ValueError:
         out = {}
     if r.status_code != 200:
-        msg = out.get("Message") if isinstance(out, dict) else None
+        msg = None  # Provider errors may echo credential-bearing URLs.
         if r.status_code in (401, 403):
             msg = msg or "API-Schlüssel ungültig oder ohne Zugriff auf diese Website"
         raise BingError(f"Bing Webmaster API: HTTP {r.status_code}" + (f" – {msg}" if msg else ""))
@@ -227,3 +227,39 @@ async def indexnow_submit(settings: dict, site_url: str, urls: list[str], client
             await client.aclose()
     return {"status_code": r.status_code, "ok": r.status_code in (200, 202), "submitted": len(body["urlList"]),
             "message": INDEXNOW_STATUS.get(r.status_code, f"Unerwartete Antwort HTTP {r.status_code}")}
+
+# Microsoft JSON API read operations, kept separate from Google metrics.
+READ_OPERATIONS = {
+    "traffic": ("GetRankAndTrafficStats", None),
+    "pages": ("GetPageStats", None),
+    "query_pages": ("GetQueryPageStats", "query"),
+    "url_info": ("GetUrlInfo", "url"),
+    "sitemaps": ("GetFeeds", None),
+    "backlink_counts": ("GetLinkCounts", None),
+    "backlinks": ("GetUrlLinks", "url"),
+    "crawl_settings": ("GetCrawlSettings", None),
+    "submission_quota": ("GetUrlSubmissionQuota", None),
+    "page_queries": ("GetPageQueryStats", "page"),
+}
+
+
+async def read_intelligence(settings: dict, site_url: str, operation: str, *,
+                            keyword: str | None = None, url: str | None = None,
+                            client: httpx.AsyncClient | None = None) -> dict:
+    if operation not in READ_OPERATIONS:
+        raise BingError("Nicht unterstützte Bing-Operation.")
+    method, required = READ_OPERATIONS[operation]
+    params = {"siteUrl": site_url}
+    if required == "query":
+        if not keyword or not keyword.strip():
+            raise BingError("Suchanfrage erforderlich.")
+        params["query"] = keyword.strip()
+    elif required in ("url", "page"):
+        if not url or not same_host_urls([url], site_url)[0]:
+            raise BingError("URL derselben Website erforderlich.")
+        params[required] = url
+    if operation in ("backlink_counts", "backlinks"):
+        params["page"] = 0
+    data = await call(settings, method, params=params, client=client)
+    return {"provider": "bing", "operation": operation, "site_url": site_url,
+            "data": data, "retrieved_at": datetime.now(UTC).isoformat()}
