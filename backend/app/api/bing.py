@@ -70,6 +70,55 @@ async def bing_intelligence(
         raise _bad(exc) from exc
 
 
+
+@router.get("/sites/{site_id}/bing/content-analysis")
+async def bing_content_analysis(
+    site_id: int, weeks: int = Query(4, ge=2, le=12),
+    page_limit: int = Query(10, ge=1, le=25),
+    user: User = Depends(current_user), db: Session = Depends(get_db),
+) -> dict:
+    """Bounded, on-demand sample of actual Bing page-query pairs."""
+    from sqlalchemy.orm import undefer
+    from ..services.bing_content import normalize_page_queries, analyze_sample
+    site = get_site_for(db, user, site_id)
+    settings = get_setting(db, "bing")
+    crawls = _completed_crawls(db, site.id)
+    if not crawls:
+        return {"provider": "bing", "has_data": False, "reason": "Website-Crawl erforderlich."}
+    try:
+        site_url = bing.match_site([s for s in await bing.sites(settings) if s.get("verified")], site.url)
+        if site_url is None:
+            raise HTTPException(400, "Keine verifizierte Bing-Website gefunden.")
+        ranking = await bing.read_intelligence(settings, site_url, "pages")
+        raw = ranking.get("data")
+        if not isinstance(raw, list):
+            raise bing.BingError("Unerwartetes Bing-Seitendatenformat.")
+        totals = {}
+        for row in raw:
+            if isinstance(row, dict) and isinstance(row.get("Query"), str):
+                page = row["Query"]
+                if bing.same_host_urls([page], site_url)[0]:
+                    totals[page] = totals.get(page, 0) + int(row.get("Impressions") or 0)
+        targets = sorted(totals, key=lambda p: (-totals[p], p))[:page_limit]
+        rows = []
+        for page in targets:
+            data = await bing.call(settings, "GetPageQueryStats", params={"siteUrl": site_url, "page": page})
+            if not isinstance(data, list):
+                raise bing.BingError("Unerwartetes Bing-Query-Datenformat.")
+            rows.extend(normalize_page_queries(page, data))
+        pages = list(db.scalars(select(Page).options(undefer(Page.text)).where(
+            Page.crawl_id == crawls[0].id, Page.indexable.is_(True),
+            Page.is_html.is_(True), Page.status_code == 200).order_by(Page.id).limit(4000)))
+        metadata = [{"url": p.url, "title": p.title, "h1": p.h1,
+                     "headings": (p.data or {}).get("headings") or [],
+                     "text": p.text or "", "description": p.meta_description} for p in pages]
+        result = analyze_sample(rows, metadata, weeks=weeks)
+        return {**result, "sampled_pages": targets, "available_pages": len(totals),
+                "crawl_id": crawls[0].id}
+    except (bing.BingError, ValueError, TypeError) as exc:
+        raise _bad(exc) from exc
+
+
 # ----------------------------------------------------------------------------- IndexNow
 def _completed_crawls(db: Session, site_id: int) -> list[Crawl]:
     return list(db.scalars(select(Crawl).where(Crawl.site_id == site_id, Crawl.competitor_id.is_(None), Crawl.status == "completed")
