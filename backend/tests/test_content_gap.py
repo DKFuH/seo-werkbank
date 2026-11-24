@@ -5,6 +5,7 @@ from datetime import date
 
 from app.db import session_scope
 from app.models import GscRow
+from tests.conftest import wait_for_job
 from app.services.content_gap import analyze
 
 
@@ -71,9 +72,15 @@ def test_zero_impressions_and_unknown_page_not_invented():
     assert x["total_clusters"] == 0
 
 
-def test_api_requires_paired_rows_last_crawl_and_site_isolation(client, auth, crawled):
-    sid = crawled["site"]["id"]
-    base = crawled["base"]
+def test_api_requires_paired_rows_last_crawl_and_site_isolation(client, auth, fixture_site):
+    base = fixture_site.url
+    created = client.post("/api/sites", headers=auth, json={"name": "Content Gap Isolation", "url": base + "/"})
+    assert created.status_code == 201, created.text
+    sid = created.json()["id"]
+    crawl = client.post(f"/api/sites/{sid}/crawls", headers=auth, json={
+        "delay_ms": 0, "concurrency": 8, "max_urls": 80, "exclude_patterns": ["/big/"]})
+    assert crawl.status_code == 202, crawl.text
+    assert wait_for_job(client, auth, crawl.json()["job_id"])["status"] == "completed"
     endpoint = f"/api/sites/{sid}/content-gap"
     response = client.get(endpoint, headers=auth)
     assert response.status_code == 200
