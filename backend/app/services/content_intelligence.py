@@ -85,10 +85,10 @@ def cannibalisation(rows: list[dict], split: date, min_impressions: int = 20,
             continue
         for x in entries:
             x["impression_share"] = round(x["total"] / total, 3) if total else 0
-        def leader(key: str) -> str | None:
-            ranked = sorted(entries, key=lambda x: (-x[key]["impressions"], x["url"]))
-            return ranked[0]["url"] if ranked and ranked[0][key]["impressions"] else None
-        previous, current = leader("before"), leader("after")
+        first_previous = sorted(entries, key=lambda row: (-row["before"]["impressions"], row["url"]))[0]
+        first_current = sorted(entries, key=lambda row: (-row["after"]["impressions"], row["url"]))[0]
+        previous = first_previous["url"] if first_previous["before"]["impressions"] else None
+        current = first_current["url"] if first_current["after"]["impressions"] else None
         out.append({"query": query, "impressions": round(total),
                     "urls": sorted(entries, key=lambda x: -x["total"])[:8],
                     "previous_leader": previous, "current_leader": current,
