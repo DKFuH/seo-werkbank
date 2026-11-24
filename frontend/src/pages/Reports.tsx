@@ -3,6 +3,7 @@ import { type ReactNode, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button, Card, EmptyState, Notice, PageHeader, Spinner } from "../components/ui";
 import { api, errorMessage } from "../lib/api";
+import ReportSnapshotPanel from "../components/ReportSnapshotPanel";
 import { useSite } from "../lib/context";
 import { crawlName, fmtDateTime, fmtInt } from "../lib/format";
 
@@ -112,6 +113,7 @@ export default function Reports() {
     <>
       <PageHeader title="Berichte" description={<>Alle Berichte und Exporte für <span className="font-medium text-slate-700 dark:text-slate-200">{site.name}</span>.</>} />
       <div className="space-y-4">
+        <ReportSnapshotPanel />
         <Group title="Crawl-Berichte" disabled={crawlId === null} reports={crawlReports}
           description={crawlId !== null && site.last_crawl ? `Aus ${crawlName(site.last_crawl)} · ${fmtInt(site.last_crawl.pages_crawled)} URLs · ${fmtDateTime(site.last_crawl.finished_at)}` : "Aus dem letzten abgeschlossenen Crawl"}
           notice={crawlId === null ? (
