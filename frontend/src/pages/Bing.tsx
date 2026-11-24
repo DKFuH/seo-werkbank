@@ -180,6 +180,47 @@ function BingWebmaster({ siteId }: { siteId: number }) {
   );
 }
 
+
+function BingIntelligence({ siteId }: { siteId: number }) {
+  const qc = useQueryClient();
+  const [operation, setOperation] = useState("traffic");
+  const [keyword, setKeyword] = useState("");
+  const [url, setUrl] = useState("");
+  const [selected, setSelected] = useState<number | null>(null);
+  const history = useQuery({ queryKey: ["bing-history", siteId], queryFn: () => api.get(`/sites/${siteId}/bing/snapshots`) });
+  const capture = useMutation({
+    mutationFn: () => api.post(`/sites/${siteId}/bing/snapshots`, { operation, keyword: operation === "query_pages" ? keyword : null, url: ["url_info", "backlinks", "page_queries"].includes(operation) ? url : null }),
+    onSuccess: (r) => { setSelected(r.id); qc.invalidateQueries({ queryKey: ["bing-history", siteId] }); },
+  });
+  const detail = useQuery({ queryKey: ["bing-snapshot", siteId, selected], enabled: selected !== null, queryFn: () => api.get(`/sites/${siteId}/bing/snapshots/${selected}`) });
+  const analysis = useMutation({ mutationFn: () => api.get(`/sites/${siteId}/bing/content-analysis`, { page_limit: 5 }) });
+  return <div className="space-y-4">
+    <Card title="Bing Intelligence" description="Originaldaten von Bing, getrennt von Google. Abruf und Speicherung nur auf Anforderung.">
+      <div className="flex flex-wrap items-end gap-3">
+        <Field label="Datensatz"><Select value={operation} onChange={(e) => setOperation(e.target.value)}>
+          {Object.entries({traffic:"Traffic",pages:"Seiten",query_pages:"URLs je Suchanfrage",page_queries:"Suchanfragen je URL",url_info:"Indexinformationen",sitemaps:"Sitemaps",backlink_counts:"Backlink-Anzahl",backlinks:"Backlinks je URL",crawl_settings:"Crawl-Einstellungen",submission_quota:"Übermittlungskontingent"}).map(([k,v]) => <option key={k} value={k}>{v}</option>)}
+        </Select></Field>
+        {operation === "query_pages" && <Field label="Suchanfrage"><input value={keyword} onChange={(e) => setKeyword(e.target.value)} /></Field>}
+        {["url_info", "backlinks", "page_queries"].includes(operation) && <Field label="URL"><input value={url} onChange={(e) => setUrl(e.target.value)} /></Field>}
+        <Button loading={capture.isPending} onClick={() => capture.mutate()}>Abrufen und speichern</Button>
+      </div>
+      {capture.error && <ErrorBox error={capture.error} />}
+      {history.error && <ErrorBox error={history.error} />}
+      <div className="mt-3"><Field label="Gespeicherte Snapshots"><Select value={selected ?? ""} onChange={(e) => setSelected(e.target.value ? Number(e.target.value) : null)}>
+        <option value="">Auswählen</option>
+        {(history.data?.items ?? []).map((r: any) => <option key={r.id} value={r.id}>{r.created_at} – {r.operation}</option>)}
+      </Select></Field></div>
+      {detail.error && <ErrorBox error={detail.error} />}
+      {detail.data && <pre className="max-h-96 overflow-auto whitespace-pre-wrap text-xs">{JSON.stringify(detail.data.payload, null, 2)}</pre>}
+    </Card>
+    <Card title="Bing Content-Analyse" description="Stichprobe von bis zu fünf URLs mit echten Bing-Query-Daten und letztem Crawl.">
+      <Button loading={analysis.isPending} onClick={() => analysis.mutate()}>Analyse starten</Button>
+      {analysis.error && <ErrorBox error={analysis.error} />}
+      {analysis.data && <pre className="max-h-96 overflow-auto whitespace-pre-wrap text-xs">{JSON.stringify(analysis.data, null, 2)}</pre>}
+    </Card>
+  </div>;
+}
+
 export default function Bing() {
   const { site } = useSite();
   return (
@@ -190,6 +231,7 @@ export default function Bing() {
         <div className="space-y-4">
           <IndexNowPanel siteId={site.id} />
           <BingWebmaster siteId={site.id} />
+          <BingIntelligence key={site.id} siteId={site.id} />
         </div>
       )}
     </>
