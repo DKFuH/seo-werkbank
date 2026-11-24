@@ -34,7 +34,6 @@ from .api import (
     evidence,
     geo_access,
     integrations,
-    intelligence_operations,
     index_intelligence,
     logs,
     pagespeed_batch,
