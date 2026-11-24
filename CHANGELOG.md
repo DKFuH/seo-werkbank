@@ -5,6 +5,12 @@ uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased] - SEO-Werkbank
 
+### Added (Content-Gap-Analyse)
+- GSC-Query-URL-Paare mit indexierbaren Crawl-Seiten abgleichen und Suchanfragen nach lexikalischen Themenvarianten gruppieren.
+- Heuristische Handlungskategorien und Hinweise zu mehreren rankenden Landingpages, stets mit gemessenen GSC-Werten und Offenlegung der Grenzen.
+- Eigene Content-Gap-Seite samt Filter, kopierbaren Briefings und manuellem SEO-Maßnahmen-Workflow; keine automatische Veröffentlichung.
+
+
 ### Added (Bing and Brave evidence)
 - Every Bing/Brave mapping now carries its guideline section, a verbatim quote or an explicit `topic` level, and the date of the
   source (`docs/SEARCH_ENGINE_RULES.md`). The detail view of a finding shows them. Bing mappings grew from 14 to 43 rules, Brave from 3 to 4.
