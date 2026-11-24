@@ -275,7 +275,7 @@ export default function RankTracking() {
           ]} />
           {tab === "portfolio" && <PortfolioTab siteId={site.id} />}
           {tab === "queries" && <QueriesTab siteId={site.id} />}
-          {tab === "provider" && <RankProviderMeasurements />}
+          {tab === "provider" && <><RankProviderMeasurements /><div className="mt-5"><LocalRankPanel /></div></>}
         </>
       )}
     </>
