@@ -5,8 +5,8 @@ from datetime import date
 
 from app.db import session_scope
 from app.models import GscRow
-from tests.conftest import wait_for_job
 from app.services.content_gap import analyze
+from tests.conftest import wait_for_job
 
 
 def _page(url: str, title: str, h1: str, body: str) -> dict:
