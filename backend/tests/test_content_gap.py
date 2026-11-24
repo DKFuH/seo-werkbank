@@ -2,10 +2,9 @@
 from __future__ import annotations
 
 from datetime import date
-from types import SimpleNamespace
 
 from app.db import session_scope
-from app.models import GscRow, Page
+from app.models import GscRow
 from app.services.content_gap import analyze
 
 
