@@ -896,6 +896,7 @@ Diese Tabelle ist zugleich ein **„Wo finde ich was?“**-Nachschlagewerk.
 | Content | **Content-Optimierung** (`/content`) | Einzeltext/Seite prüfen |
 | Content | **WDF*IDF** (`/wdf-idf`) | Sprachstatistischer Wettbewerbsvergleich |
 | Content | **Content-Refresh** (`/content-refresh`) | GSC-basierte Aktualisierungschancen |
+| Content | **Content-Gaps** (`/content-gap`) | GSC-Query-URL-Paare gegen die Textabdeckung des letzten Crawls prüfen; keine automatischen Artikel |
 | Content | **Content-Entwürfe** (`/content-proposals`) | Änderungstexte speichern und freigeben |
 | Content | **Content Studio** (`/content-studio`) | Fallstudien, Fragen, Marken, Experimente |
 | Content | **Qualität & CRO** (`/research-quality`) | Quellen, CRO-Notizen und Asset-Briefings |

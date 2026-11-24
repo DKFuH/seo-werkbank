@@ -116,3 +116,10 @@ curl -s -o crawl.xlsx "$BASE/crawls/$CRAWL_ID/export?dataset=all&format=xlsx" -H
 - Errors: `{"detail": "message"}` (or FastAPI's validation array for 422). Objects owned by another user return 404.
 - Rate limits: 600 requests/minute per IP by default (10/minute for login and registration); exceeding them returns 429.
 - Provenance: responses that include estimates carry a `method`, `basis`, `note` or `status` field saying so.
+
+## Content-Gap-Analyse
+
+- `GET /api/sites/{site_id}/content-gap?days=90&min_impressions=10&limit=80`: Authentifizierte, datumsbezogene GSC-Query-URL-Paare mit letztem Crawl abgleichen. Gibt Kategorien, Messwerte, URL-Belege und methodische Warnungen zurück. Begrenzt auf 10.000 Paare und 4.000 Seiten; kein Suchvolumen.
+- `POST /api/sites/{site_id}/content-gap/work` mit `{query,target_url,action}`: Erstellt ausschließlich eine geplante Content-Maßnahme auf der eigenen Website, keine CMS-Veröffentlichung. `action` ist `expand`, `new_candidate` oder `review`.
+
+Details: [Content-Gap-Analyse](CONTENT_GAPS.md).
