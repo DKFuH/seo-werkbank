@@ -6,7 +6,7 @@ per-owner/per-site private settings. No fake fallback measurements.
 from __future__ import annotations
 
 import base64
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from urllib.parse import urlsplit
 
 import httpx
@@ -15,7 +15,7 @@ import jwt
 from ..services.settings_store import get_private, set_private
 
 GA4_SCOPE = "https://www.googleapis.com/auth/analytics.readonly"
-GA4_TOKEN = "https://oauth2.googleapis.com/token"
+GA4_OAUTH_ENDPOINT = "https://oauth2.googleapis.com/token"
 GA4_API = "https://analyticsdata.googleapis.com/v1beta/properties"
 CLARITY_API = "https://www.clarity.ms/export-data/api/v1/project-live-insights"
 DATAFORSEO_ROOT = "https://api.dataforseo.com/v3/serp/google"
@@ -53,14 +53,14 @@ async def ga4_overview(settings: dict, *, days: int = 28) -> dict:
     if not property_id.isdigit():
         raise ProviderError("GA4-Property-ID muss numerisch sein")
     now = int(datetime.now(UTC).timestamp())
-    claim = {"iss": settings["client_email"], "scope": GA4_SCOPE, "aud": GA4_TOKEN,
+    claim = {"iss": settings["client_email"], "scope": GA4_SCOPE, "aud": GA4_OAUTH_ENDPOINT,
              "iat": now, "exp": now + 3500}
     try:
         assertion = jwt.encode(claim, settings["private_key"], algorithm="RS256")
     except Exception as exc:
         raise ProviderError("Ungültiger GA4-Service-Account-Schlüssel") from exc
     async with httpx.AsyncClient(timeout=35) as client:
-        token_res = await client.post(GA4_TOKEN, data={
+        token_res = await client.post(GA4_OAUTH_ENDPOINT, data={
             "grant_type": "urn:ietf:params:oauth:grant-type:jwt-bearer", "assertion": assertion})
         if token_res.status_code != 200:
             raise ProviderError(f"Google OAuth verweigert Token (HTTP {token_res.status_code}). Berechtigung prüfen.")
