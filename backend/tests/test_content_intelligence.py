@@ -36,7 +36,7 @@ def test_url_switch_is_not_called_proven_cannibalisation():
     assert found[0]["leader_changed"] is True
     assert found[0]["previous_leader"] == a
     assert found[0]["current_leader"] == b
-    assert "kein" in found[0]["interpretation"].lower()
+    assert "ohne schädliche" in found[0]["interpretation"].lower()
 
 
 def test_trend_marks_new_only_in_observed_sample():
@@ -48,12 +48,14 @@ def test_trend_marks_new_only_in_observed_sample():
     assert "GSC" in found[0]["interpretation"]
 
 
-def test_site_isolation_and_api_preference(client, auth, crawled):
-    sid = crawled["site"]["id"]
-    base = crawled["base"]
+def test_site_isolation_and_api_preference(client, auth, fixture_site):
+    base = fixture_site.url
+    created = client.post("/api/sites", headers=auth, json={"name": "Content Intelligence isolated", "url": base + "/"})
+    assert created.status_code == 201, created.text
+    sid = created.json()["id"]
     with session_scope() as db:
         db.add_all([
-            GscRow(site_id=sid, dataset="query_page", source="api", day=date(2026, 11, 2),
+            GscRow(site_id=sid, dataset="query_page", source="api", day=date(2026, 10, 15),
                    query="küchen Ideen", page=base + "/about", impressions=100,
                    clicks=30, position=3),
             GscRow(site_id=sid, dataset="query_page", source="api", day=date(2026, 11, 25),
