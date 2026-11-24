@@ -1243,3 +1243,17 @@ einer Ankündigung vom 30.10.2026; Microsoft kann sie ändern.
 
 **Mitmachen und Fehler melden:** https://github.com/DKFuH/seo-werkbank  
 **Dokumentationsprinzip:** Ein sichtbarer Wert benötigt eine belegbare Herkunft. Ein gespeicherter Entwurf benötigt vor der Veröffentlichung eine eigenständige fachliche Prüfung.
+
+## Intelligence: GSC-Trends, Indexstatus, Berichte und lokale Anbieter
+
+Unter **Content → Content Intelligence** vergleicht die Werkbank zwei gleich lange GSC-Zeiträume und kennzeichnet Seiten mit Klickverlust, mehrere Landingpages einer Query und neue oder wachsende Suchanfragen. Die Ursachen sind **Hypothesen**; eine Änderung der Suchintention oder Saisonalität muss redaktionell untersucht werden.
+
+In **Sitemaps & robots.txt** werden historische Sitemap-URL-Mengen verglichen. Der Google-Index-Inspektionsbereich startet auf ausdrücklichen Klick maximal 10 URL-Inspection-Abfragen je Job, sofern die berechtigte Search-Console-Property verbunden ist. **Nur tatsächliche Google-Antworten** erscheinen in der Indexstatus-Historie; ein Ergebnis ist kein Live-Test und kein Indexierungsantrag.
+
+Bei **redaktionellen Content-Entwürfen** kann eine lokale Regelprüfung auf neue Zahlen, Datumswerte, mögliche Namen, externe Links und Überschriften ausgeführt werden. Die Prüfung ist kein Faktencheck und ersetzt die Freigabe nicht.
+
+Unter **Berichte** lassen sich eingefrorene HTML-/PDF-Snapshots des letzten abgeschlossenen Crawls und der gespeicherten GSC-Messdaten anlegen. Optional ermöglicht ein Monitor des Typs **Bericht** die regelmäßige Archivierung; Berichte werden nicht automatisch verschickt. Unter **Backlinks** werden verifizierte Live/Verlust-Übergänge dokumentiert und können als **manuelle** Link-Recovery-Maßnahme erfasst werden.
+
+Unter **Conversion → GA4, Clarity & lokale SERPs** werden optionale externe Zugangsdaten pro Website verschlüsselt verwaltet. GA4 benötigt eine numerische Property-ID und einen berechtigten Service Account; Clarity erlaubt nur die letzten 1–3 Tage und wenige API-Abfragen. Lokales organisches und Google-Maps-Ranktracking läuft über **DataForSEO**, benötigt einen vorhandenen Ranktracker-Eintrag mit Ortsangabe und eine **explizite Kostenbestätigung pro Messung**. Anbieter-Messungen sind nicht mit der impressionsgewichteten GSC-Ø-Position gleichzusetzen. Die Werkbank führt keine automatischen kostenpflichtigen Messungen aus.
+
+Ausführlich: [Intelligence-Module und API-Quellen](INTELLIGENCE_MODULES.md).
