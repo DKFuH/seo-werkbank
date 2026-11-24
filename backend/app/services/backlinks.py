@@ -17,7 +17,7 @@ from ..crawler.parser import parse_html
 from ..crawler.urls import normalize_url, registrable_domain, strip_www
 from ..db import session_scope
 from ..jobs import JobContext
-from ..models import Backlink, Crawl, Page, Site, utcnow
+from ..models import Backlink, Crawl, Page, SeoResearchRecord, Site, utcnow
 
 _COLS = {
     "source": ("source url", "source_url", "linking page", "linking pages", "referring page", "referring page url", "url from",
@@ -167,8 +167,19 @@ async def verify_backlinks(site_id: int, ctx: JobContext | None = None, limit: i
             b = db.get(Backlink, bid)
             if b is None:
                 continue
+            before = b.status
             for k, v in out.items():
                 setattr(b, k, v)
             b.last_checked = utcnow()
+            if before != out["status"] and before in ("live", "lost"):
+                db.add(SeoResearchRecord(
+                    site_id=site_id, kind="link_transition", source="verification",
+                    title=b.source_url[:300],
+                    payload={"backlink_id": b.id, "source_url": b.source_url,
+                             "target_url": b.target_url, "previous_status": before,
+                             "current_status": out["status"],
+                             "checked_at": b.last_checked.isoformat()},
+                    notes="Beobachtete Änderung bei URL-Prüfung, kein Beweis für dauerhaften Linkverlust.",
+                ))
             counts[out["status"]] += 1
     return {"checked": len(results), **counts}

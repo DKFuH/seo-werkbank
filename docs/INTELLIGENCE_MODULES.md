@@ -50,3 +50,45 @@ Datenbankmigration.
 
 Quelle: https://developers.google.com/webmaster-tools/v1/urlInspection.index/inspect
 Quoten: https://developers.google.com/webmaster-tools/limits
+
+## Redaktionelle QA (Content → Content-Entwürfe)
+
+Der Button **Aktuellen Entwurf prüfen** vergleicht Ausgangstext und neue
+Fassung **vor dem Speichern**; der gespeicherte Entwurf kann zusätzlich
+über die API abgefragt werden. Erkannt werden neue numerische Werte,
+Maßangaben, Jahresangaben, externe URLs, Markdown-Überschriften und
+mögliche Eigennamen. Das sind deterministische **Prüfhinweise**:
+kein semantischer Faktencheck, keine rechtliche oder technische Freigabe,
+kein Plagiatsnachweis. Die bestehende menschliche Freigabe ist weiterhin
+notwendig. Die Daten werden nicht an einen externen KI-Anbieter gesendet.
+
+## Berichts-Snapshots (Maßnahmen → Berichte)
+
+- Ein Snapshot friert Website, Crawl, Score, gezählte Seiten und
+  vorhandene datierte GSC-Messwerte **zum Zeitpunkt der Erstellung** ein.
+  Der HTML-/PDF-Export verwendet ausschließlich die gespeicherten Daten,
+  nicht neu eingespielte Messwerte.
+- GSC-Quelle `api` hat bei doppelten Quellen Vorrang vor `csv`;
+  Query-URL-Impressionen sind nicht eindeutig pro Suchanfrage.
+- Optional per **Monitoring** einen Monitor des Typs **Bericht** anlegen.
+  Standardintervall 720 Stunden (30 Tage); die einfache In-Process-
+  Zeitplanung läuft nur bei aktivem API-Prozess. Automatisch erzeugte
+  Snapshots werden **nicht** an fremde Empfänger geschickt.
+- Die API bietet keinen Edit-Endpunkt für bestehende Snapshots.
+  Report-Snapshots benötigen Alembic-Migration `0014`.
+
+## Link-Recovery (Sichtbarkeit → Backlinks)
+
+Der bestehende Link-Checker speichert nun Übergänge zwischen einem
+zuvor verifizierten Live-Link und `lost` bzw. Wiedergewinnung.
+Die Link-Recovery zeigt nur importierte und geprüfte Backlinks und
+kennzeichnet, ob `live → lost` tatsächlich beobachtet wurde.
+Links ohne nachgewiesenen früheren Live-Zustand werden getrennt
+bewertet. Eine **Recovery-Aufgabe** erstellt lediglich eine geplante
+SEO-Maßnahme, ohne Quellseiten automatisch anzuschreiben, Links
+abzubauen, eine Disavow-Liste zu erstellen oder Weiterleitungen
+zu installieren.
+
+Die Link-Überprüfung kann durch HTML-Umbauten, Weiterleitungen oder
+Serverprobleme falsche Verlustsignale erzeugen. Vor einer Kontaktaufnahme
+ist eine manuelle Gegenprüfung erforderlich.

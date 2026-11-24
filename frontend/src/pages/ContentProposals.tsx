@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Badge, Button, Card, EmptyState, ErrorBox, Field, PageHeader, Select, Spinner, Textarea } from "../components/ui";
 import { api } from "../lib/api";
+import EditorialQaPanel from "../components/EditorialQaPanel";
 import { useSite } from "../lib/context";
 
 type Item = { id: number; kind: string; title: string; status: string; target_url: string };
@@ -98,6 +99,7 @@ export default function ContentProposals() {
             onChange={(e) => { setRationale(e.target.value); setDirty(true); }} />
         </Field>
       </div>
+      {site && proposal.data.content_type !== "application/ld+json" && <div className="mt-4"><EditorialQaPanel siteId={site.id} itemId={id} original={original} proposed={proposed} rationale={rationale} /></div>}
       <div className="mt-3 flex flex-wrap gap-2">
         {editable && <Button variant="primary" disabled={!proposed.trim() || save.isPending || action.isPending}
           onClick={() => save.mutate()} loading={save.isPending}>Entwurf speichern</Button>}
