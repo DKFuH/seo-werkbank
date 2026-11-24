@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import re
 from collections import defaultdict
-from urllib.parse import urlsplit
 
 from .content_refresh import page_key
 
