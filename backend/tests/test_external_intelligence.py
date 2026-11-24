@@ -5,6 +5,7 @@ import httpx
 
 from app.db import session_scope
 from app.models import RankTarget
+from app.security.auth import decode_token
 from app.services import external_intelligence as ext
 
 
@@ -20,7 +21,8 @@ def test_per_site_provider_secrets_not_returned(client, auth):
     assert result["providers"][1]["connected"] is True
     assert "private-token-secret" not in str(result)
     with session_scope() as db:
-        assert ext.config(db, "clarity", 1, sid)["token"] == "private-token-secret"
+        owner_id = decode_token(auth["Authorization"].split(" ", 1)[1])
+        assert ext.config(db, "clarity", owner_id, sid)["token"] == "private-token-secret"
     disconnected = client.delete(base + "/config/clarity", headers=auth)
     assert disconnected.status_code == 200
     assert disconnected.json()["connected"] is False
