@@ -27,8 +27,9 @@ KINDS = {
     "metadata": "Metadaten-Änderungen (Title, Description, Canonical, Robots, H1)",
     "competitor": "Wettbewerber beobachten (Metadaten der Startseite und Sitemap-Änderungen)",
     "gsc": "Keyword-Tracking über die Search Console (Positionsänderungen gespeicherter Keywords)",
+    "report": "Regelmäßiger unveränderlicher SEO-Berichtssnapshot (ohne E-Mail-Versand)",
 }
-DEFAULT_INTERVAL = {"uptime": 0.25, "audit": 168, "sitemap": 24, "metadata": 24, "competitor": 24, "gsc": 24}
+DEFAULT_INTERVAL = {"uptime": 0.25, "audit": 168, "sitemap": 24, "metadata": 24, "competitor": 24, "gsc": 24, "report": 720}
 
 
 async def _snapshot(fetcher: Fetcher, url: str) -> dict:
@@ -161,6 +162,18 @@ async def run_monitor(monitor_id: int, ctx: JobContext | None = None) -> dict:
             if b_new > b_old:
                 alerts.append({"severity": "high", "title": f"Defekte interne Links gestiegen von {b_old} auf {b_new}", "message": "", "data": {"crawl_id": crawl_id}})
         state = {"last_crawl_id": crawl_id, "score": score}
+    elif kind == "report":
+        from .report_snapshots import capture
+
+        with session_scope() as db:
+            report_site = db.get(Site, site_id)
+            try:
+                snap = capture(db, report_site, str(cfg.get("title") or "Geplanter SEO-Bericht")[:200],
+                               origin="scheduled", days=28)
+                state = {"snapshot_id": snap.id, "created_at": utcnow().isoformat()}
+            except ValueError:
+                status = "no data"
+                state = {"note": "Abgeschlossener Crawl erforderlich. Noch kein Bericht gespeichert."}
     elif kind == "gsc":
         from ..integrations import gsc
         with session_scope() as db:
