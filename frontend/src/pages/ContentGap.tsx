@@ -114,7 +114,7 @@ export default function ContentGap() {
         <Stat label="GSC-Datenquelle" value={d.source === "api" ? "API" : "CSV"} />
       </div>
       <Card title="Datenqualität und Grenzen">
-        <p className="text-sm">Vergleich mit Crawl #{d.crawl_id}. GSC-Zeitraum: {d.start_date ?? "ohne Datum"} bis {d.end_date ?? "ohne Datum"}. Diese Einordnung ist eine lexikalische Heuristik, **keine** automatische Suchintent- oder Kannibalisierungsbestätigung.</p>
+        <p className="text-sm">Vergleich mit Crawl #{d.crawl_id}. GSC-Zeitraum: {d.start_date ?? "ohne Datum"} bis {d.end_date ?? "ohne Datum"}. Diese Einordnung ist eine lexikalische Heuristik, keine automatische Suchintent- oder Kannibalisierungsbestätigung.</p>
         {(d.notes ?? []).map((n, i) => <p key={i} className="mt-2 text-xs text-amber-700 dark:text-amber-300">{n}</p>)}
         {(d.truncated || d.truncated_pairs || d.truncated_pages) && <p className="mt-2 text-xs font-medium">Auswertung wurde zur Laufzeitbegrenzung gekürzt; fehlende Treffer sind kein Beleg für fehlende Inhalte.</p>}
       </Card>
