@@ -301,6 +301,32 @@ export default function Serp() {
               </Card>
             </div>
 
+            {r.content_comparison && (
+              <Card title="Content-Wettbewerbsvergleich" description={r.content_comparison.method}>
+                <p className="mb-3 text-sm">Zielseitentyp: {r.content_comparison.target_kind} · Backlinkdaten: nicht verfügbar</p>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead><tr>{["Position / URL", "Seitentyp", "Vergleichbar", "Title", "H1", "H2/H3", "Erste 100 Wörter", "Nennungen (Stichprobe)", "Bilder"].map(h => <th className="p-2" key={h}>{h}</th>)}</tr></thead>
+                    <tbody>{(r.content_comparison.rows ?? []).map((x: any) => (
+                      <tr key={x.url} className="border-t border-slate-200 dark:border-slate-700">
+                        <td className="p-2">{x.position}. <Url href={x.url} /></td><td>{x.kind}</td><td>{x.comparable ? "Ja" : "Nein"}</td>
+                        {["title", "h1", "h2_h3", "first_100"].map(k => <td key={k}>{x.prominence ? (x.prominence[k] ? "Ja" : "Nein") : "–"}</td>)}
+                        <td>{x.prominence?.mentions_in_sample ?? "–"}</td><td>{x.images ?? "–"}</td>
+                      </tr>
+                    ))}</tbody>
+                  </table>
+                </div>
+                <h3 className="mt-5 font-medium text-sm">Begriffsmatrix (lexikalische Treffer)</h3>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead><tr><th className="p-2">Begriff</th>{(r.content_comparison.selected_urls ?? []).map((u: string, i: number) => <th key={u} className="p-2"><span title={u}>{i + 1}</span></th>)}<th>Eigene URL</th></tr></thead>
+                    <tbody>{(r.content_comparison.matrix ?? []).map((m: any) => <tr key={m.term} className="border-t border-slate-200 dark:border-slate-700"><td className="p-2">{m.term}</td>{m.hits.map((hit: boolean, i: number) => <td key={i}>{hit ? "Ja" : "Nein"}</td>)}<td>{m.own == null ? "–" : m.own ? "Ja" : "Nein"}</td></tr>)}</tbody>
+                  </table>
+                </div>
+                <p className="mt-3 text-sm">Briefing-Kandidaten zur redaktionellen Prüfung: {(r.content_comparison.briefing_candidates ?? []).join(", ") || "Keine"}</p>
+              </Card>
+            )}
+
             <AiBrief key={r.keyword} keyword={r.keyword} serp={r} />
           </>
         )}
