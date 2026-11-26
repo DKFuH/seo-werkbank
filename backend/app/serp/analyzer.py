@@ -18,6 +18,7 @@ from ..crawler.parser import parse_html
 from ..crawler.urls import normalize_url, registrable_domain
 from ..keywords.research import classify_intent
 from ..text import content_tokens, is_question, stem, tfidf_terms
+from .content_comparison import compare
 
 PROVIDERS = {
     "none": "Kein Anbieter eingerichtet (Ergebnis-URLs von Hand einfügen)",
@@ -196,5 +197,6 @@ def analyse(keyword: str, results: list[dict], pages: dict[str, dict], features:
         },
         "heading_topics": heading_topics, "common_terms": body_terms, "questions": questions,
         "content_gaps": gaps,
+        "content_comparison": compare(keyword, results, pages, my_url),
         "difficulty": estimate_difficulty(keyword, results, pages),
     }
